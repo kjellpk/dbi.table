@@ -1,0 +1,12 @@
+Package: dbi.table
+Type: Package
+Title: data.table Syntax for DBI Connections
+Version: 0.1.0
+Author: Kjell Konis
+Description: Presently a first take at database access the data.table way.
+Depends: data.table
+Imports: DBI, dbplyr
+License: 
+Copyright: 
+Encoding: UTF-8
+RoxygenNote: 6.0.1
