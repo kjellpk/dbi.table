@@ -1,0 +1,14 @@
+Package: dbi.table
+Type: Package
+Title: dbi.table
+Version: 1.0.0
+Author: Kjell P. Konis
+Maintainer: Kjell P. Konis <kjellk@gmail.com>
+Description: Query database objects over a DBI connection using data.table
+             syntax.
+Depends: data.table
+Imports: DBI, dbi.extra, dbplyr, methods, stringi, tools, utils
+Remotes: kjellpk/dbi.extra@*release
+License: MPL-2.0
+Encoding: UTF-8
+RoxygenNote: 7.2.3

@@ -1,0 +1,4 @@
+^\.vscode$
+^README\.Rmd$
+^dbi\.table\.code-workspace$
+^scratch\.R$
