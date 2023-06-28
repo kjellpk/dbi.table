@@ -81,13 +81,13 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
     }
   } else {
     if (!is.call(on)) {
-      stop(sQuote("on") , " is not a call")
+      stop(sQuote("on"), " is not a call")
     } else {
       if (as.character(on[[1]]) %in% c(".", "list")) {
         on <- handy_andy(as.list(on)[-1])
       }
 
-      if(!any(duplicated(xy_sub)) && all(xy_sub == make.names(xy_sub))) {
+      if (!any(duplicated(xy_sub)) && all(xy_sub == make.names(xy_sub))) {
         tmp_prefix <- lapply(paste0(prefixes[1], names(x)), as.name)
         names(tmp_prefix) <- paste(xy_sub[1], names(x), sep = ".")
         on <- sub_lang(on, cdefs = tmp_prefix)
@@ -149,7 +149,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   if (y_data_source$id_name %in% x_data_source$id_name) {
     yid <- unique_table_name()
 
-    if(yid %chin% x_data_source$id_name) {
+    if (yid %chin% x_data_source$id_name) {
       stop("self join failed") #Could this ever happen??? Really???
     }
 
