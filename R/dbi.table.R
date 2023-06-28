@@ -67,7 +67,7 @@ new_dbi_table <- function(hash, id, fields = NULL, pk = NULL) {
                        id_name = id_name,
                        field = fields)
 
-  pk <- fields$internal_name[match(pk, fields$field)]
+  pk <- lapply(fields$internal_name[match(pk, fields$field)], as.name)
 
   x <- lapply(fields$internal_name, as.name)
   names(x) <- fields$field
@@ -77,18 +77,19 @@ new_dbi_table <- function(hash, id, fields = NULL, pk = NULL) {
 
 
 
-dbi_table_object <- function(column_definitions, connection_hash, data_source,
-                             fields, sorted, distinct = FALSE, where = list(),
+dbi_table_object <- function(cdefs, connection_hash, data_source, fields,
+                             primary_keys, distinct = FALSE, where = list(),
                              group_by = list(), order_by = list(),
                              ctes = list()) {
 
-  a <- list(names = names(column_definitions), hash = connection_hash,
-            data_source = data_source, fields = fields, sorted = sorted,
-            distinct = distinct, where = where, by = group_by, order = order_by,
+  a <- list(names = names(cdefs), hash = connection_hash,
+            data_source = data_source, fields = fields,
+            primary_keys = primary_keys, distinct = distinct,
+            where = where, by = group_by, order = order_by,
             ctes = ctes, class = "dbi.table")
 
-  attributes(column_definitions) <- a
-  column_definitions
+  attributes(cdefs) <- a
+  cdefs
 }
 
 

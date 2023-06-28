@@ -90,20 +90,20 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
       if(!any(duplicated(xy_sub)) && all(xy_sub == make.names(xy_sub))) {
         tmp_prefix <- lapply(paste0(prefixes[1], names(x)), as.name)
         names(tmp_prefix) <- paste(xy_sub[1], names(x), sep = ".")
-        on <- sub_lang(on, tmp_prefix)
+        on <- sub_lang(on, cdefs = tmp_prefix)
 
         tmp_prefix <- lapply(paste0(prefixes[2], names(y)), as.name)
         names(tmp_prefix) <- paste(xy_sub[2], names(y), sep = ".")
-        on <- sub_lang(on, tmp_prefix)
+        on <- sub_lang(on, cdefs = tmp_prefix)
       }
 
       tmp_prefix <- lapply(paste0(prefixes[1], names(x)), as.name)
       names(tmp_prefix) <- names(x)
-      on <- sub_lang(on, tmp_prefix)
+      on <- sub_lang(on, cdefs = tmp_prefix)
 
       tmp_prefix <- lapply(paste0(prefixes[2], names(y)), as.name)
       names(tmp_prefix) <- names(y)
-      on <- sub_lang(on, tmp_prefix)
+      on <- sub_lang(on, cdefs = tmp_prefix)
     }
   }
 
@@ -167,7 +167,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   names(new_name) <- y_fields$internal_name
   y_fields$internal_name <- new_name
 
-  y <- lapply(c(y), sub_lang, cols = lapply(new_name, as.name))
+  y <- lapply(c(y), sub_lang, cdefs = lapply(new_name, as.name))
 
   fields <- rbind(x_fields, y_fields)
 
@@ -195,5 +195,5 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   names(xy) <- suffixed_names
 
   dbi_table_object(xy, hash_connection(conn), data_source, fields,
-                   sorted = NULL, ctes = ctes)
+                   primary_keys = NULL, ctes = ctes)
 }

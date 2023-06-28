@@ -1,13 +1,13 @@
-sub_lang <- function(e, cols) {
+sub_lang <- function(e, cdefs) {
   if (is.null(e)) {
     return(NULL)
   } else if (is.name(e)) {
-    if ((ce <- as.character(e)) %in% names(cols)) {
-      e <- cols[[ce]]
+    if ((ce <- as.character(e)) %in% names(cdefs)) {
+      e <- cdefs[[ce]]
     }
   } else if (is.call(e)) {
     for (i in seq_along(e)[-1]) {
-      e[[i]] <- sub_lang(e[[i]], cols)
+      e[[i]] <- sub_lang(e[[i]], cdefs)
     }
   }
   e
@@ -38,7 +38,7 @@ prepare_call <- function(e, vars, env, data = NULL) {
   }
 
   #' @importFrom dbplyr partial_eval
-  sub_lang(partial_eval(e, data = data, env = env), cols = vars)
+  sub_lang(partial_eval(e, data = data, env = env), cdefs = vars)
 }
 
 
@@ -62,7 +62,7 @@ handy_andy <- function(l) {
   }
 
   names(l) <- paste0("x", seq_along(l))
-  sub_lang(str2lang(paste(paren(names(l)), collapse = "&")), cols = l)
+  sub_lang(str2lang(paste(paren(names(l)), collapse = "&")), cdefs = l)
 }
 
 

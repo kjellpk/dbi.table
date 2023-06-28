@@ -140,22 +140,19 @@ write_order_by <- function(x) {
   conn <- get_connection(x)
   fields <- attr(x, "fields", exact = TRUE)
 
-  if (length(order_by <- attr(x, "order", exact = TRUE))) {
+  order_by <- attr(x, "order", exact = TRUE)
+  primary_keys <- attr(x, "primary_keys", exact = TRUE)
+
+  if (length(order_by <- unique(c(order_by, primary_keys)))) {
+
+    if (attr(x, "distinct", exact = TRUE)) {
+      order_by <- intersect(order_by, c(x))
+    }
+
     #' @importFrom dbplyr translate_sql_
     order_by <- translate_sql_(order_by, con = conn, window = FALSE)
     order_by <- sub_db_identifier(order_by, conn, fields)
   }
-
-  if (length(sorted <- attr(x, "sorted", exact = TRUE))) {
-    #' @importFrom dbplyr translate_sql_
-    sorted <- translate_sql_(lapply(sorted, as.name), con = conn,
-                              window = FALSE)
-    sorted <- sub_db_identifier(sorted, conn, fields)
-  } else {
-    sorted <- list()
-  }
-
-  order_by <- unique(c(order_by, sorted))
 
   if (length(order_by)) {
     paste(pad_left("ORDER BY"), paste(order_by, collapse = ", "))

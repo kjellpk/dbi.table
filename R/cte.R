@@ -5,7 +5,7 @@ as_cte <- function(x) {
     is_name <- vapply(x, is.name, FALSE)
     v <- lapply(names(x)[is_name], as.name)
     names(v) <- as.character(x[is_name])
-    order_by <- lapply(order_by, sub_lang, cols = v)
+    order_by <- lapply(order_by, sub_lang, cdefs = v)
 
     tmp <- lapply(order_by, get_names)
     keep <- vapply(tmp, function(u, v) all(u %in% v), FALSE, v = names(x))
