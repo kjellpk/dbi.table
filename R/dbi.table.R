@@ -75,7 +75,7 @@ new_dbi_table <- function(hash, id, fields = NULL, pk = NULL) {
   if (is.null(pk)) {
     order_by <- list()
   } else {
-    order_by <- sub_lang(lapply(pk, as.name), cdefs = x)
+    order_by <- unname(sub_lang(lapply(pk, as.name), cdefs = x))
   }
 
   dbi_table_object(x, hash, data_source, fields, order_by = order_by)

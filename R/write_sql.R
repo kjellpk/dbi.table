@@ -3,8 +3,8 @@ write_sql <- function(x) {
                 select = write_select(x),
                 from = write_from(x),
                 where = write_where(x),
-                by = write_group_by(x),
-                order = write_order_by(x))
+                group_by = write_group_by(x),
+                order_by = write_order_by(x))
 
   paste(query[!sapply(query, is.null)], collapse = "\n\n")
 }
@@ -12,30 +12,27 @@ write_sql <- function(x) {
 
 
 write_ctes <- function(x) {
-  a <- attributes(x)
-
-  if (!length(ctes <- a$ctes)) {
-    return(NULL)
+  if (length(ctes <- get_ctes(x))) {
+    ctes <- lapply(ctes, write_sql)
+    ctes <- paste0(dbQuoteIdentifier(get_connection(x), names(ctes)),
+                   " AS (\n", ctes)
+    ctes <- paste(ctes, collapse = "\n),\n\n")
+    paste0("WITH ", ctes, "\n)")
+  } else {
+    NULL
   }
-
-  ctes <- lapply(ctes, write_sql)
-  ctes <- paste0(dbQuoteIdentifier(get_connection(x), names(ctes)),
-                 " AS (\n", ctes)
-  ctes <- paste(ctes, collapse = "\n),\n\n")
-  paste0("WITH ", ctes, "\n)")
 }
 
 
 
 write_select <- function(x) {
-  x_names <- names(x)
   conn <- get_connection(x)
-  fields <- get_fields(x)
-  distinct <- get_distinct(x)
 
-  if (!length(get_order_by(x)) &&
-      !all(vapply(x, can_aggregate, FALSE))) {
-
+  if (all(vapply(setdiff(c(x), get_group_by(x)), can_aggregate, FALSE))) {
+    #' @importFrom dbplyr translate_sql_
+    select <- translate_sql_(c(x), con = conn, window = FALSE)
+  } else {
+    select <- list()
     for (i in seq_along(x)) {
       if (!is.null(over <- attr(x[[i]], "over", exact = TRUE))) {
         #' @importFrom dbplyr translate_sql_
@@ -46,43 +43,37 @@ write_select <- function(x) {
       }
 
       #' @importFrom dbplyr translate_sql_
-      x[[i]] <- translate_sql_(unname(c(x)[i]), con = conn,
-                               vars_group = pb, vars_order = ob)
+      select[[i]] <- translate_sql_(unname(c(x)[i]), con = conn,
+                                    vars_group = pb, vars_order = ob)
     }
-
-    x <- unlist(x)
-  } else {
-    #' @importFrom dbplyr translate_sql_
-    x <- translate_sql_(c(x), con = conn, window = FALSE)
   }
 
-  x <- sub_db_identifier(x, conn, fields)
+  select <- sub_db_identifier(unlist(select), conn, get_fields(x))
 
   #' @importFrom DBI dbQuoteIdentifier
-  x <- paste(x, "AS", dbQuoteIdentifier(conn, x_names))
+  select <- paste(select, "AS", dbQuoteIdentifier(conn, names(x)))
 
-  s1 <- ifelse(distinct, "SELECT DISTINCT", "SELECT")
-  s <- rep(ws(nchar(s1)), length(x))
-  s[1] <- s1
-  paste(paste(s, x), collapse = ",\n")
+  pad1 <- ifelse(get_distinct(x), "SELECT DISTINCT", "SELECT")
+  pad <- rep(ws(nchar(pad1)), length(x))
+  pad[1] <- pad1
+  paste(paste(pad, select), collapse = ",\n")
 }
 
 
 
 write_from <- function(x) {
-  a <- attributes(x)
   conn <- get_connection(x)
   from <- ""
 
-  for (i in seq_len(nrow(ds <- a$data_source))) {
+  for (i in seq_len(nrow(data_source <- get_data_source(x)))) {
     from <- paste0(from,
-                   pad_left(ds[i, "clause"]),
+                   pad_left(data_source[i, "clause"]),
                    " ",
-                   dbQuoteIdentifier(conn, ds[[i, "id"]]),
+                   dbQuoteIdentifier(conn, data_source[[i, "id"]]),
                    " AS ",
-                   dbQuoteIdentifier(conn, ds[[i, "id_name"]]))
+                   dbQuoteIdentifier(conn, data_source[[i, "id_name"]]))
 
-    if (!is.null(on <- ds[[i, "on"]])) {
+    if (!is.null(on <- data_source[[i, "on"]])) {
        #' @importFrom dbplyr translate_sql_
       on <- translate_sql_(list(on), con = conn, window = FALSE)
 
@@ -90,10 +81,10 @@ write_from <- function(x) {
                      "\n",
                      pad_left("ON"),
                      " ",
-                     sub_db_identifier(on, conn, a$fields))
+                     sub_db_identifier(on, conn, get_fields(x)))
     }
 
-    if (i < nrow(ds)) {
+    if (i < nrow(data_source)) {
       from <- paste0(from, "\n\n")
     }
   }
@@ -104,50 +95,42 @@ write_from <- function(x) {
 
 
 write_where <- function(x) {
-  a <- attributes(x)
   conn <- get_connection(x)
 
-  if (!length(a$where))
-    return(NULL)
-
-  #' @importFrom dbplyr translate_sql_
-  w <- translate_sql_(list(handy_andy(a$where)), con = conn, window = FALSE)
-  w <- sub_db_identifier(w, conn, a$fields)
-
-  paste(pad_left("WHERE"), w)
+  if (length(where <- get_where(x))) {
+    #' @importFrom dbplyr translate_sql_
+    where <- translate_sql_(list(handy_andy(where)), con = conn, window = FALSE)
+    where <- sub_db_identifier(where, conn, get_fields(x))
+    paste(pad_left("WHERE"), where)
+  } else {
+    NULL
+  }
 }
 
 
 
 write_group_by <- function(x) {
-  a <- attributes(x)
   conn <- get_connection(x)
 
-  if (!length(a$by)) {
-    return(NULL)
+  if (length(group_by <- get_group_by(x))) {
+    #' @importFrom dbplyr translate_sql_
+    group_by <- translate_sql_(c(group_by), con = conn, window = FALSE)
+    group_by <- sub_db_identifier(group_by, conn, get_fields(x))
+    paste(pad_left("GROUP BY"), paste(group_by, collapse = ", "))
+  } else {
+    NULL
   }
-
-  #' @importFrom dbplyr translate_sql_
-  gb <- translate_sql_(a$by, con = conn, window = FALSE)
-  gb <- sub_db_identifier(gb, conn, a$fields)
-
-  paste(pad_left("GROUP BY"), paste(gb, collapse = ", "))
 }
 
 
 
 write_order_by <- function(x) {
   conn <- get_connection(x)
-  fields <- get_fields(x)
-  order_by <- get_order_by(x)
 
-  if (length(order_by)) {
+  if (length(order_by <- get_order_by(x))) {
     #' @importFrom dbplyr translate_sql_
     order_by <- translate_sql_(order_by, con = conn, window = FALSE)
-    order_by <- sub_db_identifier(order_by, conn, fields)
-  }
-
-  if (length(order_by)) {
+    order_by <- sub_db_identifier(order_by, conn, get_fields(x))
     paste(pad_left("ORDER BY"), paste(order_by, collapse = ", "))
   } else {
     NULL

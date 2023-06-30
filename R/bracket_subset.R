@@ -25,7 +25,8 @@ bracket_subset <- function(x, i = NULL, j = NULL, by = NULL, env) {
     j <- handle_cols(x, j, env)
 
     if (all(calls_can_aggregate(j))) {
-      attr(x, "order_by") <- by
+      attr(x, "group_by") <- by
+      attr(x, "order_by") <- intersect(get_order_by(x), unname(by))
     } else {
       over <- list(partition_by = unname(by),
                    order_by = unname(get_order_by(x)))
