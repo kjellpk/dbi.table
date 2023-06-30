@@ -25,10 +25,10 @@ bracket_subset <- function(x, i = NULL, j = NULL, by = NULL, env) {
     j <- handle_cols(x, j, env)
 
     if (all(calls_can_aggregate(j))) {
-      attr(x, "by") <- by
+      attr(x, "order_by") <- by
     } else {
       over <- list(partition_by = unname(by),
-                   order_by = unname(attr(x, "order", exact = TRUE)))
+                   order_by = unname(get_order_by(x)))
 
       for (i in which(window_calls(j, get_connection(x)))) {
         attr(j[[i]], "over") <- over
@@ -116,11 +116,11 @@ handle_i_order <- function(x, i_list, env) {
   stopifnot(all(vapply(i_list, is.language, FALSE)))
 
   if (length(i_list) < 1) {
-    attr(x, "order") <- list()
+    attr(x, "order_by") <- list()
     return(x)
   }
 
-  i_list <- c(prepare_calls(i_list, x, env), attr(x, "order"))
-  attr(x, "order") <- i_list[!duplicated(i_list)]
+  i_list <- c(prepare_calls(i_list, x, env), get_order_by(x))
+  attr(x, "order_by") <- i_list[!duplicated(i_list)]
   x
 }

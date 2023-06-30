@@ -3,7 +3,7 @@
 
 
 #' @importFrom utils globalVariables
-globalVariables(c("COUNT", "."), "dbi.table", add = TRUE)
+globalVariables(c("."), "dbi.table", add = TRUE)
 
 
 
@@ -72,39 +72,80 @@ new_dbi_table <- function(hash, id, fields = NULL, pk = NULL) {
   x <- lapply(fields$internal_name, as.name)
   names(x) <- fields$field
 
-  dbi_table_object(x, hash, data_source, fields, pk)
+  if (is.null(pk)) {
+    order_by <- list()
+  } else {
+    order_by <- sub_lang(lapply(pk, as.name), cdefs = x)
+  }
+
+  dbi_table_object(x, hash, data_source, fields, order_by = order_by)
 }
 
 
 
-dbi_table_object <- function(cdefs, connection_hash, data_source, fields,
-                             primary_keys, distinct = FALSE, where = list(),
+dbi_table_object <- function(cdefs, hash, data_source, fields,
+                             distinct = FALSE, where = list(),
                              group_by = list(), order_by = list(),
                              ctes = list()) {
 
-  a <- list(names = names(cdefs), hash = connection_hash,
-            data_source = data_source, fields = fields,
-            primary_keys = primary_keys, distinct = distinct,
-            where = where, by = group_by, order = order_by,
-            ctes = ctes, class = "dbi.table")
-
-  attributes(cdefs) <- a
-  cdefs
+  structure(cdefs, hash = hash, data_source = data_source, fields = fields,
+            distinct = distinct, where = where, group_by = group_by,
+            order_by = order_by, ctes = ctes, class = "dbi.table")
 }
 
 
 
 #accessor methods
 get_hash <- function(x) {
-  stopifnot(is.dbi.table(x))
   attr(x, "hash", exact = TRUE)
 }
 
 
 
 get_connection <- function(x) {
-  stopifnot(is.dbi.table(x))
   get_connection_from_hash(get_hash(x))
+}
+
+
+
+get_data_source <- function(x) {
+  attr(x, "data_source", exact = TRUE)
+}
+
+
+
+get_fields <- function(x) {
+  attr(x, "fields", exact = TRUE)
+}
+
+
+
+get_distinct <- function(x) {
+  attr(x, "distinct", exact = TRUE)
+}
+
+
+
+get_where <- function(x) {
+  attr(x, "where", exact = TRUE)
+}
+
+
+
+get_group_by <- function(x) {
+  attr(x, "group_by", exact = TRUE)
+}
+
+
+
+get_order_by <- function(x) {
+  attr(x, "order_by", exact = TRUE)
+}
+
+
+
+get_ctes <- function(x) {
+  attr(x, "ctes", exact = TRUE)
 }
 
 
@@ -125,7 +166,7 @@ is.dbi.table <- function(x) {
 #' @export
 print.dbi.table <- function(x, ...) {
   cat(paste0("<", db_short_name(get_connection(x)), ">"),
-      paste(attr(x, "data_source", exact = TRUE)$id_name, collapse = " + "),
+      paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
   ans <- as.data.table(x, n = 6)
   if (nrow(ans) > 5) {
@@ -206,6 +247,7 @@ dim.dbi.table <- function(x) {
 
 #' @export
 unique.dbi.table <- function(x, incomparables = FALSE, ...) {
+  attr(x, "order_by") <- intersect(get_order_by(x), unname(c(x)))
   attr(x, "distinct") <- TRUE
   x
 }

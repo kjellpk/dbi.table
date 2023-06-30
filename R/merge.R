@@ -120,7 +120,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
 auto_merge <- function(x) {
   conn <- get_connection(x)
-  id <- attr(x, "data_source", exact = TRUE)[[1, "id"]]
+  id <- get_data_source(x)[[1, "id"]]
 
   #' @importFrom dbi.extra dbListForeignKeys
   fk <- dbListForeignKeys(conn, id)

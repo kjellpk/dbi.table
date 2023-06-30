@@ -50,13 +50,13 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
     x <- as_cte(x)
   }
 
-  x_ctes <- attr(x, "ctes", exact = TRUE)
+  x_ctes <- get_ctes(x)
 
   if (!dbi.table_is_simple(y)) {
     y <- as_cte(y)
   }
 
-  y_ctes <- attr(y, "ctes", exact = TRUE)
+  y_ctes <- get_ctes(y)
 
   type <- match.arg(type, choices = names(JOINS))
 
@@ -129,18 +129,18 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   names(x) <- paste0(prefixes[1], names(x))
   names(y) <- paste0(prefixes[2], names(y))
 
-  if (attr(x, "hash", exact = TRUE) == attr(y, "hash", exact = TRUE)) {
+  if (get_hash(x) == get_hash(y)) {
     conn <- get_connection(x)
   } else {
     stop(sQuote("x"), " and ", sQuote("y"), " do not share the same ",
          sQuote("DBI"), " connection")
   }
 
-  x_data_source <- attr(x, "data_source", exact = TRUE)
-  x_fields <- attr(x, "fields", exact = TRUE)
+  x_data_source <- get_data_source(x)
+  x_fields <- get_fields(x)
 
-  y_data_source <- attr(y, "data_source", exact = TRUE)
-  y_fields <- attr(y, "fields", exact = TRUE)
+  y_data_source <- get_data_source(y)
+  y_fields <- get_fields(y)
 
   if (nrow(y_data_source) > 1) {
     stop("case not handled yet") #shouldn't happen ever

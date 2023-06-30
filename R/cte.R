@@ -1,7 +1,7 @@
 as_cte <- function(x) {
   id_name <- unique_table_name("CTE")
 
-  if (length(order_by <- attr(x, "order", exact = TRUE))) {
+  if (length(order_by <- get_order_by(x))) {
     is_name <- vapply(x, is.name, FALSE)
     v <- lapply(names(x)[is_name], as.name)
     names(v) <- as.character(x[is_name])
@@ -32,9 +32,9 @@ as_cte <- function(x) {
 
   order_by <- prepare_calls(order_by, v, emptyenv())
 
-  ctes <- attr(x, "ctes")
+  ctes <- get_ctes(x)
   attr(x, "ctes") <- list()
-  attr(x, "order") <- list()
+  attr(x, "order_by") <- list()
   cte <- list(x)
   names(cte) <- id_name
 
@@ -46,11 +46,11 @@ as_cte <- function(x) {
 
 dbi.table_is_simple <- function(x) {
   if (is.dbi.table(x)) {
-    nrow(attr(x, "data_source", exact = TRUE)) == 1 &&
+    nrow(get_data_source(x)) == 1 &&
     all(vapply(x, is.name, FALSE)) &&
-    all(as.character(x) %in% attr(x, "fields", exact = TRUE)$internal_name) &&
-    length(attr(x, "by", exact = TRUE)) == 0 &&
-    length(attr(x, "where", exact = TRUE)) == 0
+    all(as.character(x) %in% get_fields(x)$internal_name) &&
+    #length(get_order_by(x)) == 0 &&
+    length(get_where(x)) == 0
   } else {
     FALSE
   }
@@ -63,7 +63,7 @@ dbi.table_can_join_x <- function(x) {
     has_over <- lapply(x, attr, which = "over", exact = TRUE)
     has_over <- !vapply(has_over, is.null, FALSE)
 
-    length(attr(x, "by", exact = TRUE)) == 0 &&
+    length(get_group_by(x)) == 0 &&
     !any(has_over)
   } else {
     FALSE

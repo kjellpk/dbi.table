@@ -30,10 +30,10 @@ write_ctes <- function(x) {
 write_select <- function(x) {
   x_names <- names(x)
   conn <- get_connection(x)
-  fields <- attr(x, "fields", exact = TRUE)
-  distinct <- attr(x, "distinct", exact = TRUE)
+  fields <- get_fields(x)
+  distinct <- get_distinct(x)
 
-  if (!length(attr(x, "by", exact = TRUE)) &&
+  if (!length(get_order_by(x)) &&
       !all(vapply(x, can_aggregate, FALSE))) {
 
     for (i in seq_along(x)) {
@@ -138,17 +138,10 @@ write_group_by <- function(x) {
 
 write_order_by <- function(x) {
   conn <- get_connection(x)
-  fields <- attr(x, "fields", exact = TRUE)
+  fields <- get_fields(x)
+  order_by <- get_order_by(x)
 
-  order_by <- attr(x, "order", exact = TRUE)
-  primary_keys <- attr(x, "primary_keys", exact = TRUE)
-
-  if (length(order_by <- unique(c(order_by, primary_keys)))) {
-
-    if (attr(x, "distinct", exact = TRUE)) {
-      order_by <- intersect(order_by, c(x))
-    }
-
+  if (length(order_by)) {
     #' @importFrom dbplyr translate_sql_
     order_by <- translate_sql_(order_by, con = conn, window = FALSE)
     order_by <- sub_db_identifier(order_by, conn, fields)
