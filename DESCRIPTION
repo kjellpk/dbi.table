@@ -1,7 +1,7 @@
 Package: dbi.table
 Type: Package
 Title: dbi.table
-Version: 1.0.0
+Version: 0.1.0
 Author: Kjell P. Konis
 Maintainer: Kjell P. Konis <kjellk@gmail.com>
 Description: Query database objects over a DBI connection using data.table
