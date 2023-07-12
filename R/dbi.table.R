@@ -6,6 +6,22 @@
 globalVariables(c("."), "dbi.table", add = TRUE)
 
 
+.onLoad <- function(libname, pkgname) {
+
+  if ("odbc" %in% row.names(installed.packages())) {
+    # Missing in odbc
+    #' @importFrom methods setMethod
+
+    setMethod("dbListFields", signature("Microsoft SQL Server", "Id"),
+              function(conn, name, ...) {
+                odbc::odbcConnectionColumns(conn, name, ...)$name
+              }
+    )
+  }
+
+  NULL
+}
+
 
 #' Create a \code{dbi.table} accessible via a \code{DBI} connection
 #'
@@ -40,7 +56,7 @@ dbi.table <- function(conn, id) {
 
 
 
-new_dbi_table <- function(hash, id, fields = NULL, pk = NULL) {
+new_dbi_table <- function(hash, id, fields = NULL) {
   conn <- get_connection_from_hash(hash)
 
   id_name <- id@name[["table"]]
@@ -54,31 +70,16 @@ new_dbi_table <- function(hash, id, fields = NULL, pk = NULL) {
     fields <- dbListFields(conn, id)
   }
 
-  if (is.null(pk)) {
-    #' @importFrom dbi.extra dbListPrimaryKeys
-    pk <- dbListPrimaryKeys(conn, id)
-  }
-
-  stopifnot(all(pk %in% fields))
-
   internal_name <- paste0("FN", seq_len(length(fields)))
 
   fields <- data.frame(internal_name = internal_name,
                        id_name = id_name,
                        field = fields)
 
-  pk <- lapply(fields$internal_name[match(pk, fields$field)], as.name)
-
   x <- lapply(fields$internal_name, as.name)
   names(x) <- fields$field
 
-  if (is.null(pk)) {
-    order_by <- list()
-  } else {
-    order_by <- unname(sub_lang(lapply(pk, as.name), cdefs = x))
-  }
-
-  dbi_table_object(x, hash, data_source, fields, order_by = order_by)
+  dbi_table_object(x, hash, data_source, fields)
 }
 
 

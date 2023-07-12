@@ -33,27 +33,26 @@
 #' @export
 dbi.attach <- function(what, pos = 2L, name = db_short_name(what, pkg = TRUE),
                        warn.conflicts = FALSE, ..., prefix = NULL) {
-  what <- register_connection(what)
-
-  #' @importFrom dbi.extra dbListSchema
-  schema <- dbListSchema(get_connection_from_hash(what), prefix = prefix, ...)
-
-  dbits <- list()
-  for (i in seq_len(nrow(schema))) {
-    tmp_name <- schema[[i, "id"]]@name[["table"]]
-    dbits[[tmp_name]] <- new_dbi_table(what,
-                                       schema[[i, "id"]],
-                                       schema[[i, "column_names"]])
-  }
+  hash <- register_connection(what)
+  schema <- dbListSchema(get_connection_from_hash(hash), prefix = prefix, ...)
 
   # From ?attach: "In programming, functions should not change the search
   #                path unless that is their purpose."
   #
   # The intended purpose of dbi.attach is to change the search path. The call
-  # to attach is masked to avoid an R CMD check Note.
+  # to attach is masked here to avoid the unsuppressible R CMD check Note.
 
   fun <- get(paste(letters[c(1,20,20,1,3,8)], collapse = ""), "package:base")
-  e <- fun(dbits, pos = pos, name = name, warn.conflicts = warn.conflicts)
+  e <- fun(NULL, pos = pos, name = name, warn.conflicts = warn.conflicts)
+
+  for (i in seq_len(nrow(schema))) {
+    dbit_name <- schema[[i, "id"]]@name[["table"]]
+    dbit <- new_dbi_table(hash, schema[[i, "id"]], schema[[i, "column_names"]])
+
+    if (!is.na(dbit_name)) {
+      assign(dbit_name, dbit, envir = e)
+    }
+  }
 
   invisible(e)
 }

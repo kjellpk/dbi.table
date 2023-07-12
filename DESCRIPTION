@@ -6,8 +6,8 @@ Author: Kjell P. Konis
 Maintainer: Kjell P. Konis <kjellk@gmail.com>
 Description: Query database objects over a DBI connection using data.table
              syntax.
-Imports: data.table, DBI, dbi.extra, dbplyr, methods, stringi, tools, utils
-Remotes: kjellpk/dbi.extra@*release
+Depends: data.table
+Imports: DBI, dbplyr, methods, stringi, tools, utils
 License: MPL-2.0
 Encoding: UTF-8
 RoxygenNote: 7.2.3
