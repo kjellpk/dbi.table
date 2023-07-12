@@ -195,5 +195,5 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   names(xy) <- suffixed_names
 
   dbi_table_object(xy, hash_connection(conn), data_source, fields,
-                   primary_keys = NULL, ctes = ctes)
+                   ctes = ctes)
 }
