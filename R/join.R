@@ -33,7 +33,7 @@ JOINS <- c(inner = "INNER JOIN",
 #'                 to eliminate the ambiguity.
 #'
 #' @export
-join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
+join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
                  prefixes = c("x.", "y."), suffixes = c(".x", ".y")) {
 
   xy_sub <- c(x_sub <- deparse(substitute(x)), y_sub <- deparse(substitute(y)))
@@ -196,4 +196,26 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
 
   dbi_table_object(xy, hash_connection(conn), data_source, fields,
                    ctes = ctes)
+}
+
+
+
+#' Join ON
+#'
+#' @describeIn join
+#'
+#' @description A helper to make the \dQuote(on) argument.
+#'
+#' @param \dots arguements for the \dQuote(on) clause.
+#'
+#' @section Value a single call.
+
+on <- function(...) {
+  l <- as.list(match.call())[-1]
+
+  if (any(lidx <- !vapply(l, is.call, FALSE))) {
+    stop(sQuote(format(l[[which(lidx)[1]]])), " is not a call")
+  }
+
+  handy_andy(l)
 }

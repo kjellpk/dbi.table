@@ -2,17 +2,20 @@
 % Please edit documentation in R/join.R
 \name{join}
 \alias{join}
+\alias{on}
 \title{Join dbi.tables}
 \usage{
 join(
   x,
   y,
   type = "inner",
-  on = NULL,
+  on = on(),
   env = parent.frame(),
   prefixes = c("x.", "y."),
   suffixes = c(".x", ".y")
 )
+
+on(...)
 }
 \arguments{
 \item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must
@@ -35,9 +38,22 @@ eliminate the ambiguity.}
 \item{suffixes}{a character vector of 2 elements. When \code{x} and \code{y}
 both have a column with the same name, suffixes are appended
 to eliminate the ambiguity.}
+
+\item{\dots}{arguements for the \dQuote(on) clause.}
 }
 \description{
 Perform a \code{SQL}-like join on two \code{\link{dbi.table}}s
              that share the same underlying \code{\link{DBI}} connection.
              All columns of both \code{\link{dbi.table}}s are returned.
+
+A helper to make the \dQuote(on) argument.
 }
+\section{Functions}{
+\itemize{
+\item \code{on()}: 
+
+}}
+\section{Value a single call.}{
+NA
+}
+
