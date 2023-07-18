@@ -61,7 +61,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   by.y <- idy[by.y]
 
   on <- lapply(paste(by.y, by.x, sep = " == "), str2lang)
-  on <- as.call(c(list(as.name("list")), on))
+  on <- handy_andy(on)
 
   type <- if (!length(by.x)) {
             "cross"

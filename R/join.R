@@ -61,7 +61,15 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
   type <- match.arg(type, choices = names(JOINS))
 
   if (inherits(try(on, silent = TRUE), "try-error")) {
-    on <- substitute(on)
+    if (as.character((on <- substitute(on))[[1]]) == "on") {
+      on <- as.list(on)[-1]
+
+      if (any(idx <- !vapply(on, is.call, FALSE))) {
+        stop(sQuote(format(on[[which(idx)[1]]])), " is not a call")
+      }
+
+      on <- handy_andy(on)
+    }
   }
 
   if (!is.call(on)) {
@@ -83,10 +91,6 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
     if (!is.call(on)) {
       stop(sQuote("on"), " is not a call")
     } else {
-      if (as.character(on[[1]]) %in% c(".", "list")) {
-        on <- handy_andy(as.list(on)[-1])
-      }
-
       if (!any(duplicated(xy_sub)) && all(xy_sub == make.names(xy_sub))) {
         tmp_prefix <- lapply(paste0(prefixes[1], names(x)), as.name)
         names(tmp_prefix) <- paste(xy_sub[1], names(x), sep = ".")
@@ -204,18 +208,11 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
 #'
 #' @describeIn join
 #'
-#' @description A helper to make the \dQuote(on) argument.
+#' @description A helper to make the \dQuote{on} argument.
 #'
-#' @param \dots arguements for the \dQuote(on) clause.
+#' @param \dots arguements for the \dQuote{on} clause.
 #'
 #' @section Value a single call.
-
 on <- function(...) {
-  l <- as.list(match.call())[-1]
-
-  if (any(lidx <- !vapply(l, is.call, FALSE))) {
-    stop(sQuote(format(l[[which(lidx)[1]]])), " is not a call")
-  }
-
-  handy_andy(l)
+  NULL
 }

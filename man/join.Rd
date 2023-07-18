@@ -39,14 +39,14 @@ eliminate the ambiguity.}
 both have a column with the same name, suffixes are appended
 to eliminate the ambiguity.}
 
-\item{\dots}{arguements for the \dQuote(on) clause.}
+\item{\dots}{arguements for the \dQuote{on} clause.}
 }
 \description{
 Perform a \code{SQL}-like join on two \code{\link{dbi.table}}s
              that share the same underlying \code{\link{DBI}} connection.
              All columns of both \code{\link{dbi.table}}s are returned.
 
-A helper to make the \dQuote(on) argument.
+A helper to make the \dQuote{on} argument.
 }
 \section{Functions}{
 \itemize{
