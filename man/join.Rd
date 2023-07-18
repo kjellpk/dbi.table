@@ -11,8 +11,7 @@ join(
   type = "inner",
   on = on(),
   env = parent.frame(),
-  prefixes = c("x.", "y."),
-  suffixes = c(".x", ".y")
+  prefixes = c("x.", "y.")
 )
 
 on(...)
@@ -34,10 +33,6 @@ translated to \code{SQL}.)}
 \item{prefixes}{a character vector of 2 elements. When \code{x} and \code{y}
 both have a column with the same name, prefixes are used to
 eliminate the ambiguity.}
-
-\item{suffixes}{a character vector of 2 elements. When \code{x} and \code{y}
-both have a column with the same name, suffixes are appended
-to eliminate the ambiguity.}
 
 \item{\dots}{arguements for the \dQuote{on} clause.}
 }

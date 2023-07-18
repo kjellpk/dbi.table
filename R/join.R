@@ -28,16 +28,9 @@ JOINS <- c(inner = "INNER JOIN",
 #'                 both have a column with the same name, prefixes are used to
 #'                 eliminate the ambiguity.
 #'
-#' @param suffixes a character vector of 2 elements. When \code{x} and \code{y}
-#'                 both have a column with the same name, suffixes are appended
-#'                 to eliminate the ambiguity.
-#'
 #' @export
 join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
-                 prefixes = c("x.", "y."), suffixes = c(".x", ".y")) {
-
-  xy_sub <- c(x_sub <- deparse(substitute(x)), y_sub <- deparse(substitute(y)))
-
+                 prefixes = c("x.", "y.")) {
   if (!is.dbi.table(x)) {
     stop(sQuote("x"), " is not a dbi.table")
   }
@@ -72,15 +65,20 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
     }
   }
 
-  if (!is.call(on)) {
-    stop(sQuote("on"), " is not a call")
-  }
-
   if ((length(prefixes <- as.character(prefixes)) != 2) ||
       any(duplicated(prefixes))) {
     stop(sQuote("prefixes"), " is not a character vector ",
          "containing 2 distinct values")
   }
+
+  d <- rbind(data.table(source = "x",
+                        name = names(x),
+                        pname = paste0(prefixes[1], names(x))),
+              data.table(source = "y",
+                        name = names(y),
+                        pname = paste0(prefixes[2], names(y))))
+  d[, dup := name %chin% intersect(names(x), names(y))]
+  d[, out := ifelse(dup, pname, name)]
 
   if (is.null(on)) {
     if (type != "cross") {
@@ -90,45 +88,24 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
   } else {
     if (!is.call(on)) {
       stop(sQuote("on"), " is not a call")
-    } else {
-      if (!any(duplicated(xy_sub)) && all(xy_sub == make.names(xy_sub))) {
-        tmp_prefix <- lapply(paste0(prefixes[1], names(x)), as.name)
-        names(tmp_prefix) <- paste(xy_sub[1], names(x), sep = ".")
-        on <- sub_lang(on, cdefs = tmp_prefix)
+    }
 
-        tmp_prefix <- lapply(paste0(prefixes[2], names(y)), as.name)
-        names(tmp_prefix) <- paste(xy_sub[2], names(y), sep = ".")
-        on <- sub_lang(on, cdefs = tmp_prefix)
-      }
+    #partial eval on here
 
-      tmp_prefix <- lapply(paste0(prefixes[1], names(x)), as.name)
-      names(tmp_prefix) <- names(x)
-      on <- sub_lang(on, cdefs = tmp_prefix)
+    l <- lapply(d[dup == FALSE][["pname"]], as.name)
+    names(l) <- d[dup == FALSE][["name"]]
+    on <- sub_lang(on, l)
 
-      tmp_prefix <- lapply(paste0(prefixes[2], names(y)), as.name)
-      names(tmp_prefix) <- names(y)
-      on <- sub_lang(on, cdefs = tmp_prefix)
+    on_vars <- get_names(on)
+
+    if (any(idx <- (on_vars %in% d[dup == TRUE, unique(name)]))) {
+      stop("ambiguous use of ", sQuote(v <- on_vars[idx][1]), " in ",
+          sQuote("on"), "; use ", sQuote(paste0(prefixes[1], v)),
+          " to refer to the ", sQuote(v), " in ", sQuote("x"), " and ",
+          sQuote(paste0(prefixes[2], v)), " to refer to the ", sQuote(v),
+          " in ", sQuote("y"))
     }
   }
-
-  on_vars <- get_names(on)
-  dups <- intersect(names(x), names(y))
-
-  if (any(idx <- (on_vars %in% dups))) {
-    stop("ambiguous use of ", sQuote(v <- on_vars[idx][1]), " in ",
-         sQuote("on"), "; use ", sQuote(paste0(prefixes[1], v)),
-         " to refer to the ", sQuote(v), " in ", sQuote(x_sub), " and ",
-         sQuote(paste0(prefixes[2], v)), " to refer to the ", sQuote(v),
-         " in ", sQuote(y_sub))
-  }
-
-  suffixed_names_x <- names(x)
-  idx <- (suffixed_names_x %in% dups)
-  suffixed_names_x[idx] <- paste0(suffixed_names_x[idx], suffixes[1])
-  suffixed_names_y <- names(y)
-  idx <- (suffixed_names_y %in% dups)
-  suffixed_names_y[idx] <- paste0(suffixed_names_y[idx], suffixes[2])
-  suffixed_names <- c(suffixed_names_x, suffixed_names_y)
 
   names(x) <- paste0(prefixes[1], names(x))
   names(y) <- paste0(prefixes[2], names(y))
@@ -146,18 +123,8 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
   y_data_source <- get_data_source(y)
   y_fields <- get_fields(y)
 
-  if (nrow(y_data_source) > 1) {
-    stop("case not handled yet") #shouldn't happen ever
-  }
-
   if (y_data_source$id_name %in% x_data_source$id_name) {
-    yid <- unique_table_name()
-
-    if (yid %chin% x_data_source$id_name) {
-      stop("self join failed") #Could this ever happen??? Really???
-    }
-
-    y_data_source$id_name <- yid
+    y_data_source$id_name <- yid <- unique_table_name()
     y_fields$id_name <- yid
   }
 
@@ -196,7 +163,7 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
   ctes <- c(x_ctes, y_ctes)
   ctes <- ctes[!duplicated(names(ctes))]
 
-  names(xy) <- suffixed_names
+  names(xy) <- d$out
 
   dbi_table_object(xy, hash_connection(conn), data_source, fields,
                    ctes = ctes)
