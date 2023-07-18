@@ -1,6 +1,16 @@
 ################################################################################
-# Compact Storage for Schema, etc.
-
+#' Compact Data Frame
+#'
+#' @description Store database \emph{Info} in a compact data structure
+#'              indexed by an \code{\link[DBI]{Id}}.
+#'
+#' @param x a \code{\link{data.frame}} where one or more of the columns
+#'          identifies a \emph{table}.
+#'
+#' @param idcols a character vector specifying the subset of the columns
+#'               of \code{x} that will be passed to \code{\link[DBI]{Id}}.
+#'
+#' @export
 split_by_id <- function(x, idcols) {
   keep <- setdiff(names(x), idcols)
   x <- split(x, f = x[, idcols])
@@ -21,8 +31,22 @@ split_by_id <- function(x, idcols) {
 
 
 ################################################################################
-# dbListSchema
-
+#' List Database Schema
+#'
+#' @description List a database schema by table including column names.
+#'
+#' @param conn a \code{DBIConnection}.
+#'
+#' @param prefix an \code{\link[DBI]{Id}} specifying fully qualified path
+#'               in the database's namespace, or NULL.
+#'
+#' @param \dots additional arguements.
+#'
+#' @section Value: a compact representation of the database schema.
+#'
+#' @rdname dbListSchema
+#'
+#' @export
 setGeneric(name = "dbListSchema",
            def = function(conn, prefix = NULL, ...) {
                    standardGeneric("dbListSchema")
@@ -34,7 +58,9 @@ setGeneric(name = "dbListSchema",
 
 
 
-dbListSchema_default <- function(conn, prefix = NULL, ...) {
+setMethod(f = "dbListSchema",
+          signature = c(conn = "DBIConnection"),
+          definition = function(conn, prefix = NULL, ...) {
 
   #' @importFrom DBI dbListObjects
   schema <- dbListObjects(conn, prefix = prefix, ...)
@@ -45,59 +71,25 @@ dbListSchema_default <- function(conn, prefix = NULL, ...) {
   fields <- lapply(schema$id, function(u, v) dbListFields(v, u), v = conn)
 
   cbind(schema, column_names = I(fields))
-}
+})
 
 
 
-setMethod(f = "dbListSchema",
-          signature = c(conn = "DBIConnection"),
-          definition = dbListSchema_default)
-
-
-
-dbListSchema_Microsoft_SQL_Server <- function(conn, prefix = NULL, ...) {
-
-  if (!is.null(prefix)) {
-    components <- prefix@name
-  } else {
-    components <- character()
-  }
-
-  if (is.na(catalog <- components["catalog"])) {
-    #' @importFrom DBI dbGetInfo
-    catalog <- dbGetInfo(conn)$dbname
-  }
-
-  q1 <- "SELECT \"TABLE_CATALOG\" AS \"catalog\",
-                \"TABLE_SCHEMA\" AS \"schema\",
-                \"TABLE_NAME\" AS \"table\",
-                \"COLUMN_NAME\" AS \"column_names\"
-           FROM %s.\"INFORMATION_SCHEMA\".\"COLUMNS\""
-
-  if (!is.na(schema <- components["schema"])) {
-    q1 <- paste0(q1, "\nWHERE \"TABLE_SCHEMA\" = '", schema, "'")
-  }
-
-  q1 <- paste0(q1, "\nORDER BY \"TABLE_CATALOG\", \"TABLE_SCHEMA\", \"TABLE_NAME\", \"ORDINAL_POSITION\"")
-  #' @importFrom DBI dbQuoteIdentifier
-  q1 <- sprintf(q1, dbQuoteIdentifier(conn, catalog))
-
-  #' @importFrom DBI dbGetQuery
-  split_by_id(dbGetQuery(conn, q1), c("catalog", "schema", "table"))
-}
-
-
-
-#' @importFrom methods setMethod
-setMethod(f = "dbListSchema",
-          signature = c(conn = "Microsoft SQL Server"),
-          definition = dbListSchema_Microsoft_SQL_Server)
-
-
-
-################################################################################
-# dbForeignKeys
-
+#' Foreign Keys
+#'
+#' @description List the foreign keys of a database table.
+#'
+#' @param conn a \code{DBIConnection}.
+#'
+#' @param id an \code{\link[DBI]{Id}} specifying a database table.
+#'
+#' @param \dots additional arguements.
+#'
+#' @section Value: a compact representation of the foreign keys.
+#'
+#' @rdname dbListForeignKeys
+#'
+#' @export
 setGeneric(name = "dbForeignKeys",
            valueClass = "data.frame",
            def = function(conn, id, ...) standardGeneric("dbForeignKeys"))
@@ -106,64 +98,9 @@ setGeneric(name = "dbForeignKeys",
 
 
 
-dbForeignKeys_default <- function(conn, id, ...) {
-  data.frame(id = I(list()), primary = I(list()), foreign = I(list()))
-}
-
-
-
 #' @importFrom methods setMethod
 setMethod(f = "dbForeignKeys",
           signature = c(conn = "DBIConnection", id = "Id"),
-          definition = dbForeignKeys_default)
-
-
-
-dbForeignKeys_SQLiteConnection <- function(conn, id, ...) {
-
-  query <- "SELECT `table`, `to` AS `primary`, `from` AS `foreign`
-              FROM pragma_foreign_key_list(%s)
-             ORDER BY `id`, `seq`;"
-  #' @importFrom DBI dbQuoteLiteral
-  query <- sprintf(query, dbQuoteLiteral(conn, id@name["table"]))
-
-  #' @importFrom DBI dbGetQuery
-  split_by_id(dbGetQuery(conn, query), "table")
-}
-
-
-
-#' @importFrom methods setMethod
-setMethod(f = "dbForeignKeys",
-          signature = c(conn = "SQLiteConnection", id = "Id"),
-          definition = dbForeignKeys_SQLiteConnection)
-
-
-
-dbForeignKeys_Microsoft_SQL_Server <- function(conn, id, ...) {
-  components <- id@name
-
-  xref <- c(catalog = "@fktable_qualifier",
-            schema = "@fktable_owner",
-            table = "@fktable_name")
-
-  names(components) <- xref[names(components)]
-
-  #' @importFrom DBI dbQuoteString
-  statement <- paste(names(components), dbQuoteString(conn, components), sep = " = ")
-  statement <- paste("EXEC sp_fkeys", paste(statement, collapse = ", "))
-
-  #' @importFrom DBI dbGetQuery
-  fk <- dbGetQuery(conn, statement)
-  fk <- fk[, c("PKTABLE_QUALIFIER", "PKTABLE_OWNER", "PKTABLE_NAME", "PKCOLUMN_NAME", "FKCOLUMN_NAME")]
-  names(fk) <- c("catalog", "schema", "table", "primary", "foreign")
-
-  split_by_id(fk, c("catalog", "schema", "table"))
-}
-
-
-
-#' @importFrom methods setMethod
-setMethod(f = "dbForeignKeys",
-          signature = c(conn = "Microsoft SQL Server", id = "Id"),
-          definition = dbForeignKeys_Microsoft_SQL_Server)
+          definition = function(conn, id, ...) {
+  data.frame(id = I(list()), primary = I(list()), foreign = I(list()))
+})
