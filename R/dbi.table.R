@@ -6,22 +6,6 @@
 globalVariables(c("."), "dbi.table", add = TRUE)
 
 
-.onLoad <- function(libname, pkgname) {
-
-  if ("odbc" %in% row.names(installed.packages())) {
-    # Missing in odbc
-    #' @importFrom methods setMethod
-
-    setMethod("dbListFields", signature("Microsoft SQL Server", "Id"),
-              function(conn, name, ...) {
-                odbc::odbcConnectionColumns(conn, name, ...)$name
-              }
-    )
-  }
-
-  NULL
-}
-
 
 #' Create a \code{dbi.table} accessible via a \code{DBI} connection
 #'

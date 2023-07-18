@@ -6,10 +6,6 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     stop(sQuote("x"), " is not a ", sQuote("dbi.table"))
   }
 
-  if (missing(y) && dbi.table_is_simple(x)) {
-    return(auto_merge(x))
-  }
-
   if (!is.dbi.table(y)) {
     stop(sQuote("y"), " is not a ", sQuote("dbi.table"))
   }
@@ -114,22 +110,4 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   attributes(xy) <- a
 
   xy
-}
-
-
-
-auto_merge <- function(x) {
-  conn <- get_connection(x)
-  id <- get_data_source(x)[[1, "id"]]
-
-  fk <- dbForeignKeys(conn, id)
-
-  for (i in seq_len(nrow(fk))) {
-    x <- merge(x, dbi.table(conn, fk[[i, "id"]]),
-               by.x = fk[[i, "foreign"]],
-               by.y = fk[[i, "primary"]],
-               all.x = TRUE)
-  }
-
-  x
 }

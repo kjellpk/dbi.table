@@ -34,7 +34,17 @@
 dbi.attach <- function(what, pos = 2L, name = db_short_name(what, pkg = TRUE),
                        warn.conflicts = FALSE, ..., prefix = NULL) {
   hash <- register_connection(what)
-  schema <- dbListSchema(get_connection_from_hash(hash), prefix = prefix, ...)
+  conn <- get_connection_from_hash(hash)
+
+  #' @importFrom DBI dbListObjects
+  schema <- dbListObjects(conn, prefix = prefix, ...)
+  schema <- schema[!schema$is_prefix, "table", drop = FALSE]
+  names(schema) <- "id"
+
+  #' @importFrom DBI dbListFields
+  fields <- lapply(schema$id, function(u, v) dbListFields(v, u), v = conn)
+
+  schema <- cbind(schema, column_names = I(fields))
 
   # From ?attach: "In programming, functions should not change the search
   #                path unless that is their purpose."
