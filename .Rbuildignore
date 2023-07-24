@@ -2,3 +2,4 @@
 ^README\.Rmd$
 ^dbi\.table\.code-workspace$
 ^scratch\.R$
+^\.github$
