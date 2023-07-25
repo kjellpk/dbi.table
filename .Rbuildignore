@@ -1,5 +1,8 @@
+^renv$
+^renv\.lock$
 ^\.vscode$
 ^README\.Rmd$
+^README\.md$
 ^dbi\.table\.code-workspace$
 ^scratch\.R$
 ^\.github$
