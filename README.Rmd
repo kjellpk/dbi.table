@@ -1,1 +1,12 @@
+---
+title: "dbi.table"
+author: "Kjell Konis"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
 #This is my README File.
