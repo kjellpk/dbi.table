@@ -4,7 +4,7 @@
 # `dbi.table`
 
 Query and manipulate database objects (e.g., tables, views) accessible
-over a `DBI` using `data.table`-like syntax.
+over a `DBI` connection using `data.table`-like syntax.
 
 ## Why `dbi.table`?
 
