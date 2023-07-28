@@ -15,3 +15,20 @@ over a `DBI` connection using `data.table`-like syntax.
 - no API lifecycle management
 - just me
 - includes features
+
+## Test knitr on github
+
+``` r
+if (require(dbi.table)) {
+  print("dbi.table available")
+} else {
+  print("dbi.table notavailable")
+}
+```
+
+    ## Loading required package: dbi.table
+
+    ## Warning in library(package, lib.loc = lib.loc, character.only = TRUE,
+    ## logical.return = TRUE, : there is no package called 'dbi.table'
+
+    ## [1] "dbi.table notavailable"
