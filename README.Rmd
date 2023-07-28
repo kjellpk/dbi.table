@@ -22,3 +22,13 @@ Query and manipulate database objects (e.g., tables, views) accessible over a
 * no API lifecycle management
 * just me
 * includes features
+
+## Test knitr on github
+
+```{r}
+if (require(dbi.table)) {
+  print("dbi.table available")
+} else {
+  print("dbi.table notavailable")
+}
+```
