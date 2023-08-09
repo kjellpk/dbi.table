@@ -27,7 +27,7 @@ paren <- function(x) {
 #' @description View a \code{\link{dbi.table}} as a SQL query.
 #'
 #' @param x a \code{\link{dbi.table}}.
-#' @export 
+#' @export
 csql <- function(x) {
   cat(paste0("\n", write_sql(x), "\n\n"))
 }

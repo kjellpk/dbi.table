@@ -71,6 +71,9 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
          "containing 2 distinct values")
   }
 
+  # Define to avoid spurious R CMD check note
+  dup <- name <- out <- pname <- NULL
+
   d <- rbind(data.table(source = "x",
                         name = names(x),
                         pname = paste0(prefixes[1], names(x))),
