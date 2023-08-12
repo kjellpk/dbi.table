@@ -128,9 +128,18 @@ write_order_by <- function(x) {
   conn <- get_connection(x)
 
   if (length(order_by <- get_order_by(x))) {
+
+    call_to_minus <- function(u) {
+      is.call(u) && (u[[1]] == as.name("-"))
+    }
+
+    desc <- vapply(order_by, call_to_minus, FALSE)
+    order_by[desc] <- lapply(order_by[desc], `[[`, i = 2)
+
     #' @importFrom dbplyr translate_sql_
     order_by <- translate_sql_(order_by, con = conn, window = FALSE)
     order_by <- sub_db_identifier(order_by, conn, get_fields(x))
+    order_by[desc] <- paste(order_by[desc], "DESC")
     paste(pad_left("ORDER BY"), paste(order_by, collapse = ", "))
   } else {
     NULL
