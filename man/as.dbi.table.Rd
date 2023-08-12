@@ -9,7 +9,9 @@ as.dbi.table(x, conn, row.names = FALSE)
 \arguments{
 \item{x}{an \R object coercable to a \code{\link[base]{data.frame}}.}
 
-\item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}}.}
+\item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}}.
+Alternatively, \code{conn} may be a \code{\link{dbi.table}}; in
+this case the handle associated with \code{conn} is used.}
 
 \item{row.names}{see \code{row.names} in \code{\link[DBI]{dbWriteTable}}.}
 }
