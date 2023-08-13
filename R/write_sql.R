@@ -129,11 +129,11 @@ write_order_by <- function(x) {
 
   if (length(order_by <- get_order_by(x))) {
 
-    call_to_minus <- function(u) {
-      is.call(u) && (u[[1]] == as.name("-"))
+    is_unary_minus <- function(u) {
+      is.call(u) && (u[[1]] == as.name("-")) && (length(u) == 2)
     }
 
-    desc <- vapply(order_by, call_to_minus, FALSE)
+    desc <- vapply(order_by, is_unary_minus, FALSE)
     order_by[desc] <- lapply(order_by[desc], `[[`, i = 2)
 
     #' @importFrom dbplyr translate_sql_
