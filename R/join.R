@@ -8,28 +8,29 @@ JOINS <- c(inner = "INNER JOIN",
 #' Join dbi.tables
 #'
 #' @description Perform a \code{SQL}-like join on two \code{\link{dbi.table}}s
-#'              that share the same underlying \code{\link{DBI}} connection.
-#'              All columns of both \code{\link{dbi.table}}s are returned.
+#'              that share the same underlying \code{\link[DBI]{DBI}}
+#'              connection. All columns of both \code{\link{dbi.table}}s are
+#'              returned.
 #'
 #' @param x,y \code{\link{dbi.table}}s to join. \code{x} and \code{y} must
-#'            reference objects on the same \code{\link{DBI}} connection.
+#'            reference objects on the same \code{\link[DBI]{DBI}} connection.
 #'
 #' @param type one of \dQuote{inner}, \dQuote{left}, \dQuote{right},
 #'             \dQuote{outer}, or \dQuote{cross}.
 #'
-#' @param on a \code{\link{call}} to translate to the \code{SQL} \code{ON}
+#' @param on a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
 #'           clause.
 #'
 #' @param env an environment, \code{on} is partially evaluated in \code{env}
 #'            when this function is evaluated (i.e., not when the join is
 #'            translated to \code{SQL}.)
 #'
-#' @param prefixes a character vector of 2 elements. When \code{x} and \code{y}
+#' @param prefixes a 2-element character vector. When \code{x} and \code{y}
 #'                 both have a column with the same name, prefixes are used to
 #'                 eliminate the ambiguity.
 #'
 #' @export
-join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
+join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
                  prefixes = c("x.", "y.")) {
   if (!is.dbi.table(x)) {
     stop(sQuote("x"), " is not a dbi.table")
@@ -53,17 +54,23 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
 
   type <- match.arg(type, choices = names(JOINS))
 
-  if (inherits(try(on, silent = TRUE), "try-error")) {
-    if (as.character((on <- substitute(on))[[1]]) == "on") {
-      on <- as.list(on)[-1]
+  on_sub <- substitute(on)
 
-      if (any(idx <- !vapply(on, is.call, FALSE))) {
-        stop(sQuote(format(on[[which(idx)[1]]])), " is not a call")
+  if (inherits(on <- try(on, silent = TRUE), "try-error")) {
+    if (on_sub[[1]] == as.name(".") || on_sub[[1]] == as.name("list")) {
+      if (length(on <- as.list(on_sub)[-1]) > 1) {
+        on <- handy_andy(on)
+      } else {
+        on <- on[[1]]
       }
-
+    }
+  } else {
+    if (is.list(on) && all(vapply(on, is.call, FALSE))) {
       on <- handy_andy(on)
     }
   }
+
+  stopifnot(is.null(on) || is.call(on))
 
   if ((length(prefixes <- as.character(prefixes)) != 2) ||
       any(duplicated(prefixes))) {
@@ -182,7 +189,14 @@ join <- function(x, y, type = "inner", on = on(), env = parent.frame(),
 #'
 #' @param \dots arguements for the \dQuote{on} clause.
 #'
-#' @section Value a single call.
+#' @section Value a list of \code{\link[base]{call}}s.
+#' @export
 on <- function(...) {
-  NULL
+  m <- as.list(match.call())[-1]
+
+  if (any(not_a_call <- !vapply(m, is.call, FALSE))) {
+    stop(sQuote(format(m[not_a_call][[1]])), " is not a call")
+  }
+
+  m
 }

@@ -9,7 +9,7 @@ join(
   x,
   y,
   type = "inner",
-  on = on(),
+  on = NULL,
   env = parent.frame(),
   prefixes = c("x.", "y.")
 )
@@ -18,19 +18,19 @@ on(...)
 }
 \arguments{
 \item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must
-reference objects on the same \code{\link{DBI}} connection.}
+reference objects on the same \code{\link[DBI]{DBI}} connection.}
 
 \item{type}{one of \dQuote{inner}, \dQuote{left}, \dQuote{right},
 \dQuote{outer}, or \dQuote{cross}.}
 
-\item{on}{a \code{\link{call}} to translate to the \code{SQL} \code{ON}
+\item{on}{a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
 clause.}
 
 \item{env}{an environment, \code{on} is partially evaluated in \code{env}
 when this function is evaluated (i.e., not when the join is
 translated to \code{SQL}.)}
 
-\item{prefixes}{a character vector of 2 elements. When \code{x} and \code{y}
+\item{prefixes}{a 2-element character vector. When \code{x} and \code{y}
 both have a column with the same name, prefixes are used to
 eliminate the ambiguity.}
 
@@ -38,8 +38,9 @@ eliminate the ambiguity.}
 }
 \description{
 Perform a \code{SQL}-like join on two \code{\link{dbi.table}}s
-             that share the same underlying \code{\link{DBI}} connection.
-             All columns of both \code{\link{dbi.table}}s are returned.
+             that share the same underlying \code{\link[DBI]{DBI}}
+             connection. All columns of both \code{\link{dbi.table}}s are
+             returned.
 
 A helper to make the \dQuote{on} argument.
 }
@@ -48,7 +49,7 @@ A helper to make the \dQuote{on} argument.
 \item \code{on()}: 
 
 }}
-\section{Value a single call.}{
+\section{Value a list of \code{\link[base]{call}}s.}{
 NA
 }
 
