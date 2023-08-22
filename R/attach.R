@@ -31,18 +31,29 @@
 #' @seealso \code{\link[base]{attach}}
 #'
 #' @export
-dbi.attach <- function(what, pos = 2L, name = db_short_name(what, pkg = TRUE),
-                       warn.conflicts = FALSE, ..., prefix = NULL) {
-  hash <- register_connection(what)
-  conn <- get_connection_from_hash(hash)
+dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
+                       ..., prefix = NULL) {
+  recon <- NULL
+  if (is.function(what)) {
+    recon <- what
+    what <- what()
+  }
+
+  if (!isa(what, "DBIConnection")) {
+    stop(sQuote("what"), " is not a ", sQuote("DBIConnection"))
+  }
+
+  if (is.null(name)) {
+    name <- db_short_name(what, pkg = TRUE)
+  }
 
   #' @importFrom DBI dbListObjects
-  schema <- dbListObjects(conn, prefix = prefix, ...)
+  schema <- dbListObjects(what, prefix = prefix, ...)
   schema <- schema[!schema$is_prefix, "table", drop = FALSE]
   names(schema) <- "id"
 
   #' @importFrom DBI dbListFields
-  fields <- lapply(schema$id, function(u, v) dbListFields(v, u), v = conn)
+  fields <- lapply(schema$id, function(u, v) dbListFields(v, u), v = what)
 
   schema <- cbind(schema, column_names = I(fields))
 
@@ -52,12 +63,15 @@ dbi.attach <- function(what, pos = 2L, name = db_short_name(what, pkg = TRUE),
   # The intended purpose of dbi.attach is to change the search path. The call
   # to attach is masked here to avoid the unsuppressible R CMD check Note.
 
-  fun <- get(paste(letters[c(1,20,20,1,3,8)], collapse = ""), "package:base")
+  fun <- get("attach", "package:base")
   e <- fun(NULL, pos = pos, name = name, warn.conflicts = warn.conflicts)
+
+  assign(".dbi", what, envir = e)
+  assign(".recon", recon, envir = e)
 
   for (i in seq_len(nrow(schema))) {
     dbit_name <- schema[[i, "id"]]@name[["table"]]
-    dbit <- new_dbi_table(hash, schema[[i, "id"]], schema[[i, "column_names"]])
+    dbit <- new_dbi_table(e, schema[[i, "id"]], schema[[i, "column_names"]])
 
     if (!is.na(dbit_name)) {
       assign(dbit_name, dbit, envir = e)

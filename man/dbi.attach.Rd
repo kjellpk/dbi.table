@@ -7,7 +7,7 @@
 dbi.attach(
   what,
   pos = 2L,
-  name = db_short_name(what, pkg = TRUE),
+  name = NULL,
   warn.conflicts = FALSE,
   ...,
   prefix = NULL

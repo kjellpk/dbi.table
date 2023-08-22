@@ -38,7 +38,7 @@ as_cte <- function(x) {
   cte <- list(x)
   names(cte) <- id_name
 
-  dbi_table_object(v, get_hash(x), data_source, fields,
+  dbi_table_object(v, attr(x, "conn", exact = TRUE), data_source, fields,
                    order_by = order_by, ctes = c(ctes, cte))
 }
 

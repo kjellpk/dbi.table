@@ -1,10 +1,7 @@
 #' @import data.table
 
 
-
-#' @importFrom utils globalVariables
-globalVariables(c("."), "dbi.table", add = TRUE)
-
+. <- NULL
 
 
 #' Create a \code{dbi.table} accessible via a \code{DBI} connection
@@ -18,11 +15,8 @@ globalVariables(c("."), "dbi.table", add = TRUE)
 #'
 #' @export
 dbi.table <- function(conn, id) {
-  hash <- register_connection(conn)
-
   #' @importFrom DBI Id
-  #' @importFrom methods is
-  if (!is(id, "Id")) {
+  if (!isa(id, "Id")) {
     if (is.character(id) && length(id) == 1L) {
       id <- Id(table = id)
     } else {
@@ -31,18 +25,16 @@ dbi.table <- function(conn, id) {
   }
 
   #' @importFrom DBI dbExistsTable
-  if (!dbExistsTable(get_connection_from_hash(hash), id)) {
+  if (!dbExistsTable(conn, id)) {
     stop(sQuote("id"), " not found on connection")
   }
 
-  new_dbi_table(hash, id)
+  new_dbi_table(conn, id)
 }
 
 
 
-new_dbi_table <- function(hash, id, fields = NULL) {
-  conn <- get_connection_from_hash(hash)
-
+new_dbi_table <- function(conn, id, fields = NULL) {
   id_name <- id@name[["table"]]
   data_source <- data.frame(clause = "FROM",
                             id = I(list(id)),
@@ -63,32 +55,31 @@ new_dbi_table <- function(hash, id, fields = NULL) {
   x <- lapply(fields$internal_name, as.name)
   names(x) <- fields$field
 
-  dbi_table_object(x, hash, data_source, fields)
+  dbi_table_object(x, conn, data_source, fields)
 }
 
 
 
-dbi_table_object <- function(cdefs, hash, data_source, fields,
+dbi_table_object <- function(cdefs, conn, data_source, fields,
                              distinct = FALSE, where = list(),
                              group_by = list(), order_by = list(),
                              ctes = list()) {
 
-  structure(cdefs, hash = hash, data_source = data_source, fields = fields,
+  structure(cdefs, conn = conn, data_source = data_source, fields = fields,
             distinct = distinct, where = where, group_by = group_by,
             order_by = order_by, ctes = ctes, class = "dbi.table")
 }
 
 
 
-#accessor methods
-get_hash <- function(x) {
-  attr(x, "hash", exact = TRUE)
-}
-
-
-
 get_connection <- function(x) {
-  get_connection_from_hash(get_hash(x))
+  if (is.environment(conn <- attr(x, "conn"))) {
+    conn <- conn[[".dbi"]]
+  }
+
+  stopifnot(isa(conn, "DBIConnection"))
+
+  conn
 }
 
 
@@ -172,15 +163,20 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   res <- try(dbSendQuery(get_connection(x), write_sql(x)), silent = TRUE)
 
   if (inherits(res, "try-error")) {
+    #' @importFrom DBI dbIsValid
     if (!dbIsValid(get_connection(x))) {
-      reconnect(get_hash(x))
+      if (!reconnect(x)) {
+        stop("database connection not valid")
+      }
     }
 
+    #' @importFrom DBI dbSendQuery
     res <- dbSendQuery(get_connection(x), write_sql(x))
   }
 
   #' @importFrom DBI dbClearResult
   on.exit(dbClearResult(res))
+
   #' @importFrom DBI dbFetch
   setDT(dbFetch(res, n = n))
 }

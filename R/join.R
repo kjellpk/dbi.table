@@ -120,8 +120,8 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   names(x) <- paste0(prefixes[1], names(x))
   names(y) <- paste0(prefixes[2], names(y))
 
-  if (get_hash(x) == get_hash(y)) {
-    conn <- get_connection(x)
+  if (identical(attr(x, "conn", exact = TRUE), attr(y, "conn", exact = TRUE))) {
+    conn <- attr(x, "conn", exact = TRUE)
   } else {
     stop(sQuote("x"), " and ", sQuote("y"), " do not share the same ",
          sQuote("DBI"), " connection")
@@ -175,8 +175,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
 
   names(xy) <- d$out
 
-  dbi_table_object(xy, hash_connection(conn), data_source, fields,
-                   ctes = ctes)
+  dbi_table_object(xy, conn, data_source, fields, ctes = ctes)
 }
 
 

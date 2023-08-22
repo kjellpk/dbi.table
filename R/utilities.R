@@ -1,13 +1,26 @@
-db_short_name <- function(x, pkg = FALSE) {
-  if (is_hash(x)) {
-    x <- get_connection_from_hash(x)
+reconnect <- function(what) {
+  if (is.dbi.table(what)) {
+    what <- attr(what, "conn")
   }
 
-  #' @importFrom DBI dbGetInfo
-  #' @importFrom tools file_path_sans_ext
-  n <- file_path_sans_ext(basename(dbGetInfo(x)$dbname))
+  if (is.environment(what) && !is.null(recon <- what$.recon)) {
+    what$.dbi <- recon()
+    warning("reconnecting to database...")
 
-  if (pkg && !is.null(pkg <- attr(class(x), "package", exact = TRUE))) {
+    #' @importFrom DBI dbIsValid
+    return(dbIsValid(what$dbi))
+  }
+
+  FALSE
+}
+
+
+
+db_short_name <- function(conn, pkg = FALSE) {
+  #' @importFrom DBI dbGetInfo
+  n <- sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(dbGetInfo(conn)$dbname))
+
+  if (pkg && !is.null(pkg <- attr(class(conn), "package", exact = TRUE))) {
     n <- paste(pkg, n, sep = ":")
   }
 
