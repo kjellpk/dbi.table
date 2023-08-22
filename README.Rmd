@@ -1,0 +1,55 @@
+---
+title: "dbi.table"
+output: md_document
+---
+
+`dbi.table` generates and executes SQL queries from `data.table` syntax.
+
+
+## Why `dbi.table`?
+
+* use `data.table` syntax to fetch `data.table`s from a database over a `DBI`
+  connection
+* attach databases to the search path using `dbi.attach`
+
+
+## Installation
+
+```{r, eval = FALSE}
+install.packages("data.table")
+```
+
+## Usage
+
+First, load the package.
+
+```{r, message = FALSE}
+library(dbi.table)
+```
+
+Start with an arbitrary `DBI` connection (the function `ex_chinook` returns a 
+connection to the Chinook sample data that is included in the `dbi.table`
+package).
+
+```{r}
+(conn <- ex_chinook())
+```
+
+As you can see, bog-standard `DBI` connection - in this case facilitated by
+`RSQLite`.
+
+Create a `dbi.table` corresponding to the `Album` table in the Chinook database.
+
+```{r}
+library(DBI) # For Id
+(Album <- dbi.table(conn, Id(table = "Album")))
+```
+
+
+
+
+
+
+```{r, include = FALSE, results = "hide"}
+dbDisconnect(conn)
+```
