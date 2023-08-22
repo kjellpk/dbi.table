@@ -8,7 +8,7 @@
 
 ## Installation
 
-    install.packages("data.table")
+    devtools::install_github("kjellpk/dbi.table")
 
 ## Usage
 
@@ -21,6 +21,8 @@ returns a connection to the Chinook sample data that is included in the
 `dbi.table` package).
 
     (conn <- ex_chinook())
+
+    ## Loading required namespace: RSQLite
 
     ## <SQLiteConnection>
     ##   Path: /Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/library/dbi.table/example_files/Chinook_Sqlite.sqlite

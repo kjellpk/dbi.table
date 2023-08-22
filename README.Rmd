@@ -16,7 +16,7 @@ output: md_document
 ## Installation
 
 ```{r, eval = FALSE}
-install.packages("data.table")
+devtools::install_github("kjellpk/dbi.table")
 ```
 
 ## Usage
