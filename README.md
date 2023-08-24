@@ -1,10 +1,8 @@
-`dbi.table` generates and executes SQL queries from `data.table` syntax.
+# `dbi.table`
 
-## Why `dbi.table`?
-
--   use `data.table` syntax to fetch `data.table`s from a database over
-    a `DBI` connection
--   attach databases to the search path using `dbi.attach`
+Query database objects (e.g., tables and views) accessible over a `DBI`
+connection using `data.table`-like syntax. Access individual objects
+using `dbi.table` or attach an entire schema using `dbi.attach`.
 
 ## Installation
 
@@ -16,26 +14,16 @@ First, load the package.
 
     library(dbi.table)
 
-Start with an arbitrary `DBI` connection (the function `ex_chinook`
-returns a connection to the Chinook sample data that is included in the
-`dbi.table` package).
+Open a `DBI` connection to the Chinook database included in the package.
 
-    (conn <- ex_chinook())
+    db_path <- file.path(system.file(package = "dbi.table"),
+                         "example_files",
+                         "Chinook_Sqlite.sqlite")
+    chinook <- DBI::dbConnect(RSQLite::SQLite(), db_path)
 
-    ## Loading required namespace: RSQLite
+Create a `dbi.table` using the `Album` table in the Chinook database.
 
-    ## <SQLiteConnection>
-    ##   Path: /Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/library/dbi.table/example_files/Chinook_Sqlite.sqlite
-    ##   Extensions: TRUE
-
-As you can see, bog-standard `DBI` connection - in this case facilitated
-by `RSQLite`.
-
-Create a `dbi.table` corresponding to the `Album` table in the Chinook
-database.
-
-    library(DBI) # For Id
-    (Album <- dbi.table(conn, Id(table = "Album")))
+    (Album <- dbi.table(chinook, DBI::Id(table = "Album")))
 
     ## <Chinook_Sqlite> Album 
     ##  AlbumId                                 Title ArtistId
@@ -45,3 +33,33 @@ database.
     ##        4                     Let There Be Rock        1
     ##        5                              Big Ones        3
     ## ---
+
+The local object `Album` is a `dbi.table`, a data structure that
+generates and executes queries on the remote (SQLite) table `Album`.
+`dbi.table`s use the same syntax as `data.tables`. For example, the
+following command selects the `AlbumId` and `Title` fields from the
+remote table `Album` where `AlbumId` is less than 100 and equal to
+`ArtistId`.
+
+    (x <- Album[AlbumId < 100 & AlbumId == ArtistId, .(AlbumId, Title)])
+
+    ## <Chinook_Sqlite> Album 
+    ##  AlbumId                                 Title
+    ##        1 For Those About To Rock We Salute You
+    ##        2                     Balls to the Wall
+    ##       58                   Come Taste The Band
+
+By default, the preview is the first 5 rows returned by the dbms (in
+this case SQLite). There are only 3 records that satify the query so all
+results were returned.
+
+The local object `x` is not the data, rather it is another `dbi.table`
+corresponding to the specific query. Use empty square brackets (`[]`) or
+the `as.data.table` function to fetch the results set as a `data.table`.
+
+    x[]
+
+    ##    AlbumId                                 Title
+    ## 1:       1 For Those About To Rock We Salute You
+    ## 2:       2                     Balls to the Wall
+    ## 3:      58                   Come Taste The Band
