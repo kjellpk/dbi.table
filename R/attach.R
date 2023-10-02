@@ -69,14 +69,25 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   assign(".dbi", what, envir = e)
   assign(".recon", recon, envir = e)
 
+  reg.finalizer(e, dbi_attach_finalizer, onexit = TRUE)
+
   for (i in seq_len(nrow(schema))) {
     dbit_name <- schema[[i, "id"]]@name[["table"]]
     dbit <- new_dbi_table(e, schema[[i, "id"]], schema[[i, "column_names"]])
 
     if (!is.na(dbit_name)) {
       assign(dbit_name, dbit, envir = e)
+      lockBinding(dbit_name, e)
     }
   }
 
   invisible(e)
+}
+
+
+
+dbi_attach_finalizer <- function(e) {
+  e$.recon <- NULL
+  #' @importFrom DBI dbDisconnect
+  dbDisconnect(e$.dbi)
 }
