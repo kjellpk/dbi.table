@@ -53,7 +53,7 @@ new_dbi_table <- function(conn, id, fields = NULL) {
                        field = fields)
 
   x <- lapply(fields$internal_name, as.name)
-  names(x) <- fields$field
+  names(x) <- copy(fields$field)
 
   dbi_table_object(x, conn, data_source, fields)
 }
