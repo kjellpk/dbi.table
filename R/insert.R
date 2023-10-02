@@ -20,12 +20,10 @@ as.dbi.table <- function(x, conn, row.names = FALSE) {
   table_name <- gsub(".", "_", deparse(substitute(x)), fixed = TRUE)
 
   if (is.dbi.table(conn)) {
-    conn <- get_hash(conn)
+    conn <- get_connection(conn)
   }
 
-  if (is_hash(conn)) {
-    conn <- get_connection_from_hash(conn)
-  }
+  stopifnot(isa(conn, "DBIConnection"))
 
   #' @importFrom DBI dbExistsTable
   if (dbExistsTable(conn, table_name)) {
