@@ -24,8 +24,48 @@ test_that("dbi.attach works", {
 
 test_that("simple subset works", {
   expect_no_error(dbi.attach(ex_chinook))
-  expect_s3_class(Album <- Album, "dbi.table")
   expect_no_error(source("compare_with_data.table.R"))
-  expect_true(compare_with_data.table(Album[AlbumId > 7 & AlbumId < 13]))
+  expect_true(compare_with_data.table(
+    Album[AlbumId > 7 & AlbumId < 13],
+    env = as.environment("RSQLite:Chinook_Sqlite")
+  ))
+  expect_silent(detach("RSQLite:Chinook_Sqlite"))
+})
+
+
+
+test_that("window works", {
+  expect_no_error(dbi.attach(ex_chinook))
+  expect_no_error(source("compare_with_data.table.R"))
+  expect_true(compare_with_data.table(
+    Track[, .(TrackId,
+              x = as.numeric(Milliseconds) / sum(as.numeric(Milliseconds)))],
+    env = as.environment("RSQLite:Chinook_Sqlite")
+  ))
+  expect_true(compare_with_data.table(
+    Track[, .(TrackId,
+              x = as.numeric(Milliseconds) / sum(as.numeric(Milliseconds))),
+          by = .(MediaTypeId)],
+    env = as.environment("RSQLite:Chinook_Sqlite")
+  ))
+  expect_silent(detach("RSQLite:Chinook_Sqlite"))
+})
+
+
+
+test_that("aggregation works", {
+  expect_no_error(dbi.attach(ex_chinook))
+  expect_no_error(source("compare_with_data.table.R"))
+  expect_true(compare_with_data.table(
+    Track[, .(SUM = sum(Milliseconds),
+              MEAN = mean(Milliseconds))],
+    env = as.environment("RSQLite:Chinook_Sqlite")
+  ))
+  expect_true(compare_with_data.table(
+    Track[, .(SUM = sum(Milliseconds),
+              MEAN = mean(Milliseconds)),
+          by = .(MediaTypeId, GenreId)],
+    env = as.environment("RSQLite:Chinook_Sqlite")
+  ))
   expect_silent(detach("RSQLite:Chinook_Sqlite"))
 })
