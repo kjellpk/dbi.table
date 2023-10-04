@@ -39,7 +39,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
     what <- what()
   }
 
-  if (!isa(what, "DBIConnection")) {
+  if (!inherits(what, "DBIConnection")) {
     stop(sQuote("what"), " is not a ", sQuote("DBIConnection"))
   }
 

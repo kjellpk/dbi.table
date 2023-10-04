@@ -15,9 +15,9 @@
 #'
 #' @export
 dbi.table <- function(conn, id) {
-  #' @importFrom DBI Id
-  if (!isa(id, "Id")) {
+  if (!inherits(id, "Id")) {
     if (is.character(id) && length(id) == 1L) {
+      #' @importFrom DBI Id
       id <- Id(table = id)
     } else {
       stop(sQuote("id"), " argument invalid")
@@ -77,7 +77,7 @@ get_connection <- function(x) {
     conn <- conn[[".dbi"]]
   }
 
-  stopifnot(isa(conn, "DBIConnection"))
+  stopifnot(inherits(conn, "DBIConnection"))
 
   conn
 }

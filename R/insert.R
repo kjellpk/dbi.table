@@ -23,7 +23,7 @@ as.dbi.table <- function(x, conn, row.names = FALSE) {
     conn <- get_connection(conn)
   }
 
-  stopifnot(isa(conn, "DBIConnection"))
+  stopifnot(inherits(conn, "DBIConnection"))
 
   #' @importFrom DBI dbExistsTable
   if (dbExistsTable(conn, table_name)) {
