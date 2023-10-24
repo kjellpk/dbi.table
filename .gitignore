@@ -44,3 +44,4 @@ vignettes/*.pdf
 # Mac Specific
 .DS_Store
 
+inst/doc

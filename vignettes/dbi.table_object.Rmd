@@ -1,0 +1,164 @@
+---
+title: "`dbi.table` Object"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{`dbi.table` Object}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  prompt = TRUE,
+  comment = "  ")
+```
+
+This vignette describes the `dbi.table` object.
+
+```{r setup, include = FALSE, output = "hide"}
+library(dbi.table)
+dbi.attach(ex_chinook)
+```
+
+Similar to `data.table` (or a `data.frame`), a `dbi.table` is a list where each
+element corresponds to a column in the data set. The elements of this list are
+`language` objects: a `call`, a `name`, or scalar atomic value. Further, the
+`dbi.table` object uses attributes to hold the metadata needed to translate
+these `language` objects into the `SELECT` clause of a `SQL` query.
+
+Example: using `c` to remove all but the `names` attribute from the `Genre`
+table in the `Chinook` sample database (included in the `dbi.table` package)
+shows that `Genre` is a list with 2 elements: `FN1` and `FN2`.
+
+```{r element}
+c(Genre)
+```
+
+We can use the `mode` function to see that each element is a `name`.
+
+```{r element.mode}
+sapply(Genre, mode)
+```
+
+## Attributes
+
+The attributes of the `dbi.table` object contain the metedata needed to
+generate a precies `SQL` query. The attributes are:
+
+```{r attributes}
+names(attributes(Genre))
+```
+
+### The `names` Attribute
+
+The `names` attribute is simply the names of the `dbi.table` list. That is, a
+character vector of the same length as the `dbi.table` list. These names become
+the column names of the `dbi.table`. 
+
+```{r names}
+attr(Genre, "names")
+```
+
+### The `conn` Attribute
+
+The `conn` attribute stores the `DBIConnection` needed to fetch the `dbi.table`.
+The `conn` attribute can either be a `DBIConnection` or an `environment`. When
+the `conn` attribute is an `environment`, the `dbi.table` package expects to
+find a `DBIConnection` object named `.dbi` in the environment.
+
+### The `data_source` Attribute
+
+The `data_source` attribute stores the information needed to generate the `FROM`
+clause. The `data_source` attribute should be a 4-column `data.frame`.
+
+| Column  | Description                                                        |
+|---------|--------------------------------------------------------------------|
+| clause  | `character` - the name of the clause (`FROM`, `INNER JOIN` , etc.) |
+| id      | `DBI::Id` - reference to a database object (table or view)         |
+| id_name | `character` - the key used to identify the `Id` in `id`            |
+| on      | `call` - the `ON` part of a join clause                            |
+
+The internal_name is the `name` referred to in the `dbi.table` list of columns,
+the id is a key that refers to a database object, and field is the name of
+a column in id. The actual `Id`s referred to by id are store in the data_source
+attribute.
+
+```{r data_source}
+attr(Genre, "data_source")
+```
+
+At this point, you can probably see how these inputs will be combined into an
+SQL query. We can use the `csql` function to dislay the generated query.
+
+```{r csql}
+csql(Genre)
+```
+
+
+## Manipulating `dbi.table`s
+
+The goal of the `dbi.table` package is for these two calls (where `DBIT` is a
+`dbi.table`) to return the same `data.table` up to row order.
+
+```{r goal, eval = FALSE}
+DT1 <- as.data.table(DBIT)[i, j, by]
+DT2 <- as.data.table(DBIT[i, j, by])
+all.equal(DT1, DT2, ignore.row.order = TRUE) #This should return TRUE
+```
+
+In the first case, we are fetching all the records in the database table,
+storing them locally in a `data.table`, and then manipulating that
+`data.table` using the `[` method. In the second case, we are manipulating the
+`dbi.table` using the `[` method and then fetching the results as a
+`data.table`. The second case moves far less data over the network so should be
+faster.
+
+The possibilities for `i`, `j`, and `by` are not as general as for `data.table`.
+
+### Subsetting and Ordering Records with `i`
+
+`i` can be a call or a list of calls. When `i` is a list of calls, the calls are
+combinded into a single call using the `AND` operator.
+
+```{r ilist}
+csql(Genre[.(GenreId > 5, GenreId < 10)])
+```
+
+Or, alternatively, using a single call.
+
+```{r i}
+csql(Genre[GenreId > 5 & GenreId < 10])
+```
+
+When `i` is a call to `order`, `i` will set the ORDER BY clause instead.
+
+```{r orderby}
+csql(Genre[order(-GenreId)])
+```
+
+
+
+
+ The calls are limited to
+those that can be translated to SQL by `dbplyr::translate_sql_` 
+
+`j` should be a list of calls; these calls can only use functions that can
+be translated to SQL by `dbplyr::translate_sql_` and should only refer to
+symbols in the `dbi.table` and very simple variables (for example, length 1
+vectors). One exception is that `%in%` can have a vector of values on the
+right hand side.
+
+
+
+
+## Clean Up
+
+In the interest of good book keeping, detach the schema when finished.
+
+```{r cleanup}
+detach("RSQLite:Chinook_Sqlite")
+```
+
+The attached environment has a finalizer that will close the database
+connection.
