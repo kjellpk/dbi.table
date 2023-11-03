@@ -18,7 +18,7 @@ This vignette describes the `dbi.table` object.
 
 ```{r setup, include = FALSE, output = "hide"}
 library(dbi.table)
-dbi.attach(ex_chinook)
+dbi.attach(chinook.sqlite())
 ```
 
 Similar to `data.table` (or a `data.frame`), a `dbi.table` is a list where each
@@ -160,5 +160,3 @@ In the interest of good book keeping, detach the schema when finished.
 detach("RSQLite:Chinook_Sqlite")
 ```
 
-The attached environment has a finalizer that will close the database
-connection.

@@ -6,7 +6,11 @@ Author: Kjell P. Konis
 Maintainer: Kjell P. Konis <kjellk@gmail.com>
 Description: Query database objects over a DBI connection using data.table
              syntax.
-Imports: DBI, dbplyr, stringi
+Imports:
+    DBI,
+    dbplyr,
+    pool,
+    stringi
 Suggests: 
     RSQLite,
     rlang,

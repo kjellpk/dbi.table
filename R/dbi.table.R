@@ -15,6 +15,8 @@
 #'
 #' @export
 dbi.table <- function(conn, id) {
+  check_connection(conn)
+
   if (!inherits(id, "Id")) {
     if (is.character(id) && length(id) == 1L) {
       #' @importFrom DBI Id
@@ -73,13 +75,7 @@ dbi_table_object <- function(cdefs, conn, data_source, fields,
 
 
 get_connection <- function(x) {
-  if (is.environment(conn <- attr(x, "conn"))) {
-    conn <- conn[[".dbi"]]
-  }
-
-  stopifnot(inherits(conn, "DBIConnection"))
-
-  conn
+  attr(x, "conn", exact = TRUE)
 }
 
 
@@ -159,26 +155,8 @@ print.dbi.table <- function(x, ...) {
 
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
-  #' @importFrom DBI dbSendQuery
-  res <- try(dbSendQuery(get_connection(x), write_sql(x)), silent = TRUE)
-
-  if (inherits(res, "try-error")) {
-    #' @importFrom DBI dbIsValid
-    if (!dbIsValid(get_connection(x))) {
-      if (!reconnect(x)) {
-        stop("database connection not valid")
-      }
-    }
-
-    #' @importFrom DBI dbSendQuery
-    res <- dbSendQuery(get_connection(x), write_sql(x))
-  }
-
-  #' @importFrom DBI dbClearResult
-  on.exit(dbClearResult(res))
-
-  #' @importFrom DBI dbFetch
-  setDT(dbFetch(res, n = n))
+  #' @importFrom DBI dbGetQuery
+  setDT(dbGetQuery(get_connection(x), write_sql(x), n = n))
 }
 
 

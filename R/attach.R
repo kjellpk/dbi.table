@@ -33,15 +33,7 @@
 #' @export
 dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
                        ..., prefix = NULL) {
-  recon <- NULL
-  if (is.function(what)) {
-    recon <- what
-    what <- what()
-  }
-
-  if (!inherits(what, "DBIConnection")) {
-    stop(sQuote("what"), " is not a ", sQuote("DBIConnection"))
-  }
+  check_connection(what)
 
   if (is.null(name)) {
     name <- db_short_name(what, pkg = TRUE)
@@ -66,14 +58,11 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   fun <- get("attach", "package:base")
   e <- fun(NULL, pos = pos, name = name, warn.conflicts = warn.conflicts)
 
-  assign(".dbi", what, envir = e)
-  assign(".recon", recon, envir = e)
-
   reg.finalizer(e, dbi_attach_finalizer, onexit = TRUE)
 
   for (i in seq_len(nrow(schema))) {
     dbit_name <- schema[[i, "id"]]@name[["table"]]
-    dbit <- new_dbi_table(e, schema[[i, "id"]], schema[[i, "column_names"]])
+    dbit <- new_dbi_table(what, schema[[i, "id"]], schema[[i, "column_names"]])
 
     if (!is.na(dbit_name)) {
       assign(dbit_name, dbit, envir = e)
@@ -87,7 +76,5 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
 
 
 dbi_attach_finalizer <- function(e) {
-  e$.recon <- NULL
-  #' @importFrom DBI dbDisconnect
-  dbDisconnect(e$.dbi)
+  NULL
 }

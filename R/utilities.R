@@ -1,30 +1,46 @@
-reconnect <- function(what) {
-  if (is.dbi.table(what)) {
-    what <- attr(what, "conn")
+dbGetInfo <- function(dbObj, ...) {
+  if (inherits(dbObj, "Pool")) {
+    #' @importFrom pool localCheckout
+    dbObj <- pool::localCheckout(dbObj)
   }
 
-  if (is.environment(what) && !is.null(recon <- what$.recon)) {
-    what$.dbi <- recon()
-    warning("reconnecting to database...")
+  #' @importFrom DBI dbGetInfo
+  DBI::dbGetInfo(dbObj, ...)
+}
 
-    #' @importFrom DBI dbIsValid
-    return(dbIsValid(what$dbi))
+
+
+get_connection_pkg <- function(conn) {
+  if (inherits(conn, "Pool")) {
+    attr(conn$objClass, "package", exact = TRUE)
+  } else {
+    attr(class(conn), "package", exact = TRUE)
   }
-
-  FALSE
 }
 
 
 
 db_short_name <- function(conn, pkg = FALSE) {
-  #' @importFrom DBI dbGetInfo
+  ## @importFrom DBI dbGetInfo
   n <- sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(dbGetInfo(conn)$dbname))
 
-  if (pkg && !is.null(pkg <- attr(class(conn), "package", exact = TRUE))) {
+  if (pkg && !is.null(pkg <- get_connection_pkg(conn))) {
     n <- paste(pkg, n, sep = ":")
   }
 
   n
+}
+
+
+
+check_connection <- function(conn) {
+  if (!inherits(conn, "DBIConnection") && !inherits(conn, "Pool")) {
+    stop("invalid connection argument - ", sQuote("conn"), " must be a ",
+         sQuote("DBI"), " connection or a ", sQuote("Pool"), " of ",
+         sQuote("DBI"), " connections")
+  }
+
+  invisible()
 }
 
 
