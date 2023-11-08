@@ -4,14 +4,7 @@
 \alias{dbi.attach}
 \title{Attach a DBI Connection to the Search Path}
 \usage{
-dbi.attach(
-  what,
-  pos = 2L,
-  name = NULL,
-  warn.conflicts = FALSE,
-  ...,
-  prefix = NULL
-)
+dbi.attach(what, pos = 2L, name = NULL, warn.conflicts = FALSE, ...)
 }
 \arguments{
 \item{what}{a connection handle returned by \code{\link[DBI]{dbConnect}}.}
@@ -29,10 +22,7 @@ an object \code{.conflicts.OK}. A conflict is a
 function masking a function, or a non-function
 masking a non-function.}
 
-\item{\dots}{additional arguments are passed to
-\code{\link[DBI]{dbListObjects}}.}
-
-\item{prefix}{see the \code{prefix} argument in
+\item{\dots}{additional arguments (e.g., \code{prefix}) are passed to
 \code{\link[DBI]{dbListObjects}}.}
 }
 \description{

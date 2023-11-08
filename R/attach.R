@@ -20,11 +20,8 @@
 #'                       function masking a function, or a non-function
 #'                       masking a non-function.
 #'
-#' @param \dots additional arguments are passed to
+#' @param \dots additional arguments (e.g., \code{prefix}) are passed to
 #'              \code{\link[DBI]{dbListObjects}}.
-#'
-#' @param prefix see the \code{prefix} argument in
-#'               \code{\link[DBI]{dbListObjects}}.
 #'
 #' @note Attaches each object returned by \code{\link[DBI]{dbListObjects}}.
 #'
@@ -32,7 +29,7 @@
 #'
 #' @export
 dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
-                       ..., prefix = NULL) {
+                       ...) {
   check_connection(what)
 
   if (is.null(name)) {
@@ -40,7 +37,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   }
 
   #' @importFrom DBI dbListObjects
-  schema <- dbListObjects(what, prefix = prefix, ...)
+  schema <- dbListObjects(what, ...)
   schema <- schema[!schema$is_prefix, "table", drop = FALSE]
   names(schema) <- "id"
 
@@ -58,23 +55,23 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   fun <- get("attach", "package:base")
   e <- fun(NULL, pos = pos, name = name, warn.conflicts = warn.conflicts)
 
-  reg.finalizer(e, dbi_attach_finalizer, onexit = TRUE)
-
-  for (i in seq_len(nrow(schema))) {
-    dbit_name <- schema[[i, "id"]]@name[["table"]]
-    dbit <- new_dbi_table(what, schema[[i, "id"]], schema[[i, "column_names"]])
-
-    if (!is.na(dbit_name)) {
-      assign(dbit_name, dbit, envir = e)
-      lockBinding(dbit_name, e)
-    }
-  }
-
-  invisible(e)
+  dbi_table_env(what, schema, e)
 }
 
 
 
-dbi_attach_finalizer <- function(e) {
-  NULL
+dbi_table_env <- function(conn, schema, envir = new.env()) {
+  for (i in seq_len(nrow(schema))) {
+    dbit_name <- schema[[i, "id"]]@name[["table"]]
+    dbit <- new_dbi_table(conn, schema[[i, "id"]], schema[[i, "column_names"]])
+
+    if (!is.na(dbit_name)) {
+      assign(dbit_name, dbit, envir = envir)
+      lockBinding(dbit_name, envir)
+    }
+  }
+
+  #reg.finalizer(envir, dbi_table_env_finalizer, onexit = TRUE)
+
+  invisible(e)
 }
