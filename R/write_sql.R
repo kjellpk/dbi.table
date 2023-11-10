@@ -1,19 +1,3 @@
-## As of 2023-11-01 dbplyr::translate_sql_ does not work with pool.
-translate_sql_ <- function(dots, con, vars_group = NULL, vars_order = NULL,
-                           vars_frame = NULL, window = TRUE,
-                           context = list()) {
-
-  if (inherits(con, "Pool")) {
-    con <- pool::localCheckout(con)
-  }
-
-  #' @importFrom dbplyr translate_sql_
-  dbplyr::translate_sql_(dots, con, vars_group, vars_order, vars_frame,
-                         window, context)
-}
-
-
-
 write_sql <- function(x) {
   query <- list(ctes = write_ctes(x),
                 select = write_select(x),

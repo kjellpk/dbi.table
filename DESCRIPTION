@@ -9,7 +9,6 @@ Description: Query database objects over a DBI connection using data.table
 Imports:
     DBI,
     dbplyr,
-    pool,
     stringi
 Suggests: 
     RSQLite,

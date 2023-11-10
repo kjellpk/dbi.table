@@ -30,21 +30,29 @@
 #' @export
 dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
                        ...) {
-  check_connection(what)
+  what_name <- deparse1(substitute(what))
+  what <- init_connection(what)
+  check_connection(what, arg_name = "what")
 
   if (is.null(name)) {
-    name <- db_short_name(what, pkg = TRUE)
+    name <- db_short_name(what)
+  }
+
+  name <- paste(dbi_connection_package(what), as.character(name[1]), sep = ":")
+
+  if (name %in% search()) {
+    stop(sQuote(what_name), " was not attached because ", sQuote(name),
+         " is already on the search path - use the ", sQuote("name"),
+         " argument to provide a distinct name")
   }
 
   #' @importFrom DBI dbListObjects
   schema <- dbListObjects(what, ...)
-  schema <- schema[!schema$is_prefix, "table", drop = FALSE]
-  names(schema) <- "id"
-
+  schema <- schema[!schema$is_prefix, "table"]
+  names(schema) <- vapply(schema, function(u) u@name[["table"]], "")
   #' @importFrom DBI dbListFields
-  fields <- lapply(schema$id, function(u, v) dbListFields(v, u), v = what)
-
-  schema <- cbind(schema, column_names = I(fields))
+  fields <- mapply(dbListFields, schema, MoreArgs = list(conn = what))
+  schema <- list(id = schema, fields = fields)
 
   # From ?attach: "In programming, functions should not change the search
   #                path unless that is their purpose."
@@ -55,23 +63,42 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   fun <- get("attach", "package:base")
   e <- fun(NULL, pos = pos, name = name, warn.conflicts = warn.conflicts)
 
-  dbi_table_env(what, schema, e)
+  schema_env(what, schema, e)
 }
 
 
 
-dbi_table_env <- function(conn, schema, envir = new.env()) {
-  for (i in seq_len(nrow(schema))) {
-    dbit_name <- schema[[i, "id"]]@name[["table"]]
-    dbit <- new_dbi_table(conn, schema[[i, "id"]], schema[[i, "column_names"]])
+schema_env_finalizer <- function(e) {
+  on.exit(rm(list = ".dbi_connection", envir = e))
+  #' @importFrom DBI dbDisconnect
+  try(dbDisconnect(get_connection(e)))
+}
 
-    if (!is.na(dbit_name)) {
-      assign(dbit_name, dbit, envir = envir)
-      lockBinding(dbit_name, envir)
+
+
+schema_env <- function(conn, schema, envir = new.env()) {
+  if (!is.null(existing_conn <- envir$.dbi_connection)) {
+    if (!identical(conn, existing_conn)) {
+      stop("multiple connections are not supported in a single schema")
     }
+  } else {
+    envir$.dbi_connection <- conn
   }
 
-  #reg.finalizer(envir, dbi_table_env_finalizer, onexit = TRUE)
+  if (anyDuplicated(dbit_names <- names(schema$id))) {
+    stop("duplicate names found in ", sQuote("schema"))
+  }
+
+  for (dbit_name in dbit_names) {
+    dbit <- new_dbi_table(envir,
+                          schema$id[[dbit_name]],
+                          schema$fields[[dbit_name]])
+
+    assign(dbit_name, dbit, envir = envir)
+    lockBinding(dbit_name, envir)
+  }
+
+  reg.finalizer(envir, schema_env_finalizer, onexit = TRUE)
 
   invisible(e)
 }

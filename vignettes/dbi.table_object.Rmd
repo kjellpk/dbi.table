@@ -18,7 +18,7 @@ This vignette describes the `dbi.table` object.
 
 ```{r setup, include = FALSE, output = "hide"}
 library(dbi.table)
-dbi.attach(chinook.sqlite())
+dbi.attach(chinook.sqlite)
 ```
 
 Similar to `data.table` (or a `data.frame`), a `dbi.table` is a list where each

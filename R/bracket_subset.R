@@ -2,7 +2,7 @@ bracket_subset <- function(x, i = NULL, j = NULL, by = NULL, env) {
 
   if (is.null(j) && !is.null(by)) {
     stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
-        " is missing or ", sQuote("NULL"))
+         " is missing or ", sQuote("NULL"))
   }
 
   if (!dbi.table_is_simple(x)) {

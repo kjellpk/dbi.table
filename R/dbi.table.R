@@ -15,6 +15,7 @@
 #'
 #' @export
 dbi.table <- function(conn, id) {
+  conn <- init_connection(conn)
   check_connection(conn)
 
   if (!inherits(id, "Id")) {
@@ -75,7 +76,15 @@ dbi_table_object <- function(cdefs, conn, data_source, fields,
 
 
 get_connection <- function(x) {
-  attr(x, "conn", exact = TRUE)
+  if (is.dbi.table(x)) {
+    x <- attr(x, "conn", exact = TRUE)
+  }
+
+  if (is.environment(x)) {
+    x <- x$.dbi_connection
+  }
+
+  x
 }
 
 
@@ -155,8 +164,23 @@ print.dbi.table <- function(x, ...) {
 
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
-  #' @importFrom DBI dbGetQuery
-  setDT(dbGetQuery(get_connection(x), write_sql(x), n = n))
+  #' @importFrom DBI dbSendStatement
+  res <- try(dbSendStatement(get_connection(x), write_sql(x)), silent = TRUE)
+
+  if (inherits(res, "try-error") &&
+        is.environment(e <- attr(x, "conn", exact = TRUE)) &&
+        !is.null(recon <- attr(get_connection(x), "recon", exact = TRUE))) {
+    e$.dbi_connection <- init_connection(recon)
+
+    #' @importFrom DBI dbSendStatement
+    res <- dbSendStatement(get_connection(x), write_sql(x))
+  }
+
+  #' @importFrom DBI dbClearResult
+  on.exit(dbClearResult(res))
+
+  #' @importFrom DBI dbFetch
+  setDT(dbFetch(res, n = n))
 }
 
 

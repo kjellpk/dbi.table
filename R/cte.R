@@ -64,7 +64,7 @@ dbi.table_can_join_x <- function(x) {
     has_over <- !vapply(has_over, is.null, FALSE)
 
     length(get_group_by(x)) == 0 &&
-    !any(has_over)
+      !any(has_over)
   } else {
     FALSE
   }

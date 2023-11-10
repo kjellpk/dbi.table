@@ -4,10 +4,11 @@
 \alias{chinook.sqlite}
 \title{Example Databases}
 \usage{
-chinook.sqlite(type = c("Pool", "DBI"))
+chinook.sqlite(type = c("DBI", "path"))
 }
 \arguments{
-\item{type}{a character string. Use \code{"pool"} or \code{"DBI"}.}
+\item{type}{a scalar character string. Use \code{"DBI"} for a
+\code{DBIConnection} or \code{path} for the database file path.}
 }
 \description{
 These functions return connections to example databases
