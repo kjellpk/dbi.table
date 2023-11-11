@@ -71,7 +71,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
 schema_env_finalizer <- function(e) {
   on.exit(rm(list = ".dbi_connection", envir = e))
   #' @importFrom DBI dbDisconnect
-  try(dbDisconnect(get_connection(e)))
+  try(dbDisconnect(get_connection(e)), silent = TRUE)
 }
 
 
