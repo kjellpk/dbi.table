@@ -100,13 +100,11 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
       stop(sQuote("on"), " is not a call")
     }
 
-    #partial eval on here
-
     l <- lapply(d[dup == FALSE][["pname"]], as.name)
     names(l) <- d[dup == FALSE][["name"]]
     on <- sub_lang(on, l)
 
-    on_vars <- get_names(on)
+    on_vars <- all.names(on)
 
     if (any(idx <- (on_vars %in% d[dup == TRUE, unique(name)]))) {
       stop("ambiguous use of ", sQuote(v <- on_vars[idx][1]), " in ",
@@ -148,7 +146,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   names(new_name) <- y_fields$internal_name
   y_fields$internal_name <- new_name
 
-  y <- lapply(c(y), sub_lang, cdefs = lapply(new_name, as.name))
+  y <- lapply(c(y), sub_lang, remotes = lapply(new_name, as.name))
 
   fields <- rbind(x_fields, y_fields)
 
@@ -162,7 +160,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   y_data_source$clause <- JOINS[type]
 
   if (!is.null(on)) {
-    y_data_source$on <- list(prepare_call(on, xy, env))
+    y_data_source$on <- list(sub_lang(on, remotes = xy, locals = env))
   }
 
   data_source <- rbind(x_data_source, y_data_source)

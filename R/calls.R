@@ -1,57 +1,36 @@
-sub_lang <- function(e, cdefs) {
+SYMBOL_MAP <- new.env()
+assign(".N", call("n"), envir = SYMBOL_MAP)
+assign("fcoalesce", as.name("coalesce"), envir = SYMBOL_MAP)
+assign("%chin%", as.name("%in%"), envir = SYMBOL_MAP)
+
+
+
+sub_lang <- function(e, remotes, locals = parent.frame(),
+                     symbol_map = SYMBOL_MAP) {
   if (is.null(e)) {
     return(NULL)
   } else if (is.name(e)) {
-    if ((ce <- as.character(e)) %in% names(cdefs)) {
-      e <- cdefs[[ce]]
+    if (!is.null(u <- symbol_map[[as.character(e)]])) {
+      e <- u
+    } else if (!is.null(r <- remotes[[as.character(e)]])) {
+      e <- r
+    } else if (!is.null(l <- locals[[as.character(e)]]))  {
+      if (is.vector(l) && (length(l) == 1L)) {
+        e <- l
+      } else {
+        stop("only scalar local variables are supported at this time")
+      }
+    } else {
+      stop("symbol ", sQuote(e), " not found")
     }
   } else if (is.call(e)) {
-    for (i in seq_along(e)[-1]) {
-      e[[i]] <- sub_lang(e[[i]], cdefs)
+    if (!is.null(r <- symbol_map[[as.character(e[[1]])]])) {
+      e[[1]] <- r
     }
+
+    e[-1] <- lapply(e[-1], sub_lang, remotes = remotes, locals = locals)
   }
   e
-}
-
-
-
-get_names <- function(e, symbols = new.env(), level = 1L) {
-  if (is.name(e)) {
-    assign(as.character(e), 1, envir = symbols)
-  } else if (is.call(e)) {
-    lapply(as.list(e[-1]), get_names, symbols = symbols, level = level + 1L)
-  }
-
-  if (level == 1L) ls(symbols) else NULL
-}
-
-
-
-prepare_call <- function(e, vars, env, data = NULL) {
-  if (is.null(data)) {
-    data <- as.list(logical(length(var_names <- names(vars))))
-    names(data) <- var_names
-    data <- data[unique(names(data))]
-
-    #' @importFrom dbplyr lazy_frame
-    data <- do.call(lazy_frame, data)
-  }
-
-  #' @importFrom dbplyr partial_eval
-  sub_lang(partial_eval(e, data = data, env = env), cdefs = vars)
-}
-
-
-
-prepare_calls <- function(calls, vars, env) {
-  data <- as.list(logical(length(var_names <- names(vars))))
-  names(data) <- var_names
-  data <- data[unique(names(data))]
-
-  #' @importFrom dbplyr lazy_frame
-  data <- do.call(lazy_frame, data)
-
-  lapply(calls, prepare_call, vars = vars, env = env, data = data)
 }
 
 
@@ -62,7 +41,7 @@ handy_andy <- function(l) {
   }
 
   names(l) <- paste0("x", seq_along(l))
-  sub_lang(str2lang(paste(paren(names(l)), collapse = "&")), cdefs = l)
+  sub_lang(str2lang(paste(paren(names(l)), collapse = "&")), remotes = l)
 }
 
 

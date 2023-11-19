@@ -81,8 +81,7 @@ handle_cols <- function(x, cols, env) {
 
     idx <- (nchar(col_names) == 0L) & vapply(cols, is.name, FALSE)
     col_names[idx] <- as.character(cols[idx])
-
-    cols <- prepare_calls(cols, x, env)
+    cols <- lapply(cols, sub_lang, remotes = x, locals = env)
     names(cols) <- col_names
   }
 
@@ -106,7 +105,7 @@ handle_i <- function(x, i_sub, env) {
 
 
 handle_i_list <- function(x, i_list, env) {
-  attr(x, "where") <- prepare_calls(i_list, x, env)
+  attr(x, "where") <- lapply(i_list, sub_lang, remotes = x, locals = env)
   x
 }
 
@@ -121,7 +120,9 @@ handle_i_order <- function(x, i_list, env) {
     return(x)
   }
 
-  i_list <- c(prepare_calls(i_list, x, env), get_order_by(x))
+  i_list <- lapply(i_list, sub_lang, remotes = x, locals = env)
+  i_list <- c(i_list,get_order_by(x))
+
   attr(x, "order_by") <- i_list[!duplicated(i_list)]
   x
 }

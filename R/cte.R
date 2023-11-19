@@ -5,9 +5,9 @@ as_cte <- function(x) {
     is_name <- vapply(x, is.name, FALSE)
     v <- lapply(names(x)[is_name], as.name)
     names(v) <- as.character(x[is_name])
-    order_by <- lapply(order_by, sub_lang, cdefs = v)
+    order_by <- lapply(order_by, sub_lang, remotes = v)
 
-    tmp <- lapply(order_by, get_names)
+    tmp <- lapply(order_by, all.names)
     keep <- vapply(tmp, function(u, v) all(u %in% v), FALSE, v = names(x))
     order_by <- order_by[keep]
 
@@ -30,7 +30,7 @@ as_cte <- function(x) {
   v <- lapply(fields$internal_name, as.name)
   names(v) <- fields$field
 
-  order_by <- prepare_calls(order_by, v, emptyenv())
+  order_by <- lapply(order_by, sub_lang, remotes = v, locals = NULL)
 
   ctes <- get_ctes(x)
   attr(x, "ctes") <- list()
