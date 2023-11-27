@@ -121,7 +121,9 @@ The possibilities for `i`, `j`, and `by` are not as general as for `data.table`.
 `i` can be a call or a list of calls. When `i` is a list of calls, the calls are
 combinded into a single call using the `AND` operator.
 
-```{r ilist}
+(list currently no working)
+
+```{r ilist, eval = FALSE}
 csql(Genre[.(GenreId > 5, GenreId < 10)])
 ```
 

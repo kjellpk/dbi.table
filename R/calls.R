@@ -1,20 +1,12 @@
-SYMBOL_MAP <- new.env()
-assign(".N", call("n"), envir = SYMBOL_MAP)
-assign("fcoalesce", as.name("coalesce"), envir = SYMBOL_MAP)
-assign("%chin%", as.name("%in%"), envir = SYMBOL_MAP)
-
-
-
-sub_lang <- function(e, remotes, locals = parent.frame(),
-                     symbol_map = SYMBOL_MAP) {
+sub_lang <- function(e, remotes = NULL, locals = NULL) {
   if (is.null(e)) {
     return(NULL)
   } else if (is.name(e)) {
-    if (!is.null(u <- symbol_map[[as.character(e)]])) {
+    if (!is.null(u <- try_map(e, special_symbols))) {
       e <- u
-    } else if (!is.null(r <- remotes[[as.character(e)]])) {
+    } else if (!is.null(r <- try_map(e, remotes))) {
       e <- r
-    } else if (!is.null(l <- locals[[as.character(e)]]))  {
+    } else if (!is.null(l <- try_map(e, locals)))  {
       if (is.vector(l) && (length(l) == 1L)) {
         e <- l
       } else {
@@ -24,8 +16,20 @@ sub_lang <- function(e, remotes, locals = parent.frame(),
       stop("symbol ", sQuote(e), " not found")
     }
   } else if (is.call(e)) {
-    if (!is.null(r <- symbol_map[[as.character(e[[1]])]])) {
+    if (!is.null(r <- try_map(e[[1]], special_functions))) {
       e[[1]] <- r
+    }
+
+    if (as.character(e[[1]]) == "list") {
+      if (is.null(nm <- names(e[-1]))) {
+        names(e[-1]) <- paste0("V", seq_along(e[-1]))
+      } else if (any((nx <- nchar(nm)) == 0L)) {
+        v <- paste0("V", seq_along(e[-1]))
+        en <- vapply(e[-1], is.name, FALSE)
+        v[en] <- vapply(e[-1][en], as.character, "")
+        nm[nx] <- v[nx]
+        names(e)[-1] <- nm
+      }
     }
 
     e[-1] <- lapply(e[-1], sub_lang, remotes = remotes, locals = locals)

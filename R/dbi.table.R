@@ -192,31 +192,30 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
     return(as.data.table(x))
   }
 
+  x_sub <- substitute(x)
+  if (!dbi.table_is_simple(x)) {
+    x <- as_cte(x)
+  }
+
   if (missing(i)) {
     i <- NULL
-  } else {
-    if (inherits(try(i, silent = TRUE), "try-error")) {
-      i <- substitute(i)
-    }
+  } else if (inherits(try(i, silent = TRUE), "try-error")) {
+    i <- sub_lang(substitute(i), remotes = x, locals = env)
   }
 
   if (missing(j)) {
     j <- NULL
-  } else {
-    if (inherits(try(j, silent = TRUE), "try-error")) {
-      j <- substitute(j)
-    }
+  } else if (inherits(try(j, silent = TRUE), "try-error")) {
+    j <- sub_lang(substitute(j), remotes = x, locals = env)
   }
 
   if (missing(by)) {
     by <- NULL
-  } else {
-    if (inherits(try(by, silent = TRUE), "try-error")) {
-      by <- substitute(by)
-    }
+  } else if (inherits(try(by <- by, silent = TRUE), "try-error")) {
+    by <- sub_lang(substitute(by), remotes = x, locals = env)
   }
 
-  bracket_subset(x, i, j, by, env)
+  bracket_subset(x, x_sub, i, j, by, env)
 }
 
 

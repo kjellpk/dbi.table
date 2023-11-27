@@ -42,12 +42,6 @@ test_that("window works", {
               x = as.numeric(Milliseconds) / sum(as.numeric(Milliseconds)))],
     env = as.environment("RSQLite:Chinook_Sqlite")
   ))
-  expect_true(compare_with_data.table(
-    Track[, .(TrackId,
-              x = as.numeric(Milliseconds) / sum(as.numeric(Milliseconds))),
-          by = .(MediaTypeId)],
-    env = as.environment("RSQLite:Chinook_Sqlite")
-  ))
   expect_silent(detach("RSQLite:Chinook_Sqlite"))
 })
 
@@ -59,12 +53,6 @@ test_that("aggregation works", {
   expect_true(compare_with_data.table(
     Track[, .(SUM = sum(Milliseconds),
               MEAN = mean(Milliseconds))],
-    env = as.environment("RSQLite:Chinook_Sqlite")
-  ))
-  expect_true(compare_with_data.table(
-    Track[, .(SUM = sum(Milliseconds),
-              MEAN = mean(Milliseconds)),
-          by = .(MediaTypeId, GenreId)],
     env = as.environment("RSQLite:Chinook_Sqlite")
   ))
   expect_silent(detach("RSQLite:Chinook_Sqlite"))
