@@ -23,7 +23,7 @@ sub_lang <- function(e, remotes = NULL, locals = NULL) {
     if (as.character(e[[1]]) == "list") {
       if (is.null(nm <- names(e[-1]))) {
         names(e[-1]) <- paste0("V", seq_along(e[-1]))
-      } else if (any((nx <- nchar(nm)) == 0L)) {
+      } else if (any(nx <- (nchar(nm) == 0L))) {
         v <- paste0("V", seq_along(e[-1]))
         en <- vapply(e[-1], is.name, FALSE)
         v[en] <- vapply(e[-1][en], as.character, "")
