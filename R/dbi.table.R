@@ -1,9 +1,6 @@
 #' @import data.table
 
 
-. <- NULL
-
-
 #' Create a \code{dbi.table} accessible via a \code{DBI} connection
 #'
 #' @description Create a \code{dbi.table} based on a SQL table.
