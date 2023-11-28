@@ -1,5 +1,4 @@
-#bracket_subset <- function(x, i = NULL, j = NULL, by = NULL, env) {
-bracket_subset <- function(x, x_sub, i, j, by, env) {
+handle_subset <- function(x, x_sub, i, j, by, env) {
   if (is.null(j) && !is.null(by)) {
     stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
          " is missing or ", sQuote("NULL"))
@@ -89,14 +88,11 @@ handle_cols <- function(x, cols, env) {
 handle_i <- function(x, i, env) {
   stopifnot(is.call(i))
 
-  #i <- sub_lang(i, remotes = x, locals = env)
-  call_name <- as.character(i[[1]])
-
-  if (call_name == "order") {
-    handle_i_order(x, as.list(i[-1]), env)
-  } else {
+  switch(as.character(i[[1]]),
+    order = handle_i_order(x, as.list(i[-1]), env),
+    list = handle_i_list(x, as.list(i[-1]), env),
     handle_i_list(x, list(i), env)
-  }
+  )
 }
 
 

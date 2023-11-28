@@ -1,6 +1,3 @@
-#' @import data.table
-
-
 #' Create a \code{dbi.table} accessible via a \code{DBI} connection
 #'
 #' @description Create a \code{dbi.table} based on a SQL table.
@@ -212,7 +209,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
     by <- sub_lang(substitute(by), remotes = x, locals = env)
   }
 
-  bracket_subset(x, x_sub, i, j, by, env)
+  handle_subset(x, x_sub, i, j, by, env)
 }
 
 

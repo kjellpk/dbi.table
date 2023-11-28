@@ -1,3 +1,6 @@
+#' @import data.table
+
+
 .onLoad <- function(libname, pkgname) {
   add_special(".N", call("n"), map = special_symbols)
   add_special(".SD", map = special_symbols)

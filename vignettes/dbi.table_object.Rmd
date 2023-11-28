@@ -123,7 +123,7 @@ combinded into a single call using the `AND` operator.
 
 (list currently no working)
 
-```{r ilist, eval = FALSE}
+```{r ilist}
 csql(Genre[.(GenreId > 5, GenreId < 10)])
 ```
 
