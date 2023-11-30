@@ -12,24 +12,22 @@ sub_lang <- function(e, remotes = NULL, locals = NULL) {
       } else {
         stop("only scalar local variables are supported at this time")
       }
-    } else {
-      stop("symbol ", sQuote(e), " not found")
-    }
+    } #else {
+      #stop("symbol ", sQuote(e), " not found")
+    #}
   } else if (is.call(e)) {
     if (!is.null(r <- try_map(e[[1]], special_functions))) {
       e[[1]] <- r
     }
 
     if (as.character(e[[1]]) == "list") {
-      if (is.null(nm <- names(e[-1]))) {
-        names(e[-1]) <- paste0("V", seq_along(e[-1]))
-      } else if (any(nx <- (nchar(nm) == 0L))) {
-        v <- paste0("V", seq_along(e[-1]))
-        en <- vapply(e[-1], is.name, FALSE)
-        v[en] <- vapply(e[-1][en], as.character, "")
-        nm[nx] <- v[nx]
-        names(e)[-1] <- nm
+      if (is.null(nm <- names(e))) {
+        nm <- character(length(e))
       }
+
+      idx <- (nchar(nm) == 0L) & vapply(e, is.name, FALSE)
+      nm[idx] <- vapply(e[idx], as.character, "")
+      names(e) <- nm
     }
 
     e[-1] <- lapply(e[-1], sub_lang, remotes = remotes, locals = locals)

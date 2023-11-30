@@ -191,25 +191,15 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
     x <- as_cte(x)
   }
 
-  if (missing(i)) {
-    i <- NULL
-  } else if (inherits(try(i, silent = TRUE), "try-error")) {
-    i <- sub_lang(substitute(i), remotes = x, locals = env)
+  i <- preprocess_subset_arg(i, substitute(i), x, env)
+  j <- preprocess_subset_arg(j, substitute(j), x, env)
+  by <- preprocess_subset_arg(by, substitute(by), x, env)
+
+  if (is.call(j) && as.character(j[[1]]) == ":=") {
+    print("x <- handle_colon_equal(x, i, j, by)")
   }
 
-  if (missing(j)) {
-    j <- NULL
-  } else if (inherits(try(j, silent = TRUE), "try-error")) {
-    j <- sub_lang(substitute(j), remotes = x, locals = env)
-  }
-
-  if (missing(by)) {
-    by <- NULL
-  } else if (inherits(try(by <- by, silent = TRUE), "try-error")) {
-    by <- sub_lang(substitute(by), remotes = x, locals = env)
-  }
-
-  handle_subset(x, x_sub, i, j, by, env)
+  handle_subset(x, i, j, by)
 }
 
 
