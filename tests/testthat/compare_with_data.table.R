@@ -23,14 +23,22 @@ compare_with_data.table <- function(x, env = parent.frame(),
                                     ignore.row.order = TRUE,
                                     verbose = FALSE) {
   x <- substitute(x)
+  DBIT_name <- as.character(x[[2]])
 
-  stopifnot(is.dbi.table(env[[DBIT_name <- as.character(x[[2]])]]))
+  check_env <- new.env()
+  check_env[[DBIT_name]] <- eval(x[[2]], envir = env)
 
-  env_DT <- rlang::env_clone(env)
-  assign(DBIT_name, as.data.table(env[[DBIT_name]]), envir = env_DT)
+  nms <- setdiff(all.vars(x), DBIT_name)
+  nms <- setdiff(nms, names(check_env[[DBIT_name]]))
 
-  DBIT <- as.data.table(eval(x, envir = env))
-  DT <- eval(x, envir = env_DT)
+  for (nm in nms)
+    check_env[[nm]] <- env[[nm]]
+
+  DBIT <- as.data.table(eval(x, envir = check_env))
+
+  check_env[[DBIT_name]] <- as.data.table(check_env[[DBIT_name]])
+
+  DT <- eval(x, envir = check_env)
 
   check <- data.frame(target_names = names(DT),
                       target_types = vapply(DT, typeof, ""),
