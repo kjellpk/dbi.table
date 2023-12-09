@@ -2,7 +2,8 @@
 
 session <- new.env(parent = emptyenv())
 session$table_name_counter <- 0L
-session$"name" <- new.env(parent = emptyenv())
+session$print <- ""
+session$special_symbols <- new.env(parent = emptyenv())
 session$special_functions <- new.env(parent = emptyenv())
 
 
