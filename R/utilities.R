@@ -70,14 +70,8 @@ pad_left <- function(x, width = 6) {
 
 
 
-e <- new.env()
-
 unique_table_name <- function(pre = "X") {
-  if (is.null(e$u_counter)) {
-    e$u_counter <- 0L
-  }
-
-  paste0(pre, (e$u_counter <- 1L + e$u_counter))
+  paste0(pre, (session$table_name_counter <- 1L + session$table_name_counter))
 }
 
 

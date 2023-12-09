@@ -138,8 +138,28 @@ is.dbi.table <- function(x) {
 
 
 
+should_print <- function(x) {
+  ret <- (session$print == "" || address(x) != session$print)
+  session$print <- ""
+  ret
+}
+
+
+
 #' @export
 print.dbi.table <- function(x, ...) {
+  mimics_auto_print <- "knit_print.default"
+  if (!should_print(x)) {
+    scs <- sys.calls()
+    if (length(scs) <= 2L ||
+      (length(scs) >= 3L && is.symbol(this <- scs[[length(scs) - 2L]][[1L]]) &&
+      as.character(this) == "source") ||
+      (length(scs) > 3L && is.symbol(this <- scs[[length(scs) - 3L]][[1L]]) &&
+      as.character(this) %chin% mimics_auto_print)) {
+      return(invisible(x))
+    }
+  }
+
   cat(paste0("<", db_short_name(get_connection(x)), ">"),
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
@@ -196,7 +216,15 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   by <- preprocess_subset_arg(by, substitute(by), x, env)
 
   if (is.call(j) && as.character(j[[1]]) == ":=") {
-    print("x <- handle_colon_equal(x, i, j, by)")
+    x <- handle_colon_equal(x, i, j, by)
+
+    if (is.name(x_sub)) {
+      assign(as.character(x_sub), x, envir = env)
+    }
+
+    #invisible doesn't work - use data.table's workaround
+    session$print <- address(x)
+    return(x)
   }
 
   handle_subset(x, i, j, by)

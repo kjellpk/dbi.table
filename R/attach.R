@@ -100,5 +100,5 @@ schema_env <- function(conn, schema, envir = new.env()) {
 
   reg.finalizer(envir, schema_env_finalizer, onexit = TRUE)
 
-  invisible(e)
+  invisible(envir)
 }

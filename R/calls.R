@@ -1,38 +1,73 @@
 sub_lang <- function(e, remotes = NULL, locals = NULL) {
   if (is.null(e)) {
     return(NULL)
-  } else if (is.name(e)) {
-    if (!is.null(u <- try_map(e, special_symbols))) {
-      e <- u
-    } else if (!is.null(r <- try_map(e, remotes))) {
-      e <- r
-    } else if (!is.null(l <- try_map(e, locals)))  {
-      if (is.vector(l) && (length(l) == 1L)) {
-        e <- l
-      } else {
-        stop("only scalar local variables are supported at this time")
-      }
-    } #else {
-      #stop("symbol ", sQuote(e), " not found")
-    #}
-  } else if (is.call(e)) {
-    if (!is.null(r <- try_map(e[[1]], special_functions))) {
-      e[[1]] <- r
+  }
+
+  if (!is.null(remotes) &&
+        all(!(all.vars(e) %in% names(remotes))) &&
+        all(!(all.vars(e) %in% names(session$special_symbols))) &&
+        all(!(all.names(e) %in% names(session$special_functions)))) {
+    v <- eval(e, envir = locals)
+
+    if (!is.vector(v) || length(v) != 1L) {
+      stop("local variable is not scalar")
     }
 
+    return(use_integer(v))
+  }
+
+
+  e <- reinplace_special(e)
+
+  if (is.name(e) && !is.null(r <- remotes[[as.character(e)]])) {
+    return(r)
+  }
+
+  if (is.call(e)) {
     if (as.character(e[[1]]) == "list") {
       if (is.null(nm <- names(e))) {
         nm <- character(length(e))
       }
 
       idx <- (nchar(nm) == 0L) & vapply(e, is.name, FALSE)
-      nm[idx] <- vapply(e[idx], as.character, "")
+
+      tmp <- vapply(e[idx], as.character, "")
+      is_spec <- tmp %in% names(session$special_symbols)
+      tmp[is_spec] <- substring(tmp[is_spec], 2)
+
+      nm[idx] <- tmp
       names(e) <- nm
     }
 
-    e[-1] <- lapply(e[-1], sub_lang, remotes = remotes, locals = locals)
+    if (as.character(e[[1]]) == ":=") {
+      lhs <- e[[2]]
+      e[[2]] <- NULL
+      stopifnot(is.name(lhs))
+      names(e)[2] <- as.character(lhs)
+      e[[2]] <- sub_lang(e[[2]], remotes = remotes, locals = locals)
+    } else {
+      e[-1] <- lapply(e[-1], sub_lang, remotes = remotes, locals = locals)
+    }
+
+    return(e)
   }
-  e
+
+  browser()
+  stop("should never get here")
+
+  NULL
+}
+
+
+
+use_integer <- function(x) {
+  if (is.double(x)) {
+    if (max(abs(x - as.integer(x))) < .Machine$double.eps) {
+      x <- as.integer(x)
+    }
+  }
+
+  x
 }
 
 
@@ -74,7 +109,7 @@ call_can_aggregate <- can_aggregate <- function(e) {
     if (as.character(e[[1]]) %in% AGGREGATE_FUNCTIONS) {
       return(TRUE)
     } else {
-      return(all(sapply(as.list(e)[-1], call_can_aggregate)))
+      return(all(vapply(as.list(e)[-1], call_can_aggregate, FALSE)))
     }
   }
 

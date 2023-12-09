@@ -134,3 +134,17 @@ handle_j <- function(x, j, by) {
 
   j
 }
+
+
+
+handle_colon_equal <- function(x, i, j, by) {
+  j <- as.list(j[-1])
+  a <- attributes(x)
+  a$names <- NULL
+  x <- c(x)
+  x[names(j)] <- j
+  a$names <- names(x)
+  attributes(x) <- a
+
+  x
+}
