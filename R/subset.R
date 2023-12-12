@@ -2,7 +2,16 @@ preprocess_subset_arg <- function(arg, arg_sub, x, env) {
   if (missing(arg)) {
     NULL
   } else if (inherits(try(arg, silent = TRUE), "try-error")) {
+    if (is.name(arg_sub)) {
+      tmp <- call("list")
+      tmp[[2]] <- arg_sub
+      arg_sub <- tmp
+    }
     sub_lang(arg_sub, remotes = x, locals = env)
+  } else if (is.null(arg) && is_special(arg_sub)) {
+    call_list <- call("list")
+    call_list[[2]] <- arg_sub
+    sub_lang(call_list)
   } else {
     arg
   }
@@ -109,8 +118,11 @@ handle_j <- function(x, j, by) {
   if (is.null(j))
     return(x)
 
-  j <- handle_cols(x, j, "j")
   by <- handle_by(x, by)
+
+
+
+  j <- handle_cols(x, j, "j")
   a <- attributes(x)
 
   if (all(calls_can_aggregate(j))) {
