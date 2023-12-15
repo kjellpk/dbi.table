@@ -4,9 +4,8 @@ sub_lang <- function(e, remotes = NULL, locals = NULL) {
   }
 
   if (!is.null(remotes) &&
-        all(!(all.vars(e) %in% names(remotes))) &&
-        all(!(all.vars(e) %in% names(session$special_symbols))) &&
-        all(!(all.names(e) %in% names(session$special_functions)))) {
+        all(!((ave <- all.vars(e)) %in% names(remotes))) &&
+        all(!(ave %in% names(session$special_symbols)))) {
     v <- eval(e, envir = locals)
 
     if (!is.vector(v) || length(v) != 1L) {
@@ -15,7 +14,6 @@ sub_lang <- function(e, remotes = NULL, locals = NULL) {
 
     return(use_integer(v))
   }
-
 
   e <- reinplace_special(e)
 
@@ -52,7 +50,6 @@ sub_lang <- function(e, remotes = NULL, locals = NULL) {
     return(e)
   }
 
-  browser()
   stop("should never get here")
 
   NULL

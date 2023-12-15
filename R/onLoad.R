@@ -17,7 +17,6 @@ session$special_symbols <- new.env(parent = emptyenv())
   add_special(".EACHI")
 
   add_special(".", as.name("list"))
-  add_special("forder", as.name("order"))
 
   NULL
 }
