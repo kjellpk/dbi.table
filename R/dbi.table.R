@@ -201,8 +201,11 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
 
 #' @export
 "[.dbi.table" <- function(x, i, j, by, env = parent.frame()) {
+  i <- preprocess_subset_arg(substitute(i), x, env)
+  j <- preprocess_subset_arg(substitute(j), x, env)
+  by <- preprocess_subset_arg(substitute(by), x, env)
 
-  if (missing(i) && missing(j)) {
+  if (is.null(i) && is.null(j)) {
     return(as.data.table(x))
   }
 
@@ -210,10 +213,6 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   if (!dbi.table_is_simple(x)) {
     x <- as_cte(x)
   }
-
-  i <- preprocess_subset_arg(i, substitute(i), x, env)
-  j <- preprocess_subset_arg(j, substitute(j), x, env)
-  by <- preprocess_subset_arg(by, substitute(by), x, env)
 
   if (is.call(j) && as.character(j[[1]]) == ":=") {
     x <- handle_colon_equal(x, i, j, by)
