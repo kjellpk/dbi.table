@@ -1,17 +1,40 @@
 unsupported <- function(sym) {
-  msg <- paste("the", sQuote("data.table"), "special symbol", sQuote(sym),
-               "is not supported by", sQuote("dbi.table"))
-  simpleError(msg)
+  eval(bquote(function(e, dbi_table, specials, env) {
+    stop("the ", sQuote("data.table"), " special symbol ", sQuote(.(sym)),
+         " is not supported by ", sQuote("dbi.table"), call. = FALSE)
+  }))
 }
 
 
 
-add_special <- function(key, value = unsupported(key)) {
-  stopifnot(is.character(key) && (length(key) == 1L) && nchar(key) > 0)
-  stopifnot(is.language(value) || inherits(value, "simpleError"))
+special_list <- function(e, dbi_table, specials, env) {
+  e[[1]] <- as.name("list")
 
-  session$special_symbols[[key]] <- value
+  if (is.null(nm <- names(e))) {
+    nm <- character(length(e))
+  }
 
+  if (any(idx <- (nchar(nm) == 0L) & vapply(e, is.name, FALSE))) {
+    tmp <- vapply(e[idx], as.character, "")
+    is_spec <- tmp %in% names(session$special_symbols)
+    tmp[is_spec] <- ifelse(substring(tmp[is_spec], 1, 1) == ".",
+                           substring(tmp[is_spec], 2),
+                           tmp[is_spec])
+    nm[idx] <- tmp
+    names(e) <- nm
+  }
+
+  e[-1] <- lapply(e[-1], sub_lang, dbi_table = dbi_table,
+                  specials = specials, env = env)
+
+  e
+}
+
+
+
+add_special <- function(symbol, fun = unsupported(symbol)) {
+  stopifnot(is.character(symbol) && (length(symbol) == 1L) && nchar(symbol) > 0)
+  session$special_symbols[[symbol]] <- fun
   invisible()
 }
 
@@ -19,28 +42,4 @@ add_special <- function(key, value = unsupported(key)) {
 
 is_special <- function(e) {
   is.name(e) && !is.null(session$special_symbols[[as.character(e)]])
-}
-
-
-
-reinplace_special <- function(e) {
-  if (is.name(e)) {
-    if (!is.null(m <- session$special_symbols[[as.character(e)]])) {
-      if (inherits(m, "simpleError")) {
-        stop(m)
-      }
-
-      e <- m
-    }
-  } else if (is.call(e)) {
-    if (!is.null(m <- session$special_symbols[[as.character(e[[1]])]])) {
-      if (inherits(m, "simpleError")) {
-        stop(m)
-      }
-
-      e[[1]] <- m
-    }
-  }
-
-  e
 }

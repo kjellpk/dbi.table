@@ -1,17 +1,7 @@
-preprocess_subset_arg <- function(arg_sub, x = NULL, env = NULL) {
-  if (is.name(arg_sub) && as.character(arg_sub) == "") {
-    NULL
-  } else {
-    sub_lang(arg_sub, remotes = x, locals = env)
-  }
-}
+handle_brackets <- function(x, i, j, by, env = NULL, x_sub = NULL) {
 
-
-
-handle_subset <- function(x, i, j, by) {
-  if (is.null(j) && !is.null(by)) {
-    stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
-         " is missing or ", sQuote("NULL"))
+  if (is.call(j) && j[[1]] == ":=") {
+    return(handle_colon_equal(x, i, j, by, env, x_sub))
   }
 
   x <- handle_i(x, i)
@@ -23,8 +13,9 @@ handle_subset <- function(x, i, j, by) {
 
 
 handle_i <- function(x, i) {
-  if (is.null(i))
+  if (is.null(i)) {
     return(x)
+  }
 
   stopifnot(is.language(i))
 
@@ -104,11 +95,11 @@ handle_cols <- function(x, cols, arg_name = "<unknown>") {
 
 
 handle_j <- function(x, j, by) {
-  if (is.null(j))
+  if (is.null(j)) {
     return(x)
+  }
 
   by <- handle_by(x, by)
-
   j <- handle_cols(x, j, "j")
   a <- attributes(x)
 
@@ -136,7 +127,11 @@ handle_j <- function(x, j, by) {
 
 
 
-handle_colon_equal <- function(x, i, j, by) {
+handle_colon_equal <- function(x, i, j, by, env, x_sub) {
+  lhs <- j[[2]]
+  j[[2]] <- NULL
+  stopifnot(is.name(lhs))
+  names(j)[2] <- as.character(lhs)
   j <- as.list(j[-1])
   a <- attributes(x)
   a$names <- NULL
@@ -145,5 +140,12 @@ handle_colon_equal <- function(x, i, j, by) {
   a$names <- names(x)
   attributes(x) <- a
 
+  if (is.name(x_sub)) {
+    # try to handle assignment to environment and list too
+    assign(as.character(x_sub), x, envir = env)
+  }
+
+  #invisible doesn't work - use data.table's workaround
+  session$print <- address(x)
   x
 }

@@ -88,7 +88,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     }
   }
 
-  by <- lapply(by, sub_lang, remotes = c(xy))
+  by <- lapply(by, sub_lang, dbi_table = xy, specials = NULL)
   names(by) <- names(idx)[match(by.x, idx)]
 
   xb <- c(xy)[setdiff(names(x), by.x)]

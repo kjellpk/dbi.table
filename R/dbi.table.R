@@ -43,7 +43,7 @@ new_dbi_table <- function(conn, id, fields = NULL) {
     fields <- dbListFields(conn, id)
   }
 
-  internal_name <- paste0("FN", seq_len(length(fields)))
+  internal_name <- paste0(session$key_base, seq_len(length(fields)))
 
   fields <- data.frame(internal_name = internal_name,
                        id_name = id_name,
@@ -201,32 +201,25 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
 
 #' @export
 "[.dbi.table" <- function(x, i, j, by, env = parent.frame()) {
-  i <- preprocess_subset_arg(substitute(i), x, env)
-  j <- preprocess_subset_arg(substitute(j), x, env)
-  by <- preprocess_subset_arg(substitute(by), x, env)
-
-  if (is.null(i) && is.null(j)) {
-    return(as.data.table(x))
-  }
-
   x_sub <- substitute(x)
+
   if (!dbi.table_is_simple(x)) {
     x <- as_cte(x)
   }
 
-  if (is.call(j) && as.character(j[[1]]) == ":=") {
-    x <- handle_colon_equal(x, i, j, by)
+  i <- sub_lang(substitute(i), dbi_table = x, env = env)
+  j <- sub_lang(substitute(j), dbi_table = x, env = env)
+  by <- sub_lang(substitute(by), dbi_table = x, env = env)
 
-    if (is.name(x_sub)) {
-      assign(as.character(x_sub), x, envir = env)
+  if (is.null(i) && is.null(j)) {
+    if (!is.null(by)) {
+      stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
+           " is missing or ", sQuote("NULL"))
     }
-
-    #invisible doesn't work - use data.table's workaround
-    session$print <- address(x)
-    return(x)
+    return(as.data.table(x))
   }
 
-  handle_subset(x, i, j, by)
+  handle_brackets(x, i, j, by, env, x_sub)
 }
 
 

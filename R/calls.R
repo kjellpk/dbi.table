@@ -1,58 +1,44 @@
-sub_lang <- function(e, remotes = NULL, locals = NULL) {
+sub_lang <- function(e, dbi_table = NULL, specials = session$special_symbols,
+                     env = NULL) {
   if (is.null(e)) {
     return(NULL)
   }
 
-  if (!is.null(remotes) &&
-        all(!((ave <- all.vars(e)) %in% names(remotes))) &&
-        all(!(ave %in% names(session$special_symbols)))) {
-    v <- eval(e, envir = locals)
+  if (is.name(e)) {
+    e_char <- as.character(e)
 
-    if (!is.vector(v) || length(v) != 1L) {
-      stop("local variable is not scalar")
+    if (nchar(e_char) < 1) {
+      return(NULL)
     }
 
-    return(use_integer(v))
-  }
+    if (!is.null(dbi_table) && (e_char %in% names(dbi_table))) {
+      return(c(dbi_table)[[e_char]])
+    }
 
-  e <- reinplace_special(e)
+    if (!is.null(specials) && (e_char %in% names(specials))) {
+      return(specials[[e_char]](e, dbi_table, specials, env))
+    }
 
-  if (is.name(e) && !is.null(r <- remotes[[as.character(e)]])) {
-    return(r)
+    if (!is.null(env) && !is.null(env[[e_char]])) {
+      return(if_scalar(eval(e, envir = env)))
+    }
+
+    stop("symbol ", sQuote(e), " not found")
   }
 
   if (is.call(e)) {
-    if (as.character(e[[1]]) == "list") {
-      if (is.null(nm <- names(e))) {
-        nm <- character(length(e))
-      }
-
-      idx <- (nchar(nm) == 0L) & vapply(e, is.name, FALSE)
-
-      tmp <- vapply(e[idx], as.character, "")
-      is_spec <- tmp %in% names(session$special_symbols)
-      tmp[is_spec] <- substring(tmp[is_spec], 2)
-
-      nm[idx] <- tmp
-      names(e) <- nm
+    if (!is.null(specials) &&
+          ((ec <- as.character(e[[1]])) %in% names(specials))) {
+      return(specials[[ec]](e, dbi_table, specials, env))
     }
 
-    if (as.character(e[[1]]) == ":=") {
-      lhs <- e[[2]]
-      e[[2]] <- NULL
-      stopifnot(is.name(lhs))
-      names(e)[2] <- as.character(lhs)
-      e[[2]] <- sub_lang(e[[2]], remotes = remotes, locals = locals)
-    } else {
-      e[-1] <- lapply(e[-1], sub_lang, remotes = remotes, locals = locals)
-    }
+    e[-1] <- lapply(e[-1], sub_lang, dbi_table = dbi_table,
+                    specials = specials, env = env)
 
     return(e)
   }
 
-  stop("should never get here")
-
-  NULL
+  if_scalar(e)
 }
 
 
@@ -69,13 +55,22 @@ use_integer <- function(x) {
 
 
 
+if_scalar <- function(x) {
+  if (!(mode(x) %in% c("numeric", "character", "logical")) || length(x) != 1L) {
+    stop("only scalar symbols can be substituted into calls")
+  }
+  use_integer(x)
+}
+
+
 handy_andy <- function(l) {
   if (!is.list(l) || !length(l)) {
     return(NULL)
   }
 
   names(l) <- paste0("x", seq_along(l))
-  sub_lang(str2lang(paste(paren(names(l)), collapse = "&")), remotes = l)
+  sub_lang(str2lang(paste(paren(names(l)), collapse = "&")),
+           dbi_table = l, specials = NULL, env = NULL)
 }
 
 

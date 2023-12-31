@@ -102,7 +102,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
 
     l <- lapply(d[dup == FALSE][["pname"]], as.name)
     names(l) <- d[dup == FALSE][["name"]]
-    on <- sub_lang(on, l)
+    on <- sub_lang(on, dbi_table = l, specials = NULL)
 
     on_vars <- all.names(on)
 
@@ -142,11 +142,12 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   nx <- nrow(x_fields)
   ny <- nrow(y_fields)
 
-  new_name <- paste0("FN", (nx + 1):(nx + ny))
+  new_name <- paste0(session$key_base, (nx + 1):(nx + ny))
   names(new_name) <- y_fields$internal_name
   y_fields$internal_name <- new_name
 
-  y <- lapply(c(y), sub_lang, remotes = lapply(new_name, as.name))
+  y <- lapply(c(y), sub_lang, dbi_table = lapply(new_name, as.name),
+              specials = NULL)
 
   fields <- rbind(x_fields, y_fields)
 
@@ -160,7 +161,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   y_data_source$clause <- JOINS[type]
 
   if (!is.null(on)) {
-    y_data_source$on <- list(sub_lang(on, remotes = xy, locals = env))
+    y_data_source$on <- list(sub_lang(on, dbi_table = xy, specials = NULL))
   }
 
   data_source <- rbind(x_data_source, y_data_source)
