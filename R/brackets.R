@@ -1,13 +1,20 @@
-handle_brackets <- function(x, i, j, by, env = NULL, x_sub = NULL) {
-
+triage_brackets <- function(x, i, j, by, env = NULL, x_sub = NULL) {
   if (is.call(j) && j[[1]] == ":=") {
     return(handle_colon_equal(x, i, j, by, env, x_sub))
   }
 
-  x <- handle_i(x, i)
-  x <- handle_j(x, j, by)
+  if (is.null(j) && !is.null(by)) {
+    stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
+         " is missing or ", sQuote("NULL"))
+  }
 
-  x
+  x <- handle_i(x, i)
+
+  if (!dbi_table_is_simple(x)) {
+    x <- as_cte(x)
+  }
+
+  handle_j(x, j, by)
 }
 
 
@@ -17,34 +24,41 @@ handle_i <- function(x, i) {
     return(x)
   }
 
-  stopifnot(is.language(i))
+  stopifnot(is.call(i))
 
-  switch(as.character(i[[1]]),
-    order = handle_i_order(x, as.list(i[-1])),
-    list = handle_i_list(x, as.list(i[-1])),
-    handle_i_list(x, list(i))
-  )
+  if (as.character(i[[1]]) == "order") {
+    return(handle_i_order(x, i))
+  }
+
+  handle_i_where(x, i)
 }
 
 
 
-handle_i_list <- function(x, i) {
-  attr(x, "where") <- i
-  x
+update_order_by <- function(x, i) {
+  i <- as.list(i[-1])
+  i <- i[!vapply(i, is.null, FALSE)]
+
+  if (length(i) < 1) {
+    return(list())
+  }
+
+  unique(c(i, get_order_by(x)))
 }
 
 
 
 handle_i_order <- function(x, i) {
-  i <- i[!vapply(i, is.null, FALSE)]
-  stopifnot(all(vapply(i, is.language, FALSE)))
+  attr(x, "order_by") <- update_order_by(x, i)
+  x
+}
 
-  if (length(i) < 1) {
-    attr(x, "order_by") <- list()
-    return(x)
-  }
 
-  attr(x, "order_by") <- unique(c(i, get_order_by(x)))
+
+handle_i_where <- function(x, i) {
+  where <- attr(x, "where", exact = TRUE)
+  where[[length(where) + 1L]] <- i
+  attr(x, "where") <- where
   x
 }
 
@@ -52,44 +66,20 @@ handle_i_order <- function(x, i) {
 
 handle_by <- function(x, by) {
   if (is.null(by)) {
-    return(NULL)
+    return(list())
   }
 
-  by <- handle_cols(x, by, "by")
+  if (is.call(by) && as.character(by[[1]]) == "list") {
+    by <- as.list(by[-1])
+  } else {
+    stop("by is not a call to list")
+  }
 
-  if (any(window_calls(by, get_connection(x)))) {
+  if (length(window_calls(by, get_connection(x)))) {
     stop("Aggregate and window functions are not allowed in ", sQuote("by"))
   }
 
   by
-}
-
-
-
-handle_vector <- function(x, v) {
-  if (any(vapply(v <- c(x)[v], is.null, FALSE))) {
-    stop("subscript out of bounds")
-  }
-
-  v
-}
-
-
-
-handle_cols <- function(x, cols, arg_name = "<unknown>") {
-  if (is.call(cols)) {
-    if (as.character(cols[[1]]) == "list") {
-      cols <- as.list(cols[-1])
-    } else {
-      cols <- list(cols)
-    }
-  } else if (is.vector(cols)) {
-    cols <- handle_vector(x, cols)
-  } else {
-    stop(sQuote(arg_name), " must be a vector or a call")
-  }
-
-  cols
 }
 
 
@@ -99,19 +89,19 @@ handle_j <- function(x, j, by) {
     return(x)
   }
 
+  if (is.call(j) && as.character(j[[1]]) == "list") {
+    j <- as.list(j[-1])
+  } else {
+    stop("j is not a call to list")
+  }
+
   by <- handle_by(x, by)
-  j <- handle_cols(x, j, "j")
   a <- attributes(x)
 
   if (all(calls_can_aggregate(j))) {
     a$group_by <- by
   } else {
-    over <- list(partition_by = by,
-                 order_by = a$order_by)
-
-    for (k in which(window_calls(j, get_connection(x)))) {
-      attr(j[[k]], "over") <- over
-    }
+    j <- handle_over(x, j, by, a$order_by) 
   }
 
   j <- c(by, j)
@@ -127,11 +117,19 @@ handle_j <- function(x, j, by) {
 
 
 
+handle_over <- function(x, j, partition, order) {
+  over <- list(partition_by = unname(partition), order_by = unname(order))
+
+  for (k in window_calls(j, get_connection(x))) {
+    attr(j[[k]], "over") <- over
+  }
+
+  j
+}
+
+
+
 handle_colon_equal <- function(x, i, j, by, env, x_sub) {
-  lhs <- j[[2]]
-  j[[2]] <- NULL
-  stopifnot(is.name(lhs))
-  names(j)[2] <- as.character(lhs)
   j <- as.list(j[-1])
   a <- attributes(x)
   a$names <- NULL

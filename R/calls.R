@@ -11,11 +11,11 @@ sub_lang <- function(e, dbi_table = NULL, specials = session$special_symbols,
       return(NULL)
     }
 
-    if (!is.null(dbi_table) && (e_char %in% names(dbi_table))) {
+    if (!is.null(dbi_table) && (e_char %chin% names(dbi_table))) {
       return(c(dbi_table)[[e_char]])
     }
 
-    if (!is.null(specials) && (e_char %in% names(specials))) {
+    if (!is.null(specials) && (e_char %chin% names(specials))) {
       return(specials[[e_char]](e, dbi_table, specials, env))
     }
 
@@ -28,7 +28,7 @@ sub_lang <- function(e, dbi_table = NULL, specials = session$special_symbols,
 
   if (is.call(e)) {
     if (!is.null(specials) &&
-          ((ec <- as.character(e[[1]])) %in% names(specials))) {
+          ((ec <- as.character(e[[1]])) %chin% names(specials))) {
       return(specials[[ec]](e, dbi_table, specials, env))
     }
 
@@ -56,11 +56,19 @@ use_integer <- function(x) {
 
 
 if_scalar <- function(x) {
-  if (!(mode(x) %in% c("numeric", "character", "logical")) || length(x) != 1L) {
+  if (!(mode(x) %chin% c("numeric", "character", "logical")) ||
+        length(x) != 1L) {
     stop("only scalar symbols can be substituted into calls")
   }
   use_integer(x)
 }
+
+
+
+is_call_to <- function(call_name, cl) {
+  is.call(cl) && (as.character(cl[[1]]) == call_name)
+}
+
 
 
 handy_andy <- function(l) {
@@ -80,7 +88,7 @@ OVER_PATTERN <- "\\)\\s*OVER\\s*\\("
 window_calls <- function(x, conn) {
   suppressWarnings(
     #' @importFrom dbplyr translate_sql_
-    grepl(OVER_PATTERN, translate_sql_(x, con = conn, window = TRUE))
+    grep(OVER_PATTERN, translate_sql_(x, con = conn, window = TRUE))
   )
 }
 
@@ -98,7 +106,7 @@ call_can_aggregate <- can_aggregate <- function(e) {
   }
 
   if (is.call(e)) {
-    if (as.character(e[[1]]) %in% AGGREGATE_FUNCTIONS) {
+    if (as.character(e[[1]]) %chin% AGGREGATE_FUNCTIONS) {
       return(TRUE)
     } else {
       return(all(vapply(as.list(e)[-1], call_can_aggregate, FALSE)))

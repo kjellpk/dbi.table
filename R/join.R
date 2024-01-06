@@ -46,7 +46,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
 
   x_ctes <- get_ctes(x)
 
-  if (!dbi.table_is_simple(y)) {
+  if (!dbi_table_is_simple(y)) {
     y <- as_cte(y)
   }
 

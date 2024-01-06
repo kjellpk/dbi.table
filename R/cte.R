@@ -45,16 +45,17 @@ as_cte <- function(x) {
 
 
 
-dbi.table_is_simple <- function(x) {
-  if (is.dbi.table(x)) {
-    nrow(get_data_source(x)) == 1 &&
-    all(vapply(x, is.name, FALSE)) &&
-    all(as.character(x) %in% get_fields(x)$internal_name) &&
-    #length(get_order_by(x)) == 0 &&
-    length(get_where(x)) == 0
-  } else {
-    FALSE
+dbi_table_is_simple <- function(x) {
+  if (!is.dbi.table(x)) {
+    return(FALSE)
   }
+
+  has_over <- vapply(c(x),
+                     function(u) !is.null(attr(u, "over", exact = TRUE)),
+                     FALSE)
+  group_by <- attr(x, "group_by", exact = TRUE)
+
+  (length(group_by) == 0L) && !any(has_over)
 }
 
 

@@ -32,14 +32,83 @@ special_list <- function(e, dbi_table, specials, env) {
 
 
 
-add_special <- function(symbol, fun = unsupported(symbol)) {
-  stopifnot(is.character(symbol) && (length(symbol) == 1L) && nchar(symbol) > 0)
-  session$special_symbols[[symbol]] <- fun
-  invisible()
+special_colon <- function(e, dbi_table, specials, env) {
+  if (is.name(lhs <- e[[2]])) {
+    lhs <- match(as.character(lhs), names(dbi_table))
+  }
+
+  if (is.name(rhs <- e[[3]])) {
+    rhs <- match(as.character(rhs), names(dbi_table))
+  }
+
+  if (!all(c(lhs, rhs) %in% seq_along(dbi_table))) {
+    stop("problem in :")
+  }
+
+  cl <- sapply(names(dbi_table)[lhs:rhs], as.name, simplify = FALSE)
+  as.call(c(list(as.name("list")), cl))
 }
 
 
 
-is_special <- function(e) {
-  is.name(e) && !is.null(session$special_symbols[[as.character(e)]])
+special_c <- function(e, dbi_table, specials, env) {
+  e_vars <- all.vars(e)
+
+  if (!all(substring(e_vars, 1, 2) == "..")) {
+    stop("handle case where 'name' is not in dbi.table")
+  }
+
+  if (length(e_vars)) {
+    nl <- lapply(substring(e_vars, 3), as.name)
+    names(nl) <- e_vars
+    e <- sub_lang(e, nl, specials = NULL)
+  }
+
+  if (is.character(e <- eval(e, envir = env))) {
+    e <- match(e, names(dbi_table))
+  }
+
+  cl <- sapply(names(dbi_table)[e], as.name, simplify = FALSE)
+  as.call(c(list(as.name("list")), cl))
+}
+
+
+
+special_colon_equals <- function(e, dbi_table, specials, env) {
+
+  if (length(e) == 2L && !is.null(names(e[[2]]))) {
+    e[2] <- sub_lang(e[2], dbi_table = dbi_table, specials = specials,
+                     env = env)
+    return(e)
+  }
+
+  rhs <- sub_lang(e[[3]], dbi_table = dbi_table, specials = specials, env = env)
+
+  if (is.name(rhs)) {
+    rhs <- call(":=", rhs)
+  } else {
+    rhs[[1]] <- as.name(":=")
+  }
+
+  if (is.call(nm <- e[[2]])) {
+    lhs <- eval(nm, env)
+  } else if (is.name(nm)) {
+    lhs <- as.character(nm)
+  }
+
+  if (is.null(nms <- names(rhs))) {
+    nms <- character(length(rhs))
+  }
+
+  nms[-1] <- lhs
+  names(rhs) <- nms
+  rhs
+}
+
+
+
+add_special <- function(symbol, fun = unsupported(symbol)) {
+  stopifnot(is.character(symbol) && (length(symbol) == 1L) && nchar(symbol) > 0)
+  session$special_symbols[[symbol]] <- fun
+  invisible()
 }
