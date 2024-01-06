@@ -118,16 +118,7 @@ The possibilities for `i`, `j`, and `by` are not as general as for `data.table`.
 
 ### Subsetting and Ordering Records with `i`
 
-`i` can be a call or a list of calls. When `i` is a list of calls, the calls are
-combinded into a single call using the `AND` operator.
-
-(list currently no working)
-
-```{r ilist}
-csql(Genre[.(GenreId > 5, GenreId < 10)])
-```
-
-Or, alternatively, using a single call.
+`i` must be a call.
 
 ```{r i}
 csql(Genre[GenreId > 5 & GenreId < 10])
@@ -139,19 +130,14 @@ When `i` is a call to `order`, `i` will set the ORDER BY clause instead.
 csql(Genre[order(-GenreId)])
 ```
 
-
-
-
- The calls are limited to
-those that can be translated to SQL by `dbplyr::translate_sql_` 
+The calls are limited to those that can be translated to SQL by
+`dbplyr::translate_sql_` 
 
 `j` should be a list of calls; these calls can only use functions that can
 be translated to SQL by `dbplyr::translate_sql_` and should only refer to
 symbols in the `dbi.table` and very simple variables (for example, length 1
 vectors). One exception is that `%in%` can have a vector of values on the
 right hand side.
-
-
 
 
 ## Clean Up
