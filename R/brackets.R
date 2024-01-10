@@ -9,11 +9,6 @@ triage_brackets <- function(x, i, j, by, env = NULL, x_sub = NULL) {
   }
 
   x <- handle_i(x, i)
-
-  if (!dbi_table_is_simple(x)) {
-    x <- as_cte(x)
-  }
-
   handle_j(x, j, by)
 }
 
@@ -130,7 +125,21 @@ handle_over <- function(x, j, partition, order) {
 
 
 handle_colon_equal <- function(x, i, j, by, env, x_sub) {
-  j <- as.list(j[-1])
+  if (!is.null(i)) {
+    if (is_call_to("order", i)) {
+      order_by <- update_order_by(x, i)
+    } else {
+      stop("when using :=, ", sQuote("i"), " must be missing or a call to ",
+           sQuote("order"))
+    }
+  } else {
+    order_by <- NULL
+  }
+
+  by <- handle_by(x, by)
+
+  j <- handle_over(x, as.list(j[-1]), by, order_by)
+
   a <- attributes(x)
   a$names <- NULL
   x <- c(x)

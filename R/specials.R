@@ -75,7 +75,6 @@ special_c <- function(e, dbi_table, specials, env) {
 
 
 special_colon_equals <- function(e, dbi_table, specials, env) {
-
   if (length(e) == 2L && !is.null(names(e[[2]]))) {
     e[2] <- sub_lang(e[2], dbi_table = dbi_table, specials = specials,
                      env = env)
@@ -84,10 +83,10 @@ special_colon_equals <- function(e, dbi_table, specials, env) {
 
   rhs <- sub_lang(e[[3]], dbi_table = dbi_table, specials = specials, env = env)
 
-  if (is.name(rhs)) {
-    rhs <- call(":=", rhs)
-  } else {
+  if (is_call_to("list", rhs)) {
     rhs[[1]] <- as.name(":=")
+  } else {
+    rhs <- call(":=", rhs)
   }
 
   if (is.call(nm <- e[[2]])) {

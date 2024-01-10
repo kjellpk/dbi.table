@@ -2,7 +2,7 @@
 % Please edit documentation in R/join.R
 \name{join}
 \alias{join}
-\alias{on}
+\alias{onyx}
 \title{Join dbi.tables}
 \usage{
 join(
@@ -14,7 +14,7 @@ join(
   prefixes = c("x.", "y.")
 )
 
-on(...)
+onyx(...)
 }
 \arguments{
 \item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must
@@ -46,7 +46,7 @@ A helper to make the \dQuote{on} argument.
 }
 \section{Functions}{
 \itemize{
-\item \code{on()}: 
+\item \code{onyx()}: 
 
 }}
 \section{Value a list of \code{\link[base]{call}}s.}{

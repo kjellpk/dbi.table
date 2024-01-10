@@ -203,6 +203,10 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
 "[.dbi.table" <- function(x, i, j, by, env = parent.frame()) {
   x_sub <- substitute(x)
 
+  if (!dbi_table_is_simple(x)) {
+    x <- as_cte(x)
+  }
+
   i <- sub_lang(substitute(i), dbi_table = x, env = env)
   j <- sub_lang(substitute(j), dbi_table = x, env = env)
   by <- sub_lang(substitute(by), dbi_table = x, env = env)

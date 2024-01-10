@@ -1,10 +1,3 @@
-JOINS <- c(inner = "INNER JOIN",
-           left  = "LEFT OUTER JOIN",
-           right = "RIGHT OUTER JOIN",
-           outer = "FULL OUTER JOIN",
-           cross = "CROSS JOIN")
-
-
 #' Join dbi.tables
 #'
 #' @description Perform a \code{SQL}-like join on two \code{\link{dbi.table}}s
@@ -40,13 +33,13 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
     stop(sQuote("y"), " is not a dbi.table")
   }
 
-  if (!dbi.table_can_join_x(x)) {
+  if (!can_join_as_x(x)) {
     x <- as_cte(x)
   }
 
   x_ctes <- get_ctes(x)
 
-  if (!dbi_table_is_simple(y)) {
+  if (!can_join_as_y(y)) {
     y <- as_cte(y)
   }
 
@@ -57,66 +50,54 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   on_sub <- substitute(on)
 
   if (inherits(on <- try(on, silent = TRUE), "try-error")) {
-    if (on_sub[[1]] == as.name(".") || on_sub[[1]] == as.name("list")) {
-      if (length(on <- as.list(on_sub)[-1]) > 1) {
-        on <- handy_andy(on)
-      } else {
-        on <- on[[1]]
-      }
-    }
-  } else {
-    if (is.list(on) && all(vapply(on, is.call, FALSE))) {
-      on <- handy_andy(on)
-    }
+    on <- on_sub
   }
 
-  stopifnot(is.null(on) || is.call(on))
+  if (is.null(on) && type != "cross") {
+    stop(sQuote("on"), " cannot not be ", sQuote("NULL"), " when ",
+         sQuote("type"), " is ", sQuote(type))
+  }
 
-  if ((length(prefixes <- as.character(prefixes)) != 2) ||
-      any(duplicated(prefixes))) {
+  if (!is.null(on) && !is.call(on)) {
+    stop(sQuote("on"), " is not a ", sQuote("call"))
+  }
+
+  prefixes <- as.character(prefixes)
+  if ((length(prefixes) != 2) || anyDuplicated(prefixes)) {
     stop(sQuote("prefixes"), " is not a character vector ",
          "containing 2 distinct values")
   }
 
-  # Define to avoid spurious R CMD check note
-  dup <- name <- out <- pname <- NULL
+  xy_names <- c(x_names <- names(x), y_names <- names(y))
+  dups <- xy_names[duplicated(xy_names)]
 
-  d <- rbind(data.table(source = "x",
-                        name = names(x),
-                        pname = paste0(prefixes[1], names(x))),
-              data.table(source = "y",
-                        name = names(y),
-                        pname = paste0(prefixes[2], names(y))))
-  d[, dup := name %chin% intersect(names(x), names(y))]
-  d[, out := ifelse(dup, pname, name)]
-
-  if (is.null(on)) {
-    if (type != "cross") {
-      stop(sQuote("on"), " cannot not be ", sQuote("NULL"),
-           " when ", sQuote("type"), " is ", sQuote(type))
-    }
-  } else {
-    if (!is.call(on)) {
-      stop(sQuote("on"), " is not a call")
-    }
-
-    l <- lapply(d[dup == FALSE][["pname"]], as.name)
-    names(l) <- d[dup == FALSE][["name"]]
-    on <- sub_lang(on, dbi_table = l, specials = NULL)
-
-    on_vars <- all.names(on)
-
-    if (any(idx <- (on_vars %in% d[dup == TRUE, unique(name)]))) {
-      stop("ambiguous use of ", sQuote(v <- on_vars[idx][1]), " in ",
-          sQuote("on"), "; use ", sQuote(paste0(prefixes[1], v)),
-          " to refer to the ", sQuote(v), " in ", sQuote("x"), " and ",
-          sQuote(paste0(prefixes[2], v)), " to refer to the ", sQuote(v),
-          " in ", sQuote("y"))
-    }
+  if (any(i <- ((on_vars <- all.vars(on)) %chin% dups))) {
+    stop("ambiguous use of ", sQuote(v <- on_vars[i][1]), " in ",
+         sQuote("on"), "; use ", sQuote(paste0(prefixes[1], v)),
+         " to refer to the ", sQuote(v), " in ", sQuote("x"), " and ",
+         sQuote(paste0(prefixes[2], v)), " to refer to the ", sQuote(v),
+         " in ", sQuote("y"))
   }
 
-  names(x) <- paste0(prefixes[1], names(x))
-  names(y) <- paste0(prefixes[2], names(y))
+  names(x) <- paste0(prefixes[1], x_names)
+  names(y) <- paste0(prefixes[2], y_names)
+
+  u_names <- c(names(x), names(y))
+  xy_names <- ifelse(xy_names %chin% dups, u_names, xy_names)
+  names(u_names) <- xy_names
+  u_names <- lapply(u_names[setdiff(names(u_names), dups)], as.name)
+
+  on <- sub_lang(on, dbi_table = u_names, specials = NULL)
+
+  x_fields <- get_fields(x)
+  y_fields <- get_fields(y)
+  y_sub <- paste0(session$key_base, nrow(x_fields) + seq_len(nrow(y_fields)))
+  names(y_sub) <- y_fields$internal_name
+  y_fields$internal_name <- y_sub
+  y_sub <- lapply(y_sub, as.name)
+
+  xy <- c(c(x), lapply(c(y), sub_lang, dbi_table = y_sub, specials = NULL))
+  names(xy) <- xy_names
 
   if (identical(attr(x, "conn", exact = TRUE), attr(y, "conn", exact = TRUE))) {
     conn <- attr(x, "conn", exact = TRUE)
@@ -126,35 +107,16 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   }
 
   x_data_source <- get_data_source(x)
-  x_fields <- get_fields(x)
-
   y_data_source <- get_data_source(y)
-  y_fields <- get_fields(y)
 
   if (y_data_source$id_name %in% x_data_source$id_name) {
-    y_data_source$id_name <- yid <- unique_table_name()
-    y_fields$id_name <- yid
+    y_data_source$id_name <- unique_table_name()
+    y_fields$id_name <- y_data_source$id_name
   }
-
 
   # 3. join fields
 
-  nx <- nrow(x_fields)
-  ny <- nrow(y_fields)
-
-  new_name <- paste0(session$key_base, (nx + 1):(nx + ny))
-  names(new_name) <- y_fields$internal_name
-  y_fields$internal_name <- new_name
-
-  y <- lapply(c(y), sub_lang, dbi_table = lapply(new_name, as.name),
-              specials = NULL)
-
   fields <- rbind(x_fields, y_fields)
-
-
-  # 4. Join columns
-
-  xy <- c(x, y)
 
   # 5. join data_source
 
@@ -166,13 +128,10 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
 
   data_source <- rbind(x_data_source, y_data_source)
 
-
   # 6. join ctes
 
   ctes <- c(x_ctes, y_ctes)
   ctes <- ctes[!duplicated(names(ctes))]
-
-  names(xy) <- d$out
 
   dbi_table_object(xy, conn, data_source, fields, ctes = ctes)
 }
@@ -189,7 +148,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
 #'
 #' @section Value a list of \code{\link[base]{call}}s.
 #' @export
-on <- function(...) {
+onyx <- function(...) {
   m <- as.list(match.call())[-1]
 
   if (any(not_a_call <- !vapply(m, is.call, FALSE))) {
@@ -197,4 +156,25 @@ on <- function(...) {
   }
 
   m
+}
+
+
+
+JOINS <- c(inner = "INNER JOIN",
+           left  = "LEFT OUTER JOIN",
+           right = "RIGHT OUTER JOIN",
+           outer = "FULL OUTER JOIN",
+           cross = "CROSS JOIN")
+
+
+
+can_join_as_x <- function(x) {
+  dbi_table_is_simple(x)
+}
+
+
+
+can_join_as_y <- function(x) {
+  data_source <- attr(x, "data_source", exact = TRUE)
+  dbi_table_is_simple(x) && (nrow(data_source) == 1L)
 }
