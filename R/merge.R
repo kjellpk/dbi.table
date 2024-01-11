@@ -51,63 +51,49 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     by.x <- by.y <- by
   }
 
-  names(x) <- idx <- paste0("x", seq_len(length(nx)))
-  names(y) <- idy <- paste0("y", seq_len(length(ny)))
+  by.xx <- paste0("x.", by.x)
+  by.yy <- paste0("y.", by.y)
 
-  names(idx) <- nx
-  names(idy) <- ny
-
-  by.x <- idx[by.x]
-  by.y <- idy[by.y]
-
-  on <- lapply(paste(by.y, by.x, sep = " == "), str2lang)
+  on <- lapply(paste(by.xx, by.yy, sep = " == "), str2lang)
   on <- handy_andy(on)
 
-  type <- if (!length(by.x)) {
-            "cross"
-          } else if (all.x && all.y) {
-            "outer"
-          } else if (all.x && !all.y) {
-            "left"
-          } else if (!all.x && all.y) {
-            "right"
-          } else {
-            "inner"
-          }
+  if (!length(by.x)) {
+    type <- "cross"
+  } else if (all.x && all.y) {
+    type <- "outer"
+  } else if (all.x && !all.y) {
+    type <- "left"
+  } else if (!all.x && all.y) {
+    type <- "right"
+  } else {
+    type <- "inner"
+  }
 
-  xy <- join(x, y, type, on, emptyenv())
+  xy <- join(x, y, type, on, envir = NULL)
 
   if (type %chin% c("inner", "left")) {
-    by <- lapply(by.x, as.name)
+    by <- lapply(by.xx, as.name)
+    names(by) <- by.x
+    by <- as.call(c(list(as.name("list")), by))
   } else if (type == "right") {
-    by <- lapply(by.y, as.name)
+    by <- lapply(by.yy, as.name)
+    names(by) <- by.x
+    by <- as.call(c(list(as.name("list")), by))
   } else { #type is "outer"
     by <- list()
     for (i in seq_along(by.x)) {
-      by[[i]] <- as.call(lapply(list("coalesce", by.x[i], by.y[i]), as.name))
+      by[[i]] <- as.call(lapply(list("coalesce", by.xx[i], by.yy[i]), as.name))
     }
+    names(by) <- by.x
+    by <- as.call(c(list(as.name("list")), by))
   }
 
-  by <- lapply(by, sub_lang, dbi_table = xy, specials = NULL)
-  names(by) <- names(idx)[match(by.x, idx)]
+  non_by <- setdiff(names(xy), c(by.xx, by.yy))
+  names(non_by) <- non_by
+  non_by <- sapply(non_by, as.name, simplify = FALSE)
 
-  xb <- c(xy)[setdiff(names(x), by.x)]
-  nxb <- names(idx)[match(names(xb), idx)]
+  j <- as.call(c(as.list(by), non_by))
+  j <- sub_lang(j, dbi_table = xy, specials = NULL)
 
-  yb <- c(xy)[setdiff(names(y), by.y)]
-  nyb <- names(idy)[match(names(yb), idy)]
-
-  dups <- intersect(nxb, nyb)
-  nxb[nxb %chin% dups] <- paste0(nxb[nxb %chin% dups], suffixes[1L])
-  nyb[nyb %chin% dups] <- paste0(nyb[nyb %chin% dups], suffixes[2L])
-
-  names(xb) <- nxb
-  names(yb) <- nyb
-
-  a <- attributes(xy)
-  xy <- c(by, xb, yb)
-  a$names <- names(xy)
-  attributes(xy) <- a
-
-  xy
+  handle_j(xy, j, NULL)
 }

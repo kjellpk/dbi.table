@@ -14,16 +14,16 @@
 #' @param on a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
 #'           clause.
 #'
-#' @param env an environment, \code{on} is partially evaluated in \code{env}
-#'            when this function is evaluated (i.e., not when the join is
-#'            translated to \code{SQL}.)
+#' @param envir an environment, \code{on} is partially evaluated in \code{envir}
+#'              when this function is evaluated (i.e., not when the join is
+#'              translated to \code{SQL}.)
 #'
 #' @param prefixes a 2-element character vector. When \code{x} and \code{y}
 #'                 both have a column with the same name, prefixes are used to
 #'                 eliminate the ambiguity.
 #'
 #' @export
-join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
+join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
                  prefixes = c("x.", "y.")) {
   if (!is.dbi.table(x)) {
     stop(sQuote("x"), " is not a dbi.table")
@@ -87,7 +87,7 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
   names(u_names) <- xy_names
   u_names <- lapply(u_names[setdiff(names(u_names), dups)], as.name)
 
-  on <- sub_lang(on, dbi_table = u_names, specials = NULL)
+  on <- sub_lang(on, dbi_table = u_names, specials = NULL, env = envir)
 
   x_fields <- get_fields(x)
   y_fields <- get_fields(y)
@@ -138,24 +138,14 @@ join <- function(x, y, type = "inner", on = NULL, env = parent.frame(),
 
 
 
-#' Join ON
-#'
-#' @describeIn join
-#'
-#' @description A helper to make the \dQuote{on} argument.
-#'
-#' @param \dots arguements for the \dQuote{on} clause.
-#'
-#' @section Value a list of \code{\link[base]{call}}s.
-#' @export
-onyx <- function(...) {
+on <- function(...) {
   m <- as.list(match.call())[-1]
 
   if (any(not_a_call <- !vapply(m, is.call, FALSE))) {
     stop(sQuote(format(m[not_a_call][[1]])), " is not a call")
   }
 
-  m
+  handy_andy(m)
 }
 
 

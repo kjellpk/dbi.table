@@ -2,7 +2,6 @@
 % Please edit documentation in R/join.R
 \name{join}
 \alias{join}
-\alias{onyx}
 \title{Join dbi.tables}
 \usage{
 join(
@@ -10,11 +9,9 @@ join(
   y,
   type = "inner",
   on = NULL,
-  env = parent.frame(),
+  envir = parent.frame(),
   prefixes = c("x.", "y.")
 )
-
-onyx(...)
 }
 \arguments{
 \item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must
@@ -26,30 +23,17 @@ reference objects on the same \code{\link[DBI]{DBI}} connection.}
 \item{on}{a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
 clause.}
 
-\item{env}{an environment, \code{on} is partially evaluated in \code{env}
+\item{envir}{an environment, \code{on} is partially evaluated in \code{envir}
 when this function is evaluated (i.e., not when the join is
 translated to \code{SQL}.)}
 
 \item{prefixes}{a 2-element character vector. When \code{x} and \code{y}
 both have a column with the same name, prefixes are used to
 eliminate the ambiguity.}
-
-\item{\dots}{arguements for the \dQuote{on} clause.}
 }
 \description{
 Perform a \code{SQL}-like join on two \code{\link{dbi.table}}s
              that share the same underlying \code{\link[DBI]{DBI}}
              connection. All columns of both \code{\link{dbi.table}}s are
              returned.
-
-A helper to make the \dQuote{on} argument.
 }
-\section{Functions}{
-\itemize{
-\item \code{onyx()}: 
-
-}}
-\section{Value a list of \code{\link[base]{call}}s.}{
-NA
-}
-

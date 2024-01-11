@@ -96,7 +96,7 @@ handle_j <- function(x, j, by) {
   if (all(calls_can_aggregate(j))) {
     a$group_by <- by
   } else {
-    j <- handle_over(x, j, by, a$order_by) 
+    j <- handle_over(x, j, by, a$order_by)
   }
 
   j <- c(by, j)
