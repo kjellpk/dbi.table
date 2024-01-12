@@ -76,7 +76,7 @@ schema_env_finalizer <- function(e) {
 
 
 
-schema_env <- function(conn, schema, envir = new.env()) {
+schema_env <- function(conn, schema, envir = new.env(parent = emptyenv())) {
   if (!is.null(existing_conn <- envir$.dbi_connection)) {
     if (!identical(conn, existing_conn)) {
       stop("multiple connections are not supported in a single schema")
