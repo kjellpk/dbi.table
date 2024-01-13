@@ -52,7 +52,7 @@ paren <- function(x) {
 #' @param x a \code{\link{dbi.table}}.
 #' @export
 csql <- function(x) {
-  cat(paste0("\n", write_sql(x), "\n\n"))
+  cat(paste0("\n", write_select_query(x), "\n\n"))
 }
 
 

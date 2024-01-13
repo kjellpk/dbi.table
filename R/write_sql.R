@@ -1,4 +1,4 @@
-write_sql <- function(x) {
+write_select_query <- function(x) {
   query <- list(ctes = write_ctes(x),
                 select = write_select(x),
                 from = write_from(x),
@@ -13,7 +13,7 @@ write_sql <- function(x) {
 
 write_ctes <- function(x) {
   if (length(ctes <- get_ctes(x))) {
-    ctes <- lapply(ctes, write_sql)
+    ctes <- lapply(ctes, write_select_query)
     ctes <- paste0(dbQuoteIdentifier(get_connection(x), names(ctes)),
                    " AS (\n", ctes)
     ctes <- paste(ctes, collapse = "\n),\n\n")

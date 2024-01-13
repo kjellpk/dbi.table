@@ -179,7 +179,8 @@ print.dbi.table <- function(x, ...) {
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   #' @importFrom DBI dbSendStatement
-  res <- try(dbSendStatement(get_connection(x), write_sql(x)), silent = TRUE)
+  res <- try(dbSendStatement(get_connection(x), write_select_query(x)),
+             silent = TRUE)
 
   if (inherits(res, "try-error") &&
         is.environment(e <- attr(x, "conn", exact = TRUE)) &&
@@ -187,7 +188,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
     e$.dbi_connection <- init_connection(recon)
 
     #' @importFrom DBI dbSendStatement
-    res <- dbSendStatement(get_connection(x), write_sql(x))
+    res <- dbSendStatement(get_connection(x), write_select_query(x))
   }
 
   #' @importFrom DBI dbClearResult
