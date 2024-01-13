@@ -14,7 +14,7 @@ write_select_query <- function(x) {
 write_ctes <- function(x) {
   if (length(ctes <- get_ctes(x))) {
     ctes <- lapply(ctes, write_select_query)
-    ctes <- paste0(dbQuoteIdentifier(get_connection(x), names(ctes)),
+    ctes <- paste0(dbQuoteIdentifier(dbi_connection(x), names(ctes)),
                    " AS (\n", ctes)
     ctes <- paste(ctes, collapse = "\n),\n\n")
     paste0("WITH ", ctes, "\n)")
@@ -26,7 +26,7 @@ write_ctes <- function(x) {
 
 
 write_select <- function(x) {
-  conn <- get_connection(x)
+  conn <- dbi_connection(x)
 
   if (all(vapply(setdiff(c(x), get_group_by(x)), can_aggregate, FALSE))) {
     ## @importFrom dbplyr translate_sql_
@@ -62,7 +62,7 @@ write_select <- function(x) {
 
 
 write_from <- function(x) {
-  conn <- get_connection(x)
+  conn <- dbi_connection(x)
   from <- ""
 
   for (i in seq_len(nrow(data_source <- get_data_source(x)))) {
@@ -95,7 +95,7 @@ write_from <- function(x) {
 
 
 write_where <- function(x) {
-  conn <- get_connection(x)
+  conn <- dbi_connection(x)
 
   if (length(where <- get_where(x))) {
     ## @importFrom dbplyr translate_sql_
@@ -110,7 +110,7 @@ write_where <- function(x) {
 
 
 write_group_by <- function(x) {
-  conn <- get_connection(x)
+  conn <- dbi_connection(x)
 
   if (length(group_by <- get_group_by(x))) {
     ## @importFrom dbplyr translate_sql_
@@ -125,7 +125,7 @@ write_group_by <- function(x) {
 
 
 write_order_by <- function(x) {
-  conn <- get_connection(x)
+  conn <- dbi_connection(x)
 
   if (length(order_by <- get_order_by(x))) {
 

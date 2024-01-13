@@ -18,6 +18,6 @@ Suggests:
 Depends: data.table
 License: MPL-2.0
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.0
 Config/testthat/edition: 3
 VignetteBuilder: knitr

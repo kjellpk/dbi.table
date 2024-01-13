@@ -1,5 +1,8 @@
 db_short_name <- function(conn) {
-  conn <- get_connection(conn)
+  if (is.dbi.table(conn)) {
+    conn <- dbi_connection(conn)
+  }
+
   #' @importFrom DBI dbGetInfo
   sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(dbGetInfo(conn)$dbname))
 }

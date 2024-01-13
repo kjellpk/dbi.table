@@ -71,14 +71,23 @@ dbi_table_object <- function(cdefs, conn, data_source, fields,
 
 get_connection <- function(x) {
   if (is.dbi.table(x)) {
-    x <- attr(x, "conn", exact = TRUE)
+    attr(x, "conn", exact = TRUE)
+  } else {
+    NULL
+  }
+}
+
+
+
+
+dbi_connection <- function(x) {
+  conn <- get_connection(x)
+
+  if (!is.null(conn) && is.environment(conn)) {
+    conn <- conn$.dbi_connection
   }
 
-  if (is.environment(x)) {
-    x <- x$.dbi_connection
-  }
-
-  x
+  conn
 }
 
 
@@ -160,10 +169,12 @@ print.dbi.table <- function(x, ...) {
     }
   }
 
-  cat(paste0("<", db_short_name(get_connection(x)), ">"),
+  ans <- as.data.table(x, n = 6)
+
+  cat(paste0("<", db_short_name(dbi_connection(x)), ">"),
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
-  ans <- as.data.table(x, n = 6)
+
   if (nrow(ans) > 5) {
     print(ans[1:5], row.names = FALSE)
     cat("---\n\n")
@@ -179,20 +190,47 @@ print.dbi.table <- function(x, ...) {
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   #' @importFrom DBI dbSendStatement
-  res <- try(dbSendStatement(get_connection(x), write_select_query(x)),
+  res <- try(dbSendStatement(dbi_connection(x), write_select_query(x)),
              silent = TRUE)
 
-  if (inherits(res, "try-error") &&
-        is.environment(e <- attr(x, "conn", exact = TRUE)) &&
-        !is.null(recon <- attr(get_connection(x), "recon", exact = TRUE))) {
-    e$.dbi_connection <- init_connection(recon)
-
-    #' @importFrom DBI dbSendStatement
-    res <- dbSendStatement(get_connection(x), write_select_query(x))
+  if (inherits(res, "DBIResult")) {
+    #' @importFrom DBI dbClearResult
+    on.exit(dbClearResult(res))
   }
 
-  #' @importFrom DBI dbClearResult
-  on.exit(dbClearResult(res))
+  if (inherits(res, "try-error")) {
+    #' @importFrom DBI dbIsValid
+    is_valid <- dbIsValid(conn <- dbi_connection(x))
+
+    if (is_valid) {
+      #' @importFrom DBI dbGetQuery
+      simple_query_works <- try(dbGetQuery(conn, "SELECT 1;"), silent = TRUE)
+      is_valid <- !inherits(simple_query_works, "try-error")
+    }
+
+    if (is_valid) {
+      stop(res, call. = FALSE)
+    }
+
+    if (is.environment(e <- get_connection(x))) {
+      conn <- e$.dbi_connection
+      if (!is.null(recon <- attr(conn, "recon", exact = TRUE))) {
+        e$.dbi_connection <- init_connection(recon)
+      } else {
+        stop(res, call. = FALSE)
+      }
+    }
+
+    #' @importFrom DBI dbSendStatement
+    res <- dbSendStatement(dbi_connection(x), write_select_query(x))
+
+    if (inherits(res, "DBIResult")) {
+      #' @importFrom DBI dbClearResult
+      on.exit(dbClearResult(res))
+    } else {
+      stop(res, call. = FALSE)
+    }
+  }
 
   #' @importFrom DBI dbFetch
   setDT(dbFetch(res, n = n))

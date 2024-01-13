@@ -70,7 +70,7 @@ handle_by <- function(x, by) {
     stop("by is not a call to list")
   }
 
-  if (length(window_calls(by, get_connection(x)))) {
+  if (length(window_calls(by, dbi_connection(x)))) {
     stop("Aggregate and window functions are not allowed in ", sQuote("by"))
   }
 
@@ -115,7 +115,7 @@ handle_j <- function(x, j, by) {
 handle_over <- function(x, j, partition, order) {
   over <- list(partition_by = unname(partition), order_by = unname(order))
 
-  for (k in window_calls(j, get_connection(x))) {
+  for (k in window_calls(j, dbi_connection(x))) {
     attr(j[[k]], "over") <- over
   }
 
