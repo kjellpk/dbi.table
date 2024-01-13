@@ -20,9 +20,9 @@ test_that("dbi.attach works", {
 
 test_that("simple subset works", {
   expect_no_error(dbi.attach(chinook.sqlite))
-  expect_no_error(source("compare_with_data.table.R"))
-  expect_true(compare_with_data.table(
-    Album[AlbumId > 7 & AlbumId < 13]
+  expect_true(reference_test(
+    Album[AlbumId > 7 & AlbumId < 13],
+    verbose = FALSE
   ))
   expect_silent(detach("RSQLite:Chinook_Sqlite"))
 })
@@ -31,10 +31,10 @@ test_that("simple subset works", {
 
 test_that("window works", {
   expect_no_error(dbi.attach(chinook.sqlite))
-  expect_no_error(source("compare_with_data.table.R"))
-  expect_true(compare_with_data.table(
+  expect_true(reference_test(
     Track[, .(TrackId,
-              x = as.numeric(Milliseconds) / sum(as.numeric(Milliseconds)))]
+              x = as.numeric(Milliseconds) / sum(as.numeric(Milliseconds)))],
+    verbose = FALSE
   ))
   expect_silent(detach("RSQLite:Chinook_Sqlite"))
 })
@@ -43,10 +43,10 @@ test_that("window works", {
 
 test_that("aggregation works", {
   expect_no_error(dbi.attach(chinook.sqlite))
-  expect_no_error(source("compare_with_data.table.R"))
-  expect_true(compare_with_data.table(
+  expect_true(reference_test(
     Track[, .(SUM = sum(Milliseconds),
-              MEAN = mean(Milliseconds))]
+              MEAN = mean(Milliseconds))],
+    verbose = FALSE
   ))
   expect_silent(detach("RSQLite:Chinook_Sqlite"))
 })
@@ -55,30 +55,35 @@ test_that("aggregation works", {
 
 test_that("j syntax consistent with data.table", {
   expect_no_error(dbi.attach(chinook.sqlite))
-  expect_no_error(source("compare_with_data.table.R"))
 
-  expect_true(compare_with_data.table(
-    Track[, Name:MediaTypeId]
+  expect_true(reference_test(
+    Track[, Name:MediaTypeId],
+    verbose = FALSE
   ))
 
-  expect_true(compare_with_data.table(
-    Track[, 1:MediaTypeId]
+  expect_true(reference_test(
+    Track[, 1:MediaTypeId],
+    verbose = FALSE
   ))
 
-  expect_true(compare_with_data.table(
-    Track[, Name:6]
+  expect_true(reference_test(
+    Track[, Name:6],
+    verbose = FALSE
   ))
 
-  expect_true(compare_with_data.table(
-    Track[, 1:6]
+  expect_true(reference_test(
+    Track[, 1:6],
+    verbose = FALSE
   ))
 
-  expect_true(compare_with_data.table(
-    Track[, c("MediaTypeId", "UnitPrice", "Name", "Milliseconds")]
+  expect_true(reference_test(
+    Track[, c("MediaTypeId", "UnitPrice", "Name", "Milliseconds")],
+    verbose = FALSE
   ))
 
-  expect_true(compare_with_data.table(
-    Track[, c(4, 2, 3, 1)]
+  expect_true(reference_test(
+    Track[, c(4, 2, 3, 1)],
+    verbose = FALSE
   ))
 
   expect_no_error(tmp <- c("MediaTypeId", "UnitPrice", "Name", "Milliseconds"))
@@ -86,15 +91,15 @@ test_that("j syntax consistent with data.table", {
   expect_error(Track[][, tmp])
   expect_error(Track[, tmp]) # currently for wrong reason
 
-  # expect_true(compare_with_data.table(
+  # expect_true(reference_test(
   #   Track[, ..tmp]
   # ))
 
-  # expect_true(compare_with_data.table(
+  # expect_true(reference_test(
   #   Track[, c(..tmp)]
   # ))
 
-  # expect_true(compare_with_data.table(
+  # expect_true(reference_test(
   #   Track[, c("Milliseconds", ..tmp[1:3])]
   # ))
 
