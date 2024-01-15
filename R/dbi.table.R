@@ -32,7 +32,8 @@ dbi.table <- function(conn, id) {
 
 
 new_dbi_table <- function(conn, id, fields = NULL) {
-  id_name <- id@name[["table"]]
+  id_name <- id@name[[length(id@name)]]
+
   data_source <- data.frame(clause = "FROM",
                             id = I(list(id)),
                             id_name = id_name,
