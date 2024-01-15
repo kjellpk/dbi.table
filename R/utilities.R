@@ -76,22 +76,3 @@ pad_left <- function(x, width = 6) {
 unique_table_name <- function(pre = "X") {
   paste0(pre, (session$table_name_counter <- 1L + session$table_name_counter))
 }
-
-
-
-split_by_id <- function(x, idcols) {
-  keep <- setdiff(names(x), idcols)
-  x <- split(x, f = x[, idcols])
-
-  ids <- unname(lapply(x, `[`, i = 1, j = idcols, drop = FALSE))
-  #' @importFrom DBI Id
-  ids <- lapply(ids, function(u) Id(unlist(as.list(u))))
-
-  cols <- list()
-  for (k in keep) {
-    u <- unname(lapply(x, `[[`, i = k))
-    cols[[k]] <- u[!is.na(u) & nchar(u) > 0]
-  }
-
-  do.call(data.frame, c(list(id = I(ids)), lapply(cols, I)))
-}
