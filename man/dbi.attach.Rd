@@ -2,12 +2,13 @@
 % Please edit documentation in R/attach.R
 \name{dbi.attach}
 \alias{dbi.attach}
-\title{Attach a DBI Connection to the Search Path}
+\title{Attach a Database Schema to the Search Path}
 \usage{
-dbi.attach(what, pos = 2L, name = NULL, warn.conflicts = FALSE, ...)
+dbi.attach(what, pos = 2L, name = NULL, warn.conflicts = FALSE)
 }
 \arguments{
-\item{what}{a connection handle returned by \code{\link[DBI]{dbConnect}}.}
+\item{what}{a connection handle returned by \code{\link[DBI]{dbConnect}} or
+a zero-argument function that returns a connection handle.}
 
 \item{pos}{an integer specifying position in \code{\link[base]{search}}()
 where to attach.}
@@ -21,18 +22,10 @@ attaching the database, unless that database contains
 an object \code{.conflicts.OK}. A conflict is a
 function masking a function, or a non-function
 masking a non-function.}
-
-\item{\dots}{additional arguments (e.g., \code{prefix}) are passed to
-\code{\link[DBI]{dbListObjects}}.}
 }
 \description{
-Attach all (or a subset) of the database objects (tables, views,
-             etc.) accessible over a DBI connection to the search path. The
-             attached objects can be queried using
-             \code{\link[data.table]{data.table}} syntax.
-}
-\note{
-Attaches each object returned by \code{\link[DBI]{dbListObjects}}.
+Create a \code{\link{dbi.table}} for each database object in
+             a schema and place them on the search path.
 }
 \seealso{
 \code{\link[base]{attach}}
