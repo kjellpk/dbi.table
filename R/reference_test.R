@@ -45,6 +45,9 @@ reference_test <- function(x, envir = parent.frame(), ignore.row.order = TRUE,
 
   data_table_eval <- eval(x, envir = check_env)
 
+  # merge sets key by default so unkey
+  setkey(data_table_eval, NULL)
+
   eq <- all.equal(dbi_table_eval,
                   data_table_eval,
                   ignore.row.order = ignore.row.order)
