@@ -71,14 +71,36 @@ is_call_to <- function(call_name, cl) {
 
 
 
-handy_andy <- function(l) {
-  if (!is.list(l) || !length(l)) {
-    return(NULL)
+is_scalar_atomic <- function(x) {
+  is.atomic(x) && (length(x) == 1L)
+}
+
+
+
+is_language <- function(x) {
+  is.language(x) || is_scalar_atomic(x)
+}
+
+
+
+is_list_of <- function(FUN, x) {
+  is.list(x) && all(vapply(x, FUN, FALSE))
+}
+
+
+
+handy_andy <- function(x) {
+  if (!is_list_of(is_language, x)) {
+    return(x)
   }
 
-  names(l) <- paste0("x", seq_along(l))
-  sub_lang(str2lang(paste(paren(names(l)), collapse = "&")),
-           dbi_table = l, specials = NULL, env = NULL)
+  if (length(x) > 1L) {
+    names(x) <- paste0("x", seq_along(x))
+    sub_lang(str2lang(paste(paren(names(x)), collapse = "&")),
+             dbi_table = x, specials = NULL, env = NULL)
+  } else {
+    x[[1]]
+  }
 }
 
 
