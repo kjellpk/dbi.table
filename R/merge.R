@@ -29,7 +29,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
   if (!is.null(by.x)) {
     if (length(by.x) == 0L || !is.character(by.x) || !is.character(by.y))
-      stop("A non-empty vector of column names is required for ",
+      stop("non-empty character vectors of column names are required for ",
            sQuote("by.x"), " and ", sQuote("by.y"))
 
     if (!all(by.x %chin% names_x))
@@ -43,7 +43,8 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
            sQuote("y"))
   } else {
     if (!length(by)) {
-      by <- intersect(names_x, names_y)
+      stop("a non-empty character vector of column names is required for ",
+           sQuote("by"))
     }
 
     if (!all(by %chin% intersect(names_x, names_y)))
