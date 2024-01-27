@@ -62,12 +62,11 @@ test_that("outer merge works", {
 
 
 
-test_that("no.dups works", {
+test_that("self merge works", {
   expect_no_error(conn <- chinook.sqlite())
   expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
-  expect_no_error(Genre <- dbi.table(conn, DBI::Id("Genre")))
   expect_true(reference_test(
-    merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId")
+    merge(Album, Album, by = c("AlbumId", "ArtistId"))
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
@@ -77,8 +76,13 @@ test_that("no.dups works", {
 test_that("self merge works with no.dups = FALSE", {
   expect_no_error(conn <- chinook.sqlite())
   expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
-  expect_true(reference_test(
+  expect_warning(reference_test(
     merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE)
+  ))
+  expect_true(reference_test(
+    suppressWarnings(
+      merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE)
+    )
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
