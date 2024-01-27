@@ -72,7 +72,6 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   xy <- join(x, y, type, on, envir = NULL)
-  names_xy <- names(xy)
 
   x_length <- length(x)
   by_x_jdx <- chmatch(by.x, names_x)
