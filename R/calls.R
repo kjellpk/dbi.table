@@ -1,5 +1,5 @@
-sub_lang <- function(e, dbi_table = NULL, specials = session$special_symbols,
-                     env = NULL) {
+sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
+                     enclos = NULL) {
   if (is.null(e)) {
     return(NULL)
   }
@@ -11,16 +11,16 @@ sub_lang <- function(e, dbi_table = NULL, specials = session$special_symbols,
       return(NULL)
     }
 
-    if (!is.null(dbi_table) && (e_char %chin% names(dbi_table))) {
-      return(c(dbi_table)[[e_char]])
+    if (!is.null(envir) && (e_char %chin% names(envir))) {
+      return(c(envir)[[e_char]])
     }
 
     if (!is.null(specials) && (e_char %chin% names(specials))) {
-      return(specials[[e_char]](e, dbi_table, specials, env))
+      return(specials[[e_char]](e, envir, specials, enclos))
     }
 
-    if (!is.null(env) && !is.null(env[[e_char]])) {
-      return(if_scalar(eval(e, envir = env)))
+    if (!is.null(enclos) && !is.null(enclos[[e_char]])) {
+      return(if_scalar(eval(e, envir = enclos)))
     }
 
     stop("symbol ", sQuote(e), " not found")
@@ -29,11 +29,11 @@ sub_lang <- function(e, dbi_table = NULL, specials = session$special_symbols,
   if (is.call(e)) {
     if (!is.null(specials) &&
           ((ec <- as.character(e[[1]])) %chin% names(specials))) {
-      return(specials[[ec]](e, dbi_table, specials, env))
+      return(specials[[ec]](e, envir, specials, enclos))
     }
 
-    e[-1] <- lapply(e[-1], sub_lang, dbi_table = dbi_table,
-                    specials = specials, env = env)
+    e[-1] <- lapply(e[-1], sub_lang, envir = envir,
+                    specials = specials, enclos = enclos)
 
     return(e)
   }
@@ -97,7 +97,7 @@ handy_andy <- function(x) {
   if (length(x) > 1L) {
     names(x) <- paste0("x", seq_along(x))
     sub_lang(str2lang(paste(paren(names(x)), collapse = "&")),
-             dbi_table = x, specials = NULL, env = NULL)
+             envir = x, specials = NULL)
   } else {
     x[[1]]
   }

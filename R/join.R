@@ -106,7 +106,7 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
   names(pp) <- names_df[, prefixed_name]
   lookup <- sapply(c(ip, pp), as.name, simplify = FALSE)
 
-  on <- sub_lang(on, dbi_table = lookup, specials = NULL, env = envir)
+  on <- sub_lang(on, envir = lookup, specials = NULL, enclos = envir)
 
   x_fields <- get_fields(x)
   y_fields <- get_fields(y)
@@ -115,7 +115,7 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
   y_fields$internal_name <- y_sub
   y_sub <- lapply(y_sub, as.name)
 
-  xy <- c(c(x), lapply(c(y), sub_lang, dbi_table = y_sub, specials = NULL))
+  xy <- c(c(x), lapply(c(y), sub_lang, envir = y_sub, specials = NULL))
   names(xy) <- names_df[, prefixed_name]
 
 
@@ -145,7 +145,7 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
   y_data_source$clause <- JOINS[type]
 
   if (!is.null(on)) {
-    y_data_source$on <- list(sub_lang(on, dbi_table = xy, specials = NULL))
+    y_data_source$on <- list(sub_lang(on, envir = xy, specials = NULL))
   }
 
   data_source <- rbind(x_data_source, y_data_source)

@@ -113,6 +113,6 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
   names(j) <- c(by.x, start, end)
   j <- as.call(c(list(as.name("list")), j))
-  j <- sub_lang(j, dbi_table = xy, specials = NULL)
+  j <- sub_lang(j, envir = xy, specials = NULL)
   handle_j(xy, j, NULL)
 }

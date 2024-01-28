@@ -247,9 +247,9 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
     x <- as_cte(x)
   }
 
-  i <- sub_lang(substitute(i), dbi_table = x, env = env)
-  j <- sub_lang(substitute(j), dbi_table = x, env = env)
-  by <- sub_lang(substitute(by), dbi_table = x, env = env)
+  i <- sub_lang(substitute(i), envir = x, enclos = env)
+  j <- sub_lang(substitute(j), envir = x, enclos = env)
+  by <- sub_lang(substitute(by), envir = x, enclos = env)
 
   if (is.null(i) && is.null(j)) {
     return(as.data.table(x))

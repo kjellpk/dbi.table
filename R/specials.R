@@ -24,8 +24,8 @@ special_list <- function(e, dbi_table, specials, env) {
     names(e) <- nm
   }
 
-  e[-1] <- lapply(e[-1], sub_lang, dbi_table = dbi_table,
-                  specials = specials, env = env)
+  e[-1] <- lapply(e[-1], sub_lang, envir = dbi_table,
+                  specials = specials, enclos = env)
 
   e
 }
@@ -61,7 +61,7 @@ special_c <- function(e, dbi_table, specials, env) {
   if (length(e_vars)) {
     nl <- lapply(substring(e_vars, 3), as.name)
     names(nl) <- e_vars
-    e <- sub_lang(e, nl, specials = NULL)
+    e <- sub_lang(e, envir = nl, specials = NULL)
   }
 
   if (is.character(e <- eval(e, envir = env))) {
@@ -76,12 +76,12 @@ special_c <- function(e, dbi_table, specials, env) {
 
 special_colon_equals <- function(e, dbi_table, specials, env) {
   if (length(e) == 2L && !is.null(names(e[[2]]))) {
-    e[2] <- sub_lang(e[2], dbi_table = dbi_table, specials = specials,
-                     env = env)
+    e[2] <- sub_lang(e[2], envir = dbi_table, specials = specials,
+                     enclos = env)
     return(e)
   }
 
-  rhs <- sub_lang(e[[3]], dbi_table = dbi_table, specials = specials, env = env)
+  rhs <- sub_lang(e[[3]], envir = dbi_table, specials = specials, enclos = env)
 
   if (is_call_to("list", rhs)) {
     rhs[[1]] <- as.name(":=")
