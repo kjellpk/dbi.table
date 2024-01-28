@@ -17,14 +17,15 @@ join(
 \item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must
 reference objects on the same \code{\link[DBI]{DBI}} connection.}
 
-\item{type}{one of \dQuote{inner}, \dQuote{left}, \dQuote{right},
-\dQuote{outer}, or \dQuote{cross}.}
+\item{type}{a character string. Valid choices are \code{"inner"},
+\code{"left"}, \code{"right"}, \code{"outer"},
+and \code{"cross"}.}
 
 \item{on}{a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
 clause.}
 
 \item{envir}{an environment, \code{on} is partially evaluated in \code{envir}
-when this function is evaluated (i.e., not when the join is
+when this funcion is evaluated (i.e., not when the join is
 translated to \code{SQL}.)}
 
 \item{prefixes}{a 2-element character vector. When \code{x} and \code{y}

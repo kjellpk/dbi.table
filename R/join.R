@@ -8,14 +8,15 @@
 #' @param x,y \code{\link{dbi.table}}s to join. \code{x} and \code{y} must
 #'            reference objects on the same \code{\link[DBI]{DBI}} connection.
 #'
-#' @param type one of \dQuote{inner}, \dQuote{left}, \dQuote{right},
-#'             \dQuote{outer}, or \dQuote{cross}.
+#' @param type a character string. Valid choices are \code{"inner"},
+#'             \code{"left"}, \code{"right"}, \code{"outer"},
+#'             and \code{"cross"}.
 #'
 #' @param on a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
 #'           clause.
 #'
 #' @param envir an environment, \code{on} is partially evaluated in \code{envir}
-#'              when this function is evaluated (i.e., not when the join is
+#'              when this funcion is evaluated (i.e., not when the join is
 #'              translated to \code{SQL}.)
 #'
 #' @param prefixes a 2-element character vector. When \code{x} and \code{y}
@@ -51,6 +52,11 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
 
   if (inherits(on <- try(on, silent = TRUE), "try-error")) {
     on <- on_sub
+  }
+
+  if (!is.null(on) && type == "cross") {
+    warning("ignoring ", sQuote("on"), " argument for cross join")
+    on <- NULL
   }
 
   if (is.null(on) && type != "cross") {
