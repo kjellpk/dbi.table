@@ -65,8 +65,12 @@ if_scalar <- function(x) {
 
 
 
-is_call_to <- function(call_name, cl) {
-  is.call(cl) && (as.character(cl[[1]]) == call_name)
+is_call_to <- function(cl) {
+  if (!is.call(cl)) {
+    return(paste(deparse1(substitute(cl)), "is not a call"))
+  }
+
+  as.character(cl[[1]])
 }
 
 

@@ -83,7 +83,7 @@ special_colon_equals <- function(e, dbi_table, specials, env) {
 
   rhs <- sub_lang(e[[3]], envir = dbi_table, specials = specials, enclos = env)
 
-  if (is_call_to("list", rhs)) {
+  if (is_call_to(rhs) == "list") {
     rhs[[1]] <- as.name(":=")
   } else {
     rhs <- call(":=", rhs)

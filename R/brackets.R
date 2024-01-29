@@ -126,11 +126,11 @@ handle_over <- function(x, j, partition, order) {
 
 handle_colon_equal <- function(x, i, j, by, env, x_sub) {
   if (!is.null(i)) {
-    if (is_call_to("order", i)) {
+    if (is_call_to(i) == "order") {
       order_by <- update_order_by(x, i)
     } else {
-      stop("when using :=, ", sQuote("i"), " must be missing or a call to ",
-           sQuote("order"))
+      stop("when using :=, if ", sQuote("i"), " is not missing ",
+           "it must be a call to ", sQuote("order"))
     }
   } else {
     order_by <- NULL
