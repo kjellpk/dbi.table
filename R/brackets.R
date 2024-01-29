@@ -148,8 +148,15 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
   attributes(x) <- a
 
   if (is.name(x_sub)) {
-    # try to handle assignment to environment and list too
-    assign(as.character(x_sub), x, envir = env)
+    x_name <- as.character(x_sub)
+
+    if (!is.null(env[[x_name]]) || identical(env, .GlobalEnv)) {
+      assign(x_name, x, envir = env)
+    } else {
+      warning(sQuote(x_name), " could not be modified in place")
+    }
+  } else {
+    warning("dbi.table could not be modified in place")
   }
 
   #invisible doesn't work - use data.table's workaround
