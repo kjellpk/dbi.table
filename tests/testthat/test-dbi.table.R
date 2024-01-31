@@ -7,54 +7,77 @@ test_that("dbi.table works", {
 
 
 
-test_that("dbi.attach works", {
-  expect_no_error(dbi.attach(chinook.sqlite))
-  expect_type(e <- as.environment("RSQLite:Chinook_Sqlite"),
-              type =  "environment")
-  expect_vector(s <- ls(e), ptype = character())
-  expect_true(all(unlist(eapply(e, is.dbi.table))))
-  expect_silent(detach("RSQLite:Chinook_Sqlite"))
-})
-
-
-
 test_that("simple subset works", {
-  expect_no_error(dbi.attach(chinook.sqlite))
+  expect_no_error(conn <- chinook.sqlite())
+    expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
   expect_true(reference_test(
     Album[AlbumId > 7 & AlbumId < 13],
     verbose = FALSE
   ))
-  expect_silent(detach("RSQLite:Chinook_Sqlite"))
-})
-
-
-
-test_that("window works", {
-  expect_no_error(dbi.attach(chinook.sqlite))
-  expect_true(reference_test(
-    Track[, .(TrackId,
-              x = as.numeric(Milliseconds) / sum(as.numeric(Milliseconds)))],
-    verbose = FALSE
-  ))
-  expect_silent(detach("RSQLite:Chinook_Sqlite"))
+  expect_no_error(DBI::dbDisconnect(conn))
 })
 
 
 
 test_that("aggregation works", {
-  expect_no_error(dbi.attach(chinook.sqlite))
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
   expect_true(reference_test(
-    Track[, .(SUM = sum(Milliseconds),
-              MEAN = mean(Milliseconds))],
+    Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
+              MEAN = mean(Milliseconds, na.rm = TRUE))],
     verbose = FALSE
   ))
-  expect_silent(detach("RSQLite:Chinook_Sqlite"))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("aggregation works with by", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+  expect_true(reference_test(
+    Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
+              MEAN = mean(Milliseconds, na.rm = TRUE)),
+          by = .(GenreId)],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("window works", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+  expect_true(reference_test(
+    Track[, .(TrackId,
+              x = as.numeric(Milliseconds) /
+                    sum(as.numeric(Milliseconds), na.rm = TRUE))],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("window works with by", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+  expect_true(reference_test(
+    Track[, .(TrackId,
+              x = as.numeric(Milliseconds) /
+                sum(as.numeric(Milliseconds), na.rm = TRUE)),
+          by = .(GenreId)],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
 })
 
 
 
 test_that("j syntax consistent with data.table", {
-  expect_no_error(dbi.attach(chinook.sqlite))
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
 
   expect_true(reference_test(
     Track[, Name:MediaTypeId],
@@ -103,5 +126,5 @@ test_that("j syntax consistent with data.table", {
   #   Track[, c("Milliseconds", ..tmp[1:3])]
   # ))
 
-  expect_silent(detach("RSQLite:Chinook_Sqlite"))
+  expect_no_error(DBI::dbDisconnect(conn))
 })
