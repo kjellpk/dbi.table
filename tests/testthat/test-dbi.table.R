@@ -9,7 +9,7 @@ test_that("dbi.table works", {
 
 test_that("simple subset works", {
   expect_no_error(conn <- chinook.sqlite())
-    expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
   expect_true(reference_test(
     Album[AlbumId > 7 & AlbumId < 13],
     verbose = FALSE
