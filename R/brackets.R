@@ -64,16 +64,21 @@ handle_by <- function(x, by) {
     return(list())
   }
 
-  if (is.call(by) && as.character(by[[1]]) == "list") {
+  if (is_call_to(by) == "list") {
     by <- as.list(by[-1])
+  } else if (is.call(by)) {
+    by <- list(by)
+  } else if (is.name(by)) {
+    by_name <- names(x)[c(x) == by]
+    by <- list(by)
+    names(by) <- by_name
   } else {
-    stop("by is not a call to list")
+    stop("syntax error in ", sQuote("by"), call. = FALSE)
   }
 
   if (length(window_calls(by, dbi_connection(x)))) {
     stop("Aggregate and window functions are not allowed in ", sQuote("by"))
   }
-
   by
 }
 
@@ -84,13 +89,30 @@ handle_j <- function(x, j, by) {
     return(x)
   }
 
-  if (is.call(j) && as.character(j[[1]]) == "list") {
-    j <- as.list(j[-1])
-  } else {
-    stop("j is not a call to list")
-  }
+  switch(is_call_to(j),
+    "not a call" = {
+      stop(sQuote("j"), " is not a call", call. = FALSE)
+    },
+
+    "list" = {
+      j <- as.list(j[-1])
+    },
+
+    "n" = {
+      j <- list(N = call("n"))
+    },
+
+    {
+      if (!is.null(by)) {
+        j <- list(j)
+      } else {
+        stop(sQuote("j"), " is not a call to ", sQuote("list"), call. = FALSE)
+      }
+    }
+  )
 
   by <- handle_by(x, by)
+
   a <- attributes(x)
 
   if (all(calls_can_aggregate(j))) {
@@ -99,12 +121,18 @@ handle_j <- function(x, j, by) {
     j <- handle_over(x, j, by, a$order_by)
   }
 
-  j <- c(by, j)
-  n <- names(j)
-  if (any(idx <- (nchar(n) == 0L))) {
-    n[idx] <- paste0("V", which(idx))
+  if (is.null(j_names <- names(j))) {
+    j_names <- character(length(j))
   }
-  a$names <- n
+
+  if (any(idx <- (nchar(j_names) == 0L))) {
+    j_names[idx] <- paste0("V", which(idx))
+  }
+
+  by_names <- names(by)
+
+  j <- c(by, j)
+  a$names <- c(by_names, j_names)
   attributes(j) <- a
 
   j
