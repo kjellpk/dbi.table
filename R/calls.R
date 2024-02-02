@@ -55,12 +55,23 @@ use_integer <- function(x) {
 
 
 
-if_scalar <- function(x) {
-  if (!(mode(x) %chin% c("numeric", "character", "logical")) ||
-        length(x) != 1L) {
-    stop("only scalar symbols can be substituted into calls")
+SQL_MODES <- c("numeric", "character", "logical")
+
+if_allowed_mode <- function(x) {
+  if (!is.atomic(x) || !(mode(x) %chin% SQL_MODES)) {
+    stop(sQuote("x"), " is not atomic", call. = FALSE)
   }
   use_integer(x)
+}
+
+
+
+if_scalar <- function(x) {
+  if (length(x <- if_allowed_mode(x)) != 1L) {
+    stop(sQuote("x"), " is not scalar", call. = FALSE)
+  }
+
+  x
 }
 
 
