@@ -27,8 +27,7 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
   }
 
   if (is.call(e)) {
-    if (!is.null(specials) &&
-          ((ec <- as.character(e[[1]])) %chin% names(specials))) {
+    if ((ec <- as.character(e[[1]])) %chin% names(specials)) {
       return(specials[[ec]](e, envir, specials, enclos))
     }
 
@@ -38,7 +37,28 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
     return(e)
   }
 
+  if (is.list(e) && all(vapply(e, is_language, FALSE))) {
+    return(lapply(e, sub_lang, envir = envir, specials = specials,
+                  enclos = enclos))
+  }
+
   if_scalar(e)
+}
+
+
+
+names_list <- function(x, names.out = NULL) {
+  if (is.dbi.table(x)) {
+    x <- names(x)
+  }
+  x <- as.character(x)
+  if (is.null(names.out)) {
+    names.out <- x
+  } else {
+    names.out <- as.character(names.out)
+  }
+  names(x) <- names.out
+  sapply(x, as.name, simplify = FALSE)
 }
 
 

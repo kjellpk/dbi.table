@@ -1,27 +1,73 @@
-triage_brackets <- function(x, i, j, by, env = NULL, x_sub = NULL) {
-  if (is.call(j) && j[[1]] == ":=") {
-    return(handle_colon_equal(x, i, j, by, env, x_sub))
+preprocess <- function(e, dbi_table, enclos, name.ok = FALSE) {
+  if (is_call_to(e) == ":") {
+    dbit_names <- names(dbi_table)
+    if (is.name(lhs <- e[[2]])) {
+      if (is.na(lhs <- chmatch(as.character(lhs), dbit_names))) {
+        stop("'", e[[2]], "' - subscript out of bounds", call. = FALSE)
+      }
+    }
+    if (is.name(rhs <- e[[3]])) {
+      if (is.na(rhs <- chmatch(as.character(rhs), dbit_names))) {
+        stop("'", e[[3]], "' - subscript out of bounds", call. = FALSE)
+      }
+    }
+    return(names_list(dbi_table)[lhs:rhs])
   }
 
-  if (is.null(j) && !is.null(by)) {
-    stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
-         " is missing or ", sQuote("NULL"))
+  if (is.call(e) && length(all.vars(e)) == 0L) {
+    dbit_names <- names(dbi_table)
+    if (is.numeric(e <- eval(e, envir = NULL, enclos = NULL))) {
+      e <- dbit_names[e]
+    }
+    if (length(not <- setdiff(e, dbit_names))) {
+      stop("subscript out of bounds", call. = FALSE)
+    }
+    return(sapply(e, as.name, simplify = FALSE))
   }
 
-  x <- handle_i(x, i)
-  handle_j(x, j, by)
+  if (is.name(e)) {
+    e_char <- as.character(e)
+
+    if (substring(e_char, 1, 2) == ".." && nchar(e_char) > 2) {
+      e <- eval(as.name(substring(e_char, 3)), envir = enclos)
+      return(sapply(names(dbi_table), as.name, simplify = FALSE)[e])
+    }
+
+    if (e_char %chin% names(dbi_table)) {
+      if (name.ok) {
+        return(sapply(e_char, as.name, simplify = FALSE))
+      } else {
+        stop("syntax not supported - when 'j' is a symbol and column of 'x', ",
+             "data.table returns 'j' as a vector; dbi.table can only ",
+             "return dbi.tables", call. = FALSE)
+      }
+    } else {
+      stop("j (the 2nd argument inside [...]) is a single symbol but there ",
+           "is no column named '", e_char, "' in the dbi.table. To select ",
+           "dbi.table columns using a variable in the calling scope, use ",
+           "x[, ..", e_char, "] (where 'x' is your dbi.table)", call. = FALSE)
+    }
+  }
+
+  if (is.call(e) || (is.list(e) && all(vapply(e, is_language, FALSE)))) {
+    return(e)
+  }
+
+  stop("syntax error")
+
+  NULL
 }
 
 
 
-handle_i <- function(x, i) {
-  if (is.null(i)) {
+handle_i_call <- function(x, i, enclos) {
+  if (!is.call(i)) {
     return(x)
   }
 
-  stopifnot(is.call(i))
+  i <- sub_lang(i, envir = x, enclos = enclos)
 
-  if (as.character(i[[1]]) == "order") {
+  if (is_call_to(i) == "order") {
     return(handle_i_order(x, i))
   }
 
@@ -59,59 +105,37 @@ handle_i_where <- function(x, i) {
 
 
 
-handle_by <- function(x, by) {
+handle_by <- function(x, by, enclos) {
   if (is.null(by)) {
     return(list())
   }
 
-  if (is_call_to(by) == "list") {
-    by <- as.list(by[-1])
-  } else if (is.call(by)) {
-    by <- list(by)
-  } else if (is.name(by)) {
-    by_name <- names(x)[c(x) == by]
-    by <- list(by)
-    names(by) <- by_name
-  } else {
-    stop("syntax error in ", sQuote("by"), call. = FALSE)
+  by <- sub_lang(by, envir = x, enclos = enclos)
+
+  if (is.call(by)) {
+    if (is_call_to(by) == "list") {
+      by <- as.list(by[-1])
+    } else if (is.call(by)) {
+      by <- list(by)
+    }
   }
 
   if (length(window_calls(by, dbi_connection(x)))) {
-    stop("Aggregate and window functions are not allowed in ", sQuote("by"))
+    stop("Aggregate and window functions are not allowed in 'by'")
   }
+
   by
 }
 
 
 
-handle_j <- function(x, j, by) {
+handle_j <- function(x, j, by, enclos) {
   if (is.null(j)) {
     return(x)
   }
 
-  switch(is_call_to(j),
-    "not a call" = {
-      stop(sQuote("j"), " is not a call", call. = FALSE)
-    },
-
-    "list" = {
-      j <- as.list(j[-1])
-    },
-
-    "n" = {
-      j <- list(N = call("n"))
-    },
-
-    {
-      if (!is.null(by)) {
-        j <- list(j)
-      } else {
-        stop(sQuote("j"), " is not a call to ", sQuote("list"), call. = FALSE)
-      }
-    }
-  )
-
-  by <- handle_by(x, by)
+  j <- sub_lang(j, envir = x, enclos = enclos)
+  by <- handle_by(x, by, enclos)
 
   a <- attributes(x)
 

@@ -83,11 +83,9 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   non_by <- unname(sapply(non_by, as.name, simplify = FALSE))
 
   if (type %chin% c("inner", "left")) {
-    by <- names(xy)[by_x_jdx]
-    by <- sapply(by, as.name, simplify = FALSE)
+    by <- names_list(xy)[by_x_jdx]
   } else if (type == "right") {
-    by <- names(xy)[x_length + by_y_jdx]
-    by <- sapply(by, as.name, simplify = FALSE)
+    by <- names_list(xy)[x_length + by_y_jdx]
   } else if (type == "outer") {
     by_x <- sapply(names(xy)[by_x_jdx], as.name, simplify = FALSE)
     by_y <- sapply(names(xy)[x_length + by_y_jdx], as.name, simplify = FALSE)
@@ -96,7 +94,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     by <- list()
   }
 
-  j <- c(by, non_by)
+  j <- c(c(by, non_by))
 
   # naming logical taken from merge.data.table (data.table version 1.14.10)
   start <- setdiff(names_x, by.x)
@@ -112,7 +110,5 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   names(j) <- c(by.x, start, end)
-  j <- as.call(c(list(as.name("list")), j))
-  j <- sub_lang(j, envir = xy, specials = NULL)
-  handle_j(xy, j, NULL)
+  handle_j(xy, j, by = NULL, enclos = NULL)
 }

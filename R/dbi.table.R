@@ -247,15 +247,48 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
     x <- as_cte(x)
   }
 
-  i <- sub_lang(substitute(i), envir = x, enclos = env)
-  j <- sub_lang(substitute(j), envir = x, enclos = env)
-  by <- sub_lang(substitute(by), envir = x, enclos = env)
+  if (missing(i)) {
+    i <- NULL
+  } else {
+    sub_i <- substitute(i)
+    if (inherits(i <- try(i, silent = TRUE), "try-error")) {
+      if (!is.call(i <- sub_i)) {
+        stop("'i' is not a call")
+      }
+    } else if (!is.data.table(i)) {
+      stop("'i' is not a dbi.table")
+    }
+  }
+
+  stopifnot(is.null(i) || is.call(i) || is.dbi.table(i))
+
+  if (missing(by)) {
+    by <- NULL
+  } else {
+    by <- preprocess(substitute(by), x, env, TRUE)
+  }
+
+  if (missing(j)) {
+    j <- NULL
+  } else {
+    j <- preprocess(substitute(j), x, env, !is.null(by))
+  }
 
   if (is.null(i) && is.null(j)) {
     return(as.data.table(x))
   }
 
-  triage_brackets(x, i, j, by, env, x_sub)
+  if (is_call_to(j) == ":=") {
+    return(handle_colon_equal(x, i, j, by, env, x_sub))
+  }
+
+  if (is.null(j) && !is.null(by)) {
+    stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
+         " is missing or ", sQuote("NULL"))
+  }
+
+  x <- handle_i_call(x, i, env)
+  handle_j(x, j, by, env)
 }
 
 
