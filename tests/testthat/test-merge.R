@@ -3,7 +3,8 @@ test_that("inner merge works", {
   expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
   expect_no_error(Genre <- dbi.table(conn, DBI::Id("Genre")))
   expect_true(reference_test(
-    merge(Album, Genre, by.x = "AlbumId", by.y = "GenreId")
+    merge(Album, Genre, by.x = "AlbumId", by.y = "GenreId"),
+    verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
@@ -16,7 +17,8 @@ test_that("left merge works", {
   expect_no_error(Genre <- dbi.table(conn, DBI::Id("Genre")))
   expect_true(reference_test(
     merge(Album, Genre, by.x = "AlbumId", by.y = "GenreId",
-          all.x = TRUE)[is.na(Name)]
+          all.x = TRUE)[is.na(Name)],
+    verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
@@ -29,7 +31,8 @@ test_that("right merge works", {
   expect_no_error(Genre <- dbi.table(conn, DBI::Id("Genre")))
   expect_true(reference_test(
     merge(Genre, Album, by.x = "GenreId", by.y = "AlbumId",
-          all.y = TRUE)[is.na(Name)]
+          all.y = TRUE)[is.na(Name)],
+    verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
@@ -42,7 +45,8 @@ test_that("outer merge works", {
   expect_no_error(Genre <- dbi.table(conn, DBI::Id("Genre")))
   expect_true(reference_test(
     merge(Album, Genre, by.x = "AlbumId", by.y = "GenreId",
-          all = TRUE)[is.na(Name) | is.na(Title)]
+          all = TRUE)[is.na(Name) | is.na(Title)],
+    verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
@@ -54,7 +58,8 @@ test_that("by works", {
   expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
   expect_no_error(Artist <- dbi.table(conn, DBI::Id("Artist")))
   expect_true(reference_test(
-    merge(Album, Artist, by = "ArtistId")
+    merge(Album, Artist, by = "ArtistId"),
+    verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
@@ -82,7 +87,8 @@ test_that("self merge works", {
   expect_no_error(conn <- chinook.sqlite())
   expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
   expect_true(reference_test(
-    merge(Album, Album, by = c("AlbumId", "ArtistId"))
+    merge(Album, Album, by = c("AlbumId", "ArtistId")),
+    verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
@@ -93,12 +99,14 @@ test_that("self merge works with no.dups = FALSE", {
   expect_no_error(conn <- chinook.sqlite())
   expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
   expect_warning(reference_test(
-    merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE)
+    merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE),
+    verbose = FALSE
   ))
   expect_true(reference_test(
     suppressWarnings(
       merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE)
-    )
+    ),
+    verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })

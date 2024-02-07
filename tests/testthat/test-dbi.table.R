@@ -52,7 +52,7 @@ test_that("window works", {
   expect_true(reference_test(
     Track[, .(TrackId,
               x = as.numeric(Milliseconds) /
-                    sum(as.numeric(Milliseconds), na.rm = TRUE))],
+                sum(as.numeric(Milliseconds), na.rm = TRUE))],
     verbose = FALSE
   ))
   expect_no_error(DBI::dbDisconnect(conn))
