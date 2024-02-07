@@ -1,4 +1,4 @@
-preprocess <- function(e, dbi_table, enclos, name.ok = FALSE) {
+preprocess_cols <- function(e, dbi_table, enclos, name.ok = FALSE) {
   if (is_call_to(e) == ":") {
     dbit_names <- names(dbi_table)
     if (is.name(lhs <- e[[2]])) {
@@ -19,7 +19,7 @@ preprocess <- function(e, dbi_table, enclos, name.ok = FALSE) {
     if (is.numeric(e <- eval(e, envir = NULL, enclos = NULL))) {
       e <- dbit_names[e]
     }
-    if (length(not <- setdiff(e, dbit_names))) {
+    if (length(setdiff(e, dbit_names))) {
       stop("subscript out of bounds", call. = FALSE)
     }
     return(sapply(e, as.name, simplify = FALSE))

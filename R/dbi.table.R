@@ -265,13 +265,13 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   if (missing(by)) {
     by <- NULL
   } else {
-    by <- preprocess(substitute(by), x, env, TRUE)
+    by <- preprocess_cols(substitute(by), x, env, TRUE)
   }
 
   if (missing(j)) {
     j <- NULL
   } else {
-    j <- preprocess(substitute(j), x, env, !is.null(by))
+    j <- preprocess_cols(substitute(j), x, env, !is.null(by))
   }
 
   if (is.null(i) && is.null(j)) {
