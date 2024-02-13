@@ -18,7 +18,8 @@ session$key_base <- "._.xcwrl_"
   add_special(".", special_list)
   add_special("list", special_list)
   add_special(":=", special_colon_equals)
-
+  add_special("%in%", special_in)
+  add_special("%chin%", special_in)
 
   NULL
 }

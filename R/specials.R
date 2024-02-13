@@ -61,6 +61,15 @@ special_colon_equals <- function(e, dbi_table, specials, env) {
 
 
 
+special_in <- function(e, dbi_table, specials, env) {
+  e[[1]] <- as.name("%in%")
+  e[[2]] <- sub_lang(e[[2]], dbi_table, specials, env)
+  e[[3]] <- if_allowed_mode(eval(e[[3]], envir = env))
+  e
+}
+
+
+
 add_special <- function(symbol, fun = unsupported(symbol)) {
   stopifnot(is.character(symbol) && (length(symbol) == 1L) && nchar(symbol) > 0)
   session$special_symbols[[symbol]] <- fun
