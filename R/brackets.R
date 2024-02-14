@@ -28,7 +28,7 @@ preprocess_cols <- function(e, dbi_table, enclos, name.ok = FALSE) {
   if (is.name(e)) {
     e_char <- as.character(e)
 
-    if (substring(e_char, 1, 2) == ".." && nchar(e_char) > 2) {
+    if (substring(e_char, 1, 2) == ".." && nchar(e_char) > 2L) {
       e <- eval(as.name(substring(e_char, 3)), envir = enclos)
       return(sapply(names(dbi_table), as.name, simplify = FALSE)[e])
     }
@@ -41,6 +41,8 @@ preprocess_cols <- function(e, dbi_table, enclos, name.ok = FALSE) {
              "data.table returns 'j' as a vector; dbi.table can only ",
              "return dbi.tables", call. = FALSE)
       }
+    } else if (e_char == ".N") {
+      return(list(N = as.name(".N")))
     } else {
       stop("j (the 2nd argument inside [...]) is a single symbol but there ",
            "is no column named '", e_char, "' in the dbi.table. To select ",
