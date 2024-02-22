@@ -112,11 +112,12 @@ test_that("j syntax consistent with data.table", {
   expect_no_error(tmp <- c("MediaTypeId", "UnitPrice", "Name", "Milliseconds"))
 
   expect_error(Track[][, tmp])
-  expect_error(Track[, tmp]) # currently for wrong reason
+  expect_error(Track[, tmp])
 
-  # expect_true(reference_test(
-  #   Track[, ..tmp]
-  # ))
+  expect_true(reference_test(
+    Track[, ..tmp],
+    verbose = FALSE
+  ))
 
   # expect_true(reference_test(
   #   Track[, c(..tmp)]
@@ -125,6 +126,19 @@ test_that("j syntax consistent with data.table", {
   # expect_true(reference_test(
   #   Track[, c("Milliseconds", ..tmp[1:3])]
   # ))
+
+  # dbi.table returns dbi.table; data.table returns numeric
+  expect_no_error(Track[, .N])
+
+  expect_true(reference_test(
+    Track[, list(N = .N)],
+    verbose = FALSE
+  ))
+
+  expect_true(reference_test(
+    Track[, .N, MediaTypeId],
+    verbose = FALSE
+  ))
 
   expect_no_error(DBI::dbDisconnect(conn))
 })
