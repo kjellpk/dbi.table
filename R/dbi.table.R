@@ -240,23 +240,38 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
 
 
 #' @export
-"[.dbi.table" <- function(x, i, j, by, env = parent.frame()) {
+"[.dbi.table" <- function(x, i, j, by, nomatch = NA, on = NULL) {
   x_sub <- substitute(x)
+  parent <- parent.frame()
 
   if (!dbi_table_is_simple(x)) {
     x <- as_cte(x)
   }
 
+  not_i <- FALSE
+
   if (missing(i)) {
     i <- NULL
   } else {
     sub_i <- substitute(i)
+
     if (inherits(i <- try(i, silent = TRUE), "try-error")) {
       if (!is.call(i <- sub_i)) {
         stop("'i' is not a call")
       }
-    } else if (!is.data.table(i)) {
-      stop("'i' is not a dbi.table")
+
+      if (!any(all.vars(i) %chin% names(x))) {
+        if (is_call_to(i) == "!") {
+          not_i <- TRUE
+          i <- i[[2L]]
+        }
+
+        i <- eval(i, envir = parent)
+      }
+    } else {
+      if (!(is.dbi.table(i) || is.call(i))) {
+        stop("'i' must be a call or a dbi.table")
+      }
     }
   }
 
@@ -265,21 +280,33 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   if (missing(by)) {
     by <- NULL
   } else {
-    by <- preprocess_cols(substitute(by), x, env, TRUE)
+    by <- preprocess_cols(substitute(by), x, parent, TRUE)
   }
 
   if (missing(j)) {
     j <- NULL
   } else {
-    j <- preprocess_cols(substitute(j), x, env, !is.null(by))
+    j <- preprocess_cols(substitute(j), x, parent, !is.null(by))
+  }
+
+  sub_on <- substitute(on)
+  if (!is.null(sub_on)) {
+    on <- try(eval(on, envir = parent), silent = TRUE)
+    if (inherits(on, "try-error")) {
+      on <- sub_on
+    }
   }
 
   if (is.null(i) && is.null(j)) {
     return(as.data.table(x))
   }
 
+  if (is.dbi.table(i)) {
+    return(merge_i_dbi_table(x, i, not_i, j, by, nomatch, on, parent))
+  }
+
   if (is_call_to(j) == ":=") {
-    return(handle_colon_equal(x, i, j, by, env, x_sub))
+    return(handle_colon_equal(x, i, j, by, parent, x_sub))
   }
 
   if (is.null(j) && !is.null(by)) {
@@ -287,8 +314,8 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
          " is missing or ", sQuote("NULL"))
   }
 
-  x <- handle_i_call(x, i, env)
-  handle_j(x, j, by, env)
+  x <- handle_i_call(x, i, parent)
+  handle_j(x, j, by, parent)
 }
 
 

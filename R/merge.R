@@ -112,3 +112,120 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   names(j) <- c(by.x, start, end)
   handle_j(xy, j, by = NULL, enclos = NULL)
 }
+
+
+
+merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
+
+  x_names <- names(x)
+  i_names <- names(i)
+  names(x) <- paste0("x_", names(x))
+  names(i) <- paste0("i_", names(i))
+
+  if (is.null(nomatch)) {
+    join_type <- "inner"
+  } else if (is.na(nomatch)) {
+    join_type <- "right"
+  } else {
+    stop("'nomatch' must be NA or NULL", call. = FALSE)
+  }
+
+  if (is.character(on)) {
+    if (is.null(on_x <- names(on))) {
+      on_x <- character(length(on))
+    }
+
+    on <- as.list(parse(text = on))
+    single_name <- vapply(on, is.name, FALSE)
+    no_name <- (nchar(on_x) == 0L)
+    on_x[single_name & no_name] <- as.character(on[single_name & no_name])
+
+    on[single_name] <- mapply(call,
+                              name = "==",
+                              lapply(on_x[single_name], as.name),
+                              on[single_name],
+                              SIMPLIFY = FALSE,
+                              USE.NAMES = FALSE)
+  }
+
+  if ((is_call_to(on) == ".") || (is_call_to(on) == "list")) {
+    on <- as.list(on[-1])
+  }
+
+  on <- lapply(on, bracket_on_validator, x_names = x_names, i_names = i_names)
+  on_i <- as.character(lapply(on, `[[`, 3L))
+
+  on <- lapply(on, function(u) {u[[2L]] <- as.name(paste0("x_", u[[2L]])); u})
+  on <- lapply(on, function(u) {u[[3L]] <- as.name(paste0("i_", u[[3L]])); u})
+
+  on <- handy_andy(on)
+
+  if (not_i) {
+    xi <- join(x, i, type = "left", on = on, envir = enclos,
+               prefixes = c("", "i."))
+
+    w <- lapply(paste0("i_", on_i), function(u) call("is.na", as.name(u)))
+    w <- handy_andy(w)
+    xi <- xi[w]
+
+    j <- names(xi)[seq_along(x_names)]
+    names(j) <- x_names
+    j <- sapply(j, as.name, simplify = FALSE)
+
+    xi <- handle_j(xi, j, by = NULL)
+  } else {
+    xi <- join(x, i, type = join_type, on = on, envir = enclos)
+
+    j <- names(xi)
+    names(j) <- c(x_names, i_names)
+    j <- j[-chmatch(paste0("i_", on_i), j)]
+    dups <- duplicated(j_names <- names(j))
+    j_names[dups] <- paste0("i.", j_names[dups])
+    names(j) <- j_names
+    j <- sapply(j, as.name, simplify = FALSE)
+
+    xi <- handle_j(xi, j, by = NULL)
+  }
+
+  xi
+}
+
+
+
+DT_SUPPORTED_JOIN_OPERATORS <- c("==", "<=", "<", ">=", ">")
+
+
+
+bracket_on_validator <- function(expr, x_names, i_names) {
+  if (is.name(expr)) {
+    cexpr <- as.character(expr)
+    if (cexpr %chin% x_names && cexpr %chin% i_names) {
+      return(call("==", expr, expr))
+    } else {
+      stop("argument specifying columns received non-existing column: '",
+           cexpr, "'")
+    }
+  }
+
+  if ((op <- is_call_to(expr)) %chin% DT_SUPPORTED_JOIN_OPERATORS) {
+    if (!(lhs <- as.character(expr[[2L]])) %chin% x_names) {
+      stop("argument specifying columns received non-existing column: '",
+           lhs, "'")
+    }
+    if (!(rhs <- as.character(expr[[3L]])) %chin% i_names) {
+      stop("argument specifying columns received non-existing column: '",
+           rhs, "'")
+    }
+
+    # else {
+    #   expr[[3L]] <- as.name(paste0("i.", rhs))
+    # }
+
+    return(expr)
+  } else {
+    stop("invalid join operator [", op, "]; the allowed operators are ",
+         "[", paste(DT_SUPPORTED_JOIN_OPERATORS, collapse = ", "), "]")
+  }
+
+  NULL
+}

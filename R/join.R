@@ -49,7 +49,6 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
   type <- match.arg(type, choices = names(JOINS))
 
   on_sub <- substitute(on)
-
   if (inherits(on <- try(on, silent = TRUE), "try-error")) {
     on <- on_sub
   }
@@ -74,22 +73,22 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
          "containing 2 distinct values")
   }
 
-  names_df <- rbind(data.table(input = "x",
-                               input_name = names(x),
-                               prefixed_name = paste0(prefixes[1], names(x))),
-                    data.table(input = "y",
-                               input_name = names(y),
-                               prefixed_name = paste0(prefixes[2], names(y))))
+  if (nchar(prefixes[[2L]]) < 1L) {
+    stop("'prefixes[2]' must have at least 1 character")
+  }
 
-  dups <- names_df[, input_name[duplicated(input_name)]]
-  names_df[, duplicated := (input_name %chin% dups)]
+  x_names <- names(x)
+  y_names <- names(y)
 
-  # For R CMD check
-  output_name <- prefixed_name <- input_name <- NULL
+  prefixed_x_names <- paste0(prefixes[[1L]], x_names)
+  prefixed_y_names <- paste0(prefixes[[2L]], y_names)
 
-  names_df[, output_name := ifelse(duplicated, prefixed_name, input_name)]
+  dups <- intersect(x_names, y_names)
+  allowed <- intersect(dups, prefixed_x_names)
 
-  if (any(i <- ((on_vars <- all.vars(on)) %chin% dups))) {
+  on_vars <- all.vars(on)
+
+  if (any(i <- ((on_vars) %chin% setdiff(dups, allowed)))) {
     stop("ambiguous use of ", sQuote(v <- on_vars[i][1]), " in ",
          sQuote("on"), "; use ", sQuote(paste0(prefixes[1], v)),
          " to refer to the ", sQuote(v), " in ", sQuote("x"), " and ",
@@ -97,26 +96,32 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
          " in ", sQuote("y"))
   }
 
+  if (any(setdiff(y_names, allowed) %chin% prefixed_x_names) ||
+        any(setdiff(x_names, allowed) %chin% prefixed_y_names)) {
+    stop("this combination of column names and prefixes is not supported")
+  }
+
 
   # 1. Join column definitions
 
-  ip <- names_df[duplicated == FALSE, prefixed_name]
-  names(ip) <- names_df[duplicated == FALSE, input_name]
-  pp <- names_df[, prefixed_name]
-  names(pp) <- names_df[, prefixed_name]
-  lookup <- sapply(c(ip, pp), as.name, simplify = FALSE)
+  prefixed_names <- c(prefixed_x_names, prefixed_y_names)
+  input_names <- names_list(prefixed_names, c(x_names, y_names))
+  prefixed_names <- names_list(prefixed_names)
+  input_names <- input_names[!(names(input_names) %chin% dups)]
 
-  on <- sub_lang(on, envir = lookup, specials = NULL, enclos = envir)
+  on <- sub_lang(on, envir = c(prefixed_names, input_names), specials = NULL)
+
+  names(x) <- prefixed_x_names
+  names(y) <- prefixed_y_names
 
   x_fields <- get_fields(x)
   y_fields <- get_fields(y)
   y_sub <- paste0(session$key_base, nrow(x_fields) + seq_len(nrow(y_fields)))
   names(y_sub) <- y_fields$internal_name
-  y_fields$internal_name <- y_sub
+  y_fields$internal_name <- unname(y_sub)
   y_sub <- lapply(y_sub, as.name)
 
-  xy <- c(c(x), lapply(c(y), sub_lang, envir = y_sub, specials = NULL))
-  names(xy) <- names_df[, prefixed_name]
+  xy <- c(c(x), sub_lang(y, envir = y_sub, specials = NULL))
 
 
   # 2. Join DBI connections (fail if not same connection)
@@ -136,9 +141,11 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
     y_fields$id_name <- y_data_source$id_name
   }
 
+
   # 3. join fields
 
   fields <- rbind(x_fields, y_fields)
+
 
   # 5. join data_source
 
@@ -150,6 +157,7 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
 
   data_source <- rbind(x_data_source, y_data_source)
 
+
   # 6. join ctes
 
   ctes <- c(x_ctes, y_ctes)
@@ -157,7 +165,12 @@ join <- function(x, y, type = "inner", on = NULL, envir = parent.frame(),
 
 
   # 7. Set output names
-  names(xy) <- names_df[, output_name]
+
+  output_names <- c(x_names, y_names)
+  repl <- output_names %chin% dups
+  output_names[repl] <- as.character(prefixed_names)[repl]
+  names(xy) <- output_names
+
 
   dbi_table_object(xy, conn, data_source, fields, ctes = ctes)
 }
