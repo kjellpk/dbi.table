@@ -176,13 +176,17 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
   } else {
     xi <- join(x, i, type = join_type, on = on, envir = enclos)
 
-    j <- names(xi)
-    names(j) <- c(x_names, i_names)
-    j <- j[-chmatch(paste0("i_", on_i), j)]
-    dups <- duplicated(j_names <- names(j))
+    on_x <- paste0("x_", on_x)
+    on_i <- paste0("i_", on_i)
+    on_map <- names_list(on_i, on_x)
+    j <- names_list(xi)
+
+    j[names(on_map)] <- on_map
+    j <- j[setdiff(names(j), on_i)]
+    j_names <- substring(names(j), 3)
+    dups <- duplicated(j_names)
     j_names[dups] <- paste0("i.", j_names[dups])
     names(j) <- j_names
-    j <- sapply(j, as.name, simplify = FALSE)
 
     xi <- handle_j(xi, j, by = NULL)
   }
