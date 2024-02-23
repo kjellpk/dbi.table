@@ -5,22 +5,23 @@
 \title{\code{dbi.table} test vs. reference implementation}
 \usage{
 reference_test(
-  x,
+  expr,
   envir = parent.frame(),
   ignore.row.order = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
-\item{x}{an expression involving \code{dbi.table}s.}
+\item{expr}{an expression involving at least one \code{dbi.table}.}
 
-\item{envir}{an environment. Where to evaluate \code{x}.}
+\item{envir}{an environment. Where to evaluate \code{expr}.}
 
 \item{ignore.row.order}{a logical value. This argument is passed to
 \code{\link{all.equal}}.}
 
-\item{verbose}{a logical value. When \code{TRUE}, a summary of the comparison
-is printed in the terminal.}
+\item{verbose}{a logical value. When \code{TRUE}, the output from
+\code{all.equal} is displaued in a message when
+\code{all.equal} returns anything other than \code{TRUE}.}
 }
 \description{
 Evaluate an expression using \code{dbi.table}s and separately using

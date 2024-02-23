@@ -15,74 +15,44 @@
 #' The goal of the dbi.table package is to match the reference result. Matching
 #' up to row order is acceptable.
 #'
-#' @param x an expression involving \code{dbi.table}s.
+#' @param expr an expression involving at least one \code{dbi.table}.
 #'
-#' @param envir an environment. Where to evaluate \code{x}.
+#' @param envir an environment. Where to evaluate \code{expr}.
 #'
 #' @param ignore.row.order a logical value. This argument is passed to
 #'                         \code{\link{all.equal}}.
 #'
-#' @param verbose a logical value. When \code{TRUE}, a summary of the comparison
-#'                is printed in the terminal.
+#' @param verbose a logical value. When \code{TRUE}, the output from
+#'                \code{all.equal} is displaued in a message when
+#'                \code{all.equal} returns anything other than \code{TRUE}.
 #'
 #' @export
-reference_test <- function(x, envir = parent.frame(), ignore.row.order = TRUE,
-                           verbose = TRUE) {
-  x <- substitute(x)
+reference_test <- function(expr, envir = parent.frame(),
+                           ignore.row.order = TRUE, verbose = TRUE) {
+  expr <- substitute(expr)
 
-  if (is.dbi.table(dbi_table_eval <- eval(x, envir = envir))) {
-    dbi_table_eval <- as.data.table(dbi_table_eval)
+  dbits <- sapply(all.vars(expr), get0, envir = envir, simplify = FALSE)
+  dbits  <- dbits[vapply(dbits, is.dbi.table, FALSE)]
+
+  if (!length(dbits)) {
+    stop("'expr' must contain at least one dbi.table")
   }
 
-  check_env <- new.env(parent = envir)
+  dbits <- lapply(dbits, as.data.table)
 
-  for(v in all.vars(x)) {
-    tmp <- try(eval(as.name(v), envir = envir), silent = TRUE)
-    if (is.dbi.table(tmp)) {
-      assign(v, as.data.table(tmp), pos = check_env)
-    }
-  }
-
-  data_table_eval <- eval(x, envir = check_env)
+  dbit_eval <- as.data.table(eval(expr, envir = envir))
+  dt_eval <- eval(expr, envir = dbits, enclos = envir)
 
   # merge sets key by default so unkey
-  setkey(data_table_eval, NULL)
+  setkey(dbit_eval, NULL)
+  setkey(dt_eval, NULL)
 
-  eq <- all.equal(dbi_table_eval,
-                  data_table_eval,
+  eq <- all.equal(dbit_eval, dt_eval,
                   ignore.row.order = ignore.row.order)
 
-  if (verbose) {
-    if (!is.data.table(dbi_table_eval)) {
-      cat("\n  [MAJOR] expression", sQuote(format(x)), "did not evaluate to a",
-          sQuote("dbi.table"), "\n")
-      eq <- FALSE
-    }
-
-    if (!length(ls(check_env))) {
-      cat("\n  [MAJOR] expression", sQuote(format(x)),
-          "does not include at least one", sQuote("dbi.table"), "\n")
-      eq <- FALSE
-    }
-
-    for (DT in ls(check_env)) {
-      cat("\n   [INFO] input", sQuote("dbi.table"), DT, "preview\n\n")
-      print(first(check_env[[DT]], 2), row.names = FALSE)
-      cat("\n")
-    }
-
-    cat("\n [RESULT] evaluated as", sQuote("dbi.table"), "preview\n\n")
-    print(first(dbi_table_eval, 5), row.names = FALSE)
-    cat("\n")
-
-    cat("\n [RESULT] evaluated as", sQuote("data.table"), "preview\n\n")
-    print(first(data_table_eval, 5), row.names = FALSE)
-    cat("\n")
-
-    cat("\n   [INFO] all.equal\n\n")
-    print(eq)
-    cat("\n")
+  if (verbose && !isTRUE(eq)) {
+    message(eq)
   }
 
-  invisible(isTRUE(eq))
+  isTRUE(eq)
 }
