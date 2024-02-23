@@ -216,11 +216,6 @@ bracket_on_validator <- function(expr, x_names, i_names) {
       stop("argument specifying columns received non-existing column: '",
            rhs, "'")
     }
-
-    # else {
-    #   expr[[3L]] <- as.name(paste0("i.", rhs))
-    # }
-
     return(expr)
   } else {
     stop("invalid join operator [", op, "]; the allowed operators are ",
