@@ -162,7 +162,7 @@ mini_split_id <- function(by, conn) {
 
 list_database_objects <- function(info_s) {
   conn <- info_s[[".dbi_connection"]]
-  columns <- info_s$COLUMNS
+  columns <- as.data.table(info_s$COLUMNS)
   columns[, list(table_id = mini_split_id(.BY, conn),
                  column_names = list(COLUMN_NAME)),
           by = list(TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME)]

@@ -53,8 +53,25 @@ information_schema <- function(conn) {
 information_schema.default <- function(conn) {
   info_s <- new.env(parent = emptyenv())
   assign(".dbi_connection", conn, pos = info_s)
-  bare_bones_information_schema(info_s)
-  reg.finalizer(info_s, information_schema_finalizer, onexit = TRUE)
+
+  if (!is.null(attr(conn, "recon", exact = TRUE))) {
+    reg.finalizer(info_s, information_schema_finalizer, onexit = TRUE)
+  }
+
+  tables_id <- Id(schema = "INFORMATION_SCHEMA", table = "TABLES")
+  if (dbExistsTable(conn, tables_id)) {
+    cols <- dbListFields(conn, dbQuoteIdentifier(conn, tables_id))
+    tables <- new_dbi_table(conn, tables_id, cols)
+    assign("TABLES", tables, pos = info_s)
+
+    columns_id <- Id(schema = "INFORMATION_SCHEMA", table = "COLUMNS")
+    cols <- dbListFields(conn, dbQuoteIdentifier(conn, columns_id))
+    columns <- new_dbi_table(conn, columns_id, cols)
+    assign("COLUMNS", columns, pos = info_s)
+  } else {
+    bare_bones_information_schema(info_s)
+  }
+
   info_s
 }
 
