@@ -55,19 +55,27 @@ information_schema.default <- function(conn) {
   assign(".dbi_connection", conn, pos = info_s)
 
   if (!is.null(attr(conn, "recon", exact = TRUE))) {
-    reg.finalizer(info_s, information_schema_finalizer, onexit = TRUE)
+    reg.finalizer(info_s, information_schema_disconnect, onexit = TRUE)
   }
 
-  tables_id <- Id(schema = "INFORMATION_SCHEMA", table = "TABLES")
-  if (dbExistsTable(conn, tables_id)) {
-    cols <- dbListFields(conn, dbQuoteIdentifier(conn, tables_id))
-    tables <- new_dbi_table(conn, tables_id, cols)
-    assign("TABLES", tables, pos = info_s)
+  info_tables <- c("TABLES", "COLUMNS")
+  info_ids <- paste("INFORMATION_SCHEMA", info_tables, sep = ".")
 
-    columns_id <- Id(schema = "INFORMATION_SCHEMA", table = "COLUMNS")
-    cols <- dbListFields(conn, dbQuoteIdentifier(conn, columns_id))
-    columns <- new_dbi_table(conn, columns_id, cols)
-    assign("COLUMNS", columns, pos = info_s)
+  #' @importFrom DBI dbExistsTable
+  has_info <- all(mapply(dbExistsTable, name = info_ids,
+                         MoreArgs = list(conn = conn)))
+
+  if (has_info) {
+    #' @importFrom DBI Id
+    info_ids <- lapply(info_tables, function(u) {
+                         Id(schema = "INFORMATION_SCHEMA", table = u)
+                       })
+
+    x <- mapply(new_dbi_table, id = info_ids, MoreArgs = list(conn = conn),
+                SIMPLIFY = FALSE, USE.NAMES = FALSE)
+
+    dev_null <- mapply(assign, x = info_tables, value = x,
+                       MoreArgs = list(pos = info_s))
   } else {
     bare_bones_information_schema(info_s)
   }
@@ -77,7 +85,7 @@ information_schema.default <- function(conn) {
 
 
 
-information_schema_finalizer <- function(e) {
+information_schema_disconnect <- function(e) {
   on.exit(rm(list = ".dbi_connection", envir = e))
   #' @importFrom DBI dbDisconnect
   try(dbDisconnect(e[[".dbi_connection"]]), silent = TRUE)
