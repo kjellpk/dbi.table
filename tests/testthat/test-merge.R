@@ -110,3 +110,145 @@ test_that("self merge works with no.dups = FALSE", {
   ))
   expect_no_error(DBI::dbDisconnect(conn))
 })
+
+
+
+test_that("bracket merge works", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_true(reference_test(
+    Album[Artist, on = "ArtistId"],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket merge foreign key join", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+  expect_no_error(Customer <- dbi.table(conn, DBI::Id(table = "Customer")))
+  expect_true(reference_test(
+    Track[Customer, on = c(TrackId = "CustomerId", AlbumId = "SupportRepId")],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket merge w/ foreign key joins using the binary operator ==", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+  expect_no_error(Customer <- dbi.table(conn, DBI::Id(table = "Customer")))
+  expect_true(reference_test(
+    Track[Customer, on = c("TrackId == CustomerId", "AlbumId == SupportRepId")],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket merge w/ syntax as X[Y, on=.(a, b)]", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_true(reference_test(
+    Album[Artist, on = .(AlbumId == ArtistId, ArtistId == ArtistId)],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket merge w/ (non-equi) joins using binary operators >=, <=", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+  expect_no_error(Customer <- dbi.table(conn, DBI::Id(table = "Customer")))
+  expect_true(reference_test(
+    Track[Customer, on = c("TrackId >= CustomerId", "AlbumId <= SupportRepId")],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket merge w/ (non-equi) joins using binary operators >, <", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+  expect_no_error(Customer <- dbi.table(conn, DBI::Id(table = "Customer")))
+  expect_true(reference_test(
+    Track[Customer, on = c("TrackId > CustomerId", "AlbumId < SupportRepId")],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket self-merge withs w/ half-named character", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_true(reference_test(
+    Album[Album, on = c("AlbumId", ArtistId = "ArtistId")],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket anti-join works w/ character", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_true(reference_test(
+    Artist[!Album, on = "ArtistId"],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket anti-join works w/ character non-equi join", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_true(reference_test(
+    Artist[!Album, on = "ArtistId > ArtistId"],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket anti-join works w/ call non-equi join", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_true(reference_test(
+    Artist[!Album, on = .(ArtistId > ArtistId)],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("bracket anti-join works w/ char-call non-equi join", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+  expect_true(reference_test(
+    Artist[!Album, on = c("ArtistId > ArtistId")],
+    verbose = FALSE
+  ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})

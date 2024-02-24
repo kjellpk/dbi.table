@@ -131,28 +131,29 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
   }
 
   if (is.character(on)) {
-    if (is.null(on_x <- names(on))) {
-      on_x <- character(length(on))
+    if (is.null(on_names <- names(on))) {
+      on_names <- on
     }
 
     on <- as.list(parse(text = on))
     single_name <- vapply(on, is.name, FALSE)
-    no_name <- (nchar(on_x) == 0L)
-    on_x[single_name & no_name] <- as.character(on[single_name & no_name])
+    no_name <- (nchar(on_names) == 0L)
+
+    on_names[single_name & no_name] <- as.character(on[single_name & no_name])
 
     on[single_name] <- mapply(call,
                               name = "==",
-                              lapply(on_x[single_name], as.name),
+                              lapply(on_names[single_name], as.name),
                               on[single_name],
                               SIMPLIFY = FALSE,
                               USE.NAMES = FALSE)
-  }
 
-  if ((is_call_to(on) == ".") || (is_call_to(on) == "list")) {
+  } else if ((is_call_to(on) == ".") || (is_call_to(on) == "list")) {
     on <- as.list(on[-1])
   }
 
   on <- lapply(on, bracket_on_validator, x_names = x_names, i_names = i_names)
+  on_x <- as.character(lapply(on, `[[`, 2L))
   on_i <- as.character(lapply(on, `[[`, 3L))
 
   on <- lapply(on, function(u) {u[[2L]] <- as.name(paste0("x_", u[[2L]])); u})
