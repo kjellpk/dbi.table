@@ -47,7 +47,7 @@ reference_test <- function(expr, envir = parent.frame(),
   setkey(dbit_eval, NULL)
   setkey(dt_eval, NULL)
 
-  eq <- all.equal(dbit_eval, dt_eval,
+  eq <- all.equal(dt_eval, dbit_eval,
                   ignore.row.order = ignore.row.order)
 
   if (verbose && !isTRUE(eq)) {
