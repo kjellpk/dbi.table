@@ -280,13 +280,13 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   if (missing(by)) {
     by <- NULL
   } else {
-    by <- preprocess_cols(substitute(by), x, parent, TRUE)
+    by <- preprocess_by(substitute(by), x, parent, !missing(j))
   }
 
   if (missing(j)) {
     j <- NULL
   } else {
-    j <- preprocess_cols(substitute(j), x, parent, !is.null(by))
+    j <- preprocess_j(substitute(j), x, parent, !is.null(by))
   }
 
   sub_on <- substitute(on)
@@ -301,12 +301,12 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
     return(as.data.table(x))
   }
 
-  if (is.dbi.table(i)) {
-    return(merge_i_dbi_table(x, i, not_i, j, by, nomatch, on, parent))
-  }
-
   if (is_call_to(j) == ":=") {
     return(handle_colon_equal(x, i, j, by, parent, x_sub))
+  }
+
+  if (is.dbi.table(i)) {
+    return(merge_i_dbi_table(x, i, not_i, j, by, nomatch, on, parent))
   }
 
   if (is.null(j) && !is.null(by)) {

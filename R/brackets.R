@@ -1,4 +1,75 @@
-preprocess_cols <- function(e, dbi_table, enclos, name.ok = FALSE) {
+preprocess_j <- function(e, dbi_table, enclos, single.ok = FALSE) {
+  if (is_call_to(e) == ":=") {
+    return(e)
+  }
+
+  e <- preprocess_common(e, dbi_table, enclos, single.ok)
+
+  if (is.null(e_names <- names(e))) {
+    e_names <- character(length(e))
+  }
+
+  if (any(idx <- !nzchar(e_names))) {
+    nm <- vapply(e, function(u) if (is.name(u)) as.character(u) else "", "")
+    ndx <- !nzchar(nm)
+    nm[ndx] <- paste0("V", which(ndx))
+    e_names[idx] <- nm[idx]
+  }
+
+  if (anyDuplicated(e_names)) {
+    e_names <- make.unique(e_names)
+  }
+
+  names(e) <- e_names
+  e
+}
+
+
+
+preprocess_by <- function(e, dbi_table, enclos, single.ok = FALSE) {
+  e <- preprocess_common(e, dbi_table, enclos, single.ok)
+
+  if (is.null(e_names <- names(e))) {
+    e_names <- character(length(e))
+  }
+
+  if (any(idx <- !nzchar(e_names))) {
+    av <- lapply(e, all.vars, functions = TRUE)
+    av <- mapply(grep, x = av,
+                 MoreArgs = list(pattern = "^eval$|^[^[:alpha:]. ]",
+                                 invert = TRUE, value = TRUE),
+                 SIMPLIFY = FALSE, USE.NAMES = FALSE)
+
+    if (anyNA(av <- vapply(av, `[`, "", 1L))) {
+      nadx <- is.na(av)
+      av[nadx] <- vapply(e[nadx], deparse1, "")
+    }
+    e_names[idx] <- av[idx]
+  }
+
+  if (anyDuplicated(e_names)) {
+    e_names <- make.unique(e_names)
+  }
+
+  names(e) <- e_names
+  e
+}
+
+
+
+preprocess_common <- function(e, dbi_table, enclos, single.ok) {
+  if (is_call_to(e) %chin% c(".", "list")) {
+    e <- as.list(e)[-1]
+  }
+
+  if (is.list(e) && all(vapply(e, is_language, FALSE))) {
+    return(e)
+  }
+
+  if (is_call_to(e) == ":=") {
+    return(e)
+  }
+
   if (is_call_to(e) == ":") {
     dbit_names <- names(dbi_table)
     if (is.name(lhs <- e[[2]])) {
@@ -25,6 +96,10 @@ preprocess_cols <- function(e, dbi_table, enclos, name.ok = FALSE) {
     return(sapply(e, as.name, simplify = FALSE))
   }
 
+  if (is.call(e) && single.ok) {
+    return(list(e))
+  }
+
   if (is.name(e)) {
     e_char <- as.character(e)
 
@@ -34,7 +109,7 @@ preprocess_cols <- function(e, dbi_table, enclos, name.ok = FALSE) {
     }
 
     if (e_char %chin% names(dbi_table)) {
-      if (name.ok) {
+      if (single.ok) {
         return(sapply(e_char, as.name, simplify = FALSE))
       } else {
         stop("syntax not supported - when 'j' is a symbol and column of 'x', ",
@@ -51,8 +126,8 @@ preprocess_cols <- function(e, dbi_table, enclos, name.ok = FALSE) {
     }
   }
 
-  if (is.call(e) || (is.list(e) && all(vapply(e, is_language, FALSE)))) {
-    return(e)
+  if (is.numeric(e) && all(e %in% seq_along(dbi_table))) {
+    return(names_list(dbi_table)[e])
   }
 
   stop("syntax error")
@@ -67,18 +142,17 @@ handle_i_call <- function(x, i, enclos) {
     return(x)
   }
 
-  i <- sub_lang(i, envir = x, enclos = enclos)
-
   if (is_call_to(i) == "order") {
-    return(handle_i_order(x, i))
+    return(handle_i_order(x, i, enclos))
   }
 
+  i <- sub_lang(i, envir = x, enclos = enclos)
   handle_i_where(x, i)
 }
 
 
 
-update_order_by <- function(x, i) {
+update_order_by <- function(x, i, enclos) {
   i <- as.list(i[-1])
   i <- i[!vapply(i, is.null, FALSE)]
 
@@ -86,13 +160,14 @@ update_order_by <- function(x, i) {
     return(list())
   }
 
+  i <- sub_lang(i, x, enclos = enclos)
   unique(c(i, get_order_by(x)))
 }
 
 
 
-handle_i_order <- function(x, i) {
-  attr(x, "order_by") <- update_order_by(x, i)
+handle_i_order <- function(x, i, enclos) {
+  attr(x, "order_by") <- update_order_by(x, i, enclos)
   x
 }
 
@@ -114,14 +189,6 @@ handle_by <- function(x, by, enclos) {
 
   by <- sub_lang(by, envir = x, enclos = enclos)
 
-  if (is.call(by)) {
-    if (is_call_to(by) == "list") {
-      by <- as.list(by[-1])
-    } else if (is.call(by)) {
-      by <- list(by)
-    }
-  }
-
   if (length(window_calls(by, dbi_connection(x)))) {
     stop("Aggregate and window functions are not allowed in 'by'")
   }
@@ -136,6 +203,14 @@ handle_j <- function(x, j, by, enclos) {
     return(x)
   }
 
+  if (is.null(j_names <- names(j))) {
+    j_names <- paste0("V", seq_along(j))
+  }
+
+  if (any(idx <- (!nzchar(j_names) | is.na(j_names)))) {
+    j_names[idx] <- paste0("V", which(idx))
+  }
+
   j <- sub_lang(j, envir = x, enclos = enclos)
   by <- handle_by(x, by, enclos)
 
@@ -147,18 +222,8 @@ handle_j <- function(x, j, by, enclos) {
     j <- handle_over(x, j, by, a$order_by)
   }
 
-  if (is.null(j_names <- names(j))) {
-    j_names <- character(length(j))
-  }
-
-  if (any(idx <- (nchar(j_names) == 0L))) {
-    j_names[idx] <- paste0("V", which(idx))
-  }
-
-  by_names <- names(by)
-
   j <- c(by, j)
-  a$names <- c(by_names, j_names)
+  a$names <- c(names(by), j_names)
   attributes(j) <- a
 
   j
@@ -181,10 +246,10 @@ handle_over <- function(x, j, partition, order) {
 handle_colon_equal <- function(x, i, j, by, env, x_sub) {
   if (!is.null(i)) {
     if (is_call_to(i) == "order") {
-      order_by <- update_order_by(x, i)
+      order_by <- update_order_by(x, i, enclos = env)
     } else {
-      stop("when using :=, if ", sQuote("i"), " is not missing ",
-           "it must be a call to ", sQuote("order"))
+      stop("when using :=, if 'i' is not missing ",
+           "it must be a call to 'order'")
     }
   } else {
     order_by <- NULL
@@ -192,12 +257,50 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
 
   by <- handle_by(x, by)
 
-  j <- handle_over(x, as.list(j[-1]), by, order_by)
+  if (length(j) == 3L) {
+    lhs <- j[[2]]
+    if (is.name(lhs)) {
+      lhs <- as.character(lhs)
+    } else if (!length(all.vars(lhs))) {
+      lhs <- as.character(eval(lhs, envir = env))
+    } else if (is_call_to(lhs) %chin% c(".", "list")) {
+      lhs <- vapply(as.list(lhs)[-1], deparse1, "")
+    } else {
+      stop("the left-hand-side of ':=' should be a character vector ",
+           "or a list of names", call. = FALSE)
+    }
+
+    if (is_call_to(j[[3L]]) %chin% c(".", "list")) {
+      j <- as.list(j[[3L]])[-1]
+    } else {
+      j <- list(j[[3L]])
+    }
+
+    names(j) <- lhs
+  } else {
+    j <- as.list(j)[-1]
+  }
+
+  if (anyDuplicated(names(j))) {
+    stop("duplicated assignments in ':='", call. = FALSE)
+  }
+
+  j_null <- j[jdx <- vapply(j, is.null, FALSE)]
+  j <- j[!jdx]
+
+  if (!all(vapply(j, is_language, FALSE))) {
+    stop("the right-hand-side of ':=' must be an expression or a ",
+         "list of expressions", call. = FALSE)
+  }
+
+  j <- sub_lang(j, x, enclos = env)
+  j <- handle_over(x, j, by, order_by)
 
   a <- attributes(x)
   a$names <- NULL
   x <- c(x)
   x[names(j)] <- j
+  x <- x[setdiff(names(x), names(j_null))]
   a$names <- names(x)
   attributes(x) <- a
 
