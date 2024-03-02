@@ -308,7 +308,12 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
     x_name <- as.character(x_sub)
 
     if (!is.null(env[[x_name]]) || identical(env, .GlobalEnv)) {
-      assign(x_name, x, envir = env)
+      if (is_dbi_database(env)) {
+        stop("'dbi.table's in 'dbi_database's cannot be modified by reference",
+             call. = FALSE)
+      } else {
+        assign(x_name, x, envir = env)
+      }
     } else {
       warning(sQuote(x_name), " could not be modified in place")
     }

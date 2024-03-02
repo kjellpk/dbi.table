@@ -25,7 +25,6 @@
 dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE) {
   what_name <- deparse1(substitute(what))
   what <- init_connection(what)
-  check_connection(what, arg_name = "what")
 
   if (is.null(name)) {
     name <- db_short_name(what)
@@ -39,26 +38,17 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE) {
          " argument to provide a distinct name")
   }
 
-  info_s <- information_schema(what)
-  objs <- list_database_objects(info_s)
-
-  obj_names <- default_object_names(objs)
-  objs <- objs$table_id
-  names(objs) <- obj_names
-
-  ## Check sanity here
-
   # From ?attach: "In programming, functions should not change the search
   #                path unless that is their purpose."
   #
   # The intended purpose of dbi.attach is to add data on the search path.
   # Mask the attach funcation as 'fun' to avoid R CMD check error.
 
-  fun <- get("attach", "package:base")
-  e <- fun(NULL, pos = pos, name = name, warn.conflicts = warn.conflicts)
+  e <- get("attach", "package:base")(NULL, pos = pos, name = name,
+           warn.conflicts = warn.conflicts)
 
-  assign(".information_schema", info_s, pos = e)
-  add_db_objects(e, objs)
+  initialize_dbi_database(what, e)
+  add_db_objects(e, db_objects(e))
 
   invisible(e)
 }
