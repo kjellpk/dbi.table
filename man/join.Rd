@@ -4,14 +4,7 @@
 \alias{join}
 \title{Join dbi.tables}
 \usage{
-join(
-  x,
-  y,
-  type = "inner",
-  on = NULL,
-  envir = parent.frame(),
-  prefixes = c("x.", "y.")
-)
+join(x, y, type = "inner", on = NULL, prefixes = c("x.", "y."))
 }
 \arguments{
 \item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must
@@ -23,10 +16,6 @@ and \code{"cross"}.}
 
 \item{on}{a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
 clause.}
-
-\item{envir}{an environment, \code{on} is partially evaluated in \code{envir}
-when this funcion is evaluated (i.e., not when the join is
-translated to \code{SQL}.)}
 
 \item{prefixes}{a 2-element character vector. When \code{x} and \code{y}
 both have a column with the same name, prefixes are used to
