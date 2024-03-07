@@ -39,7 +39,7 @@ as_cte <- function(x) {
   cte <- list(x)
   names(cte) <- id_name
 
-  dbi_table_object(v, attr(x, "conn", exact = TRUE), data_source, fields,
+  dbi_table_object(v, get_connection(x), data_source, fields,
                    order_by = order_by, ctes = c(ctes, cte))
 }
 
@@ -53,7 +53,7 @@ dbi_table_is_simple <- function(x) {
   has_over <- vapply(c(x),
                      function(u) !is.null(attr(u, "over", exact = TRUE)),
                      FALSE)
-  group_by <- attr(x, "group_by", exact = TRUE)
+  group_by <- get_group_by(x)
 
   (length(group_by) == 0L) && !any(has_over)
 }

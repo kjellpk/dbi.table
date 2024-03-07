@@ -30,7 +30,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE) {
     name <- db_short_name(what)
   }
 
-  name <- paste(dbi_connection_package(what), as.character(name[1]), sep = ":")
+  name <- paste(dbi_connection_package(what), name[[1L]], sep = ":")
 
   if (name %in% search()) {
     stop(sQuote(what_name), " was not attached because ", sQuote(name),

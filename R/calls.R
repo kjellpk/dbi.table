@@ -153,8 +153,8 @@ window_calls <- function(x, conn) {
 
 AGGREGATE_FUNCTIONS <- c("mean", "sum", "min", "max", "n")
 
-call_can_aggregate <- can_aggregate <- function(e) {
-  if (is.atomic(e) && length(e) == 1L) {
+call_can_aggregate <- function(e) {
+  if (is_scalar_atomic(e)) {
     return(TRUE)
   }
 

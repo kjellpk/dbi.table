@@ -174,7 +174,7 @@ handle_i_order <- function(x, i, enclos) {
 
 
 handle_i_where <- function(x, i) {
-  where <- attr(x, "where", exact = TRUE)
+  where <- get_where(x)
   where[[length(where) + 1L]] <- i
   attr(x, "where") <- where
   x

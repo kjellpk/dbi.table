@@ -28,7 +28,7 @@ write_ctes <- function(x) {
 write_select <- function(x) {
   conn <- dbi_connection(x)
 
-  if (all(vapply(setdiff(c(x), get_group_by(x)), can_aggregate, FALSE))) {
+  if (all(vapply(setdiff(c(x), get_group_by(x)), call_can_aggregate, FALSE))) {
     ## @importFrom dbplyr translate_sql_
     select <- translate_sql_(c(x), con = conn, window = FALSE)
   } else {

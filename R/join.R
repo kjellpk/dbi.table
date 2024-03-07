@@ -162,7 +162,7 @@ can_join_as_x <- function(x) {
 
 
 can_join_as_y <- function(x) {
-  data_source <- attr(x, "data_source", exact = TRUE)
+  data_source <- get_data_source(x)
   dbi_table_is_simple(x) && (nrow(data_source) == 1L)
 }
 
