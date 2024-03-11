@@ -193,10 +193,7 @@ mini_split_id <- function(by, conn) {
   if (is.na(by[1])) by <- by[-1]
   if (is.na(by[1])) stop("missing ", sQuote("TABLE_NAME"))
   #' @importFrom DBI Id
-  #' @importFrom DBI dbQuoteIdentifier
-  by <- dbQuoteIdentifier(conn, Id(by))
-  #' @importFrom DBI dbUnquoteIdentifier
-  dbUnquoteIdentifier(conn, by)
+  round_trip(conn, Id(by))
 }
 
 

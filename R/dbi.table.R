@@ -9,7 +9,6 @@
 #'
 #' @export
 dbi.table <- function(conn, id) {
-  conn <- init_connection(conn)
   check_connection(conn)
 
   if (!inherits(id, "Id")) {
@@ -21,18 +20,14 @@ dbi.table <- function(conn, id) {
     }
   }
 
-  #' @importFrom DBI dbExistsTable
-  if (!dbExistsTable(conn, id)) {
-    stop(sQuote("id"), " not found on connection")
-  }
-
   new_dbi_table(conn, id)
 }
 
 
 
 new_dbi_table <- function(conn, id, fields = NULL) {
-  id_name <- id@name[[length(id@name)]]
+  id <- round_trip(conn, id)[[1L]]
+  id_name <- id@name[["table"]]
 
   data_source <- data.frame(clause = "FROM",
                             id = I(list(id)),

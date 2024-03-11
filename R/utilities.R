@@ -76,3 +76,16 @@ pad_left <- function(x, width = 6) {
 unique_table_name <- function(pre = "X") {
   paste0(pre, (session$table_name_counter <- 1L + session$table_name_counter))
 }
+
+
+
+round_trip <- function(conn, id) {
+  if (is.environment(conn)) {
+    conn <- conn[[".dbi_connection"]]
+  }
+
+  stopifnot(inherits(id, "Id"))
+
+  #' @importFrom DBI dbQuoteIdentifier dbUnquoteIdentifier
+  dbUnquoteIdentifier(conn, dbQuoteIdentifier(conn, id))
+}
