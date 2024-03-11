@@ -90,14 +90,23 @@ join <- function(x, y, type = "inner", on = NULL, prefixes = c("x.", "y.")) {
   y_fields$internal_name <- unname(y_sub)
   y_sub <- lapply(y_sub, as.name)
 
-  xy <- c(c(x), sub_lang(y, envir = y_sub, specials = NULL))
+  xy <- c(c(x), sub_lang(y, envir = y_sub))
 
+  x_where <- get_where(x)
+  if (length(y_where <- get_where(y))) {
+    y_where <- sub_lang(y_where, envir = y_sub)
+  }
+  xy_where <- c(x_where, y_where)
+
+  x_order_by <- get_order_by(x)
+  if (length(y_order_by <- get_order_by(y))) {
+    y_order_by <- sub_lang(y_order_by, envir = y_sub, specials = NULL)
+  }
+  xy_order_by <- c(x_order_by, y_order_by)
 
   # 2. Join DBI connections (fail if not same connection)
 
-  if (identical(get_connection(x), get_connection(y))) {
-    conn <- get_connection(x)
-  } else {
+  if (!identical(xy_conn <- get_connection(x), get_connection(y))) {
     stop(sQuote("x"), " and ", sQuote("y"), " do not share the same ",
          sQuote("DBI"), " connection")
   }
@@ -113,7 +122,7 @@ join <- function(x, y, type = "inner", on = NULL, prefixes = c("x.", "y.")) {
 
   # 3. join fields
 
-  fields <- rbind(x_fields, y_fields)
+  xy_fields <- rbind(x_fields, y_fields)
 
 
   # 5. join data_source
@@ -124,13 +133,13 @@ join <- function(x, y, type = "inner", on = NULL, prefixes = c("x.", "y.")) {
     y_data_source$on <- list(sub_lang(on, envir = xy, specials = NULL))
   }
 
-  data_source <- rbind(x_data_source, y_data_source)
+  xy_data_source <- rbind(x_data_source, y_data_source)
 
 
   # 6. join ctes
 
-  ctes <- c(x_ctes, y_ctes)
-  ctes <- ctes[!duplicated(names(ctes))]
+  xy_ctes <- c(x_ctes, y_ctes)
+  xy_ctes <- xy_ctes[!duplicated(names(xy_ctes))]
 
 
   # 7. Set output names
@@ -142,7 +151,13 @@ join <- function(x, y, type = "inner", on = NULL, prefixes = c("x.", "y.")) {
   y_names[idx] <- paste0(prefixes[[2L]], y_names[idx])
 
   names(xy) <- c(x_names, y_names)
-  dbi_table_object(xy, conn, data_source, fields, ctes = ctes)
+  dbi_table_object(cdefs = xy,
+                   conn = xy_conn,
+                   data_source = xy_data_source,
+                   fields = xy_fields,
+                   where = xy_where,
+                   order_by = xy_order_by,
+                   ctes = xy_ctes)
 }
 
 
