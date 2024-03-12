@@ -176,17 +176,29 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
   } else {
     xi <- join(x, i, type = join_type, on = on)
 
-    on_x <- paste0("x_", on_x)
-    on_i <- paste0("i_", on_i)
-    on_map <- names_list(on_i, on_x)
-    j <- names_list(xi)
+    if (is.null(j)) {
+      on_x <- paste0("x_", on_x)
+      on_i <- paste0("i_", on_i)
+      on_map <- names_list(on_i, on_x)
 
-    j[names(on_map)] <- on_map
-    j <- j[setdiff(names(j), on_i)]
-    j_names <- substring(names(j), 3)
-    dups <- duplicated(j_names)
-    j_names[dups] <- paste0("i.", j_names[dups])
-    names(j) <- j_names
+      j <- names_list(xi)
+
+      j[names(on_map)] <- on_map
+      j <- j[setdiff(names(j), on_i)]
+      j_names <- substring(names(j), 3)
+      dups <- duplicated(j_names)
+      j_names[dups] <- paste0("i.", j_names[dups])
+      names(j) <- j_names
+    } else {
+      j_sub <- xref_in(x_names, i_names, prefixes = c("", "i."))
+      cj_sub <- as.character(j_sub)
+      idx <- substring(cj_sub, 1, 2) == "i." & !(cj_sub %chin% x_names)
+      j_sub[idx] <- lapply(cj_sub[idx], sub, pattern = "i.",
+                           replacement = "i_", fixed = TRUE)
+      j_sub[!idx] <- lapply(cj_sub[!idx], function(u) paste0("x_", u))
+      j_sub <- lapply(j_sub, as.name)
+      j <- sub_lang(j, envir = j_sub, specials = NULL)
+    }
 
     xi <- handle_j(xi, j, by = NULL)
   }
