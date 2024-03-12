@@ -168,10 +168,15 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
     w <- handy_andy(w)
     xi <- xi[w]
 
-    j <- names(xi)[seq_along(x_names)]
-    names(j) <- x_names
-    j <- sapply(j, as.name, simplify = FALSE)
-
+    if (is.null(j)) {
+      j <- names(xi)[seq_along(x_names)]
+      names(j) <- x_names
+      j <- sapply(j, as.name, simplify = FALSE)
+    } else {
+      j_sub <- names_list(paste0("x_", x_names), x_names)
+      j <- sub_lang(j, envir = j_sub)
+    }
+  
     xi <- handle_j(xi, j, by = NULL)
   } else {
     xi <- join(x, i, type = join_type, on = on)
