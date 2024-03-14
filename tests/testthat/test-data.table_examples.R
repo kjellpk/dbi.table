@@ -185,8 +185,9 @@ test_that("dbi.table works on data.table help examples", {
     DBIT[X, on = .(x, y <= foo)],
     verbose = FALSE))
 
-####DBIT[X, .(x,y,x.y,v), on = .(x, y>=foo)]  # Select x's join columns as well
-
+  expect_true(reference_test(
+    DBIT[X, .(x, y, x.y, v), on = .(x, y >= foo)],
+    verbose = FALSE))
 
 # NOTE: mult and .EACHI not supported in version 1
 

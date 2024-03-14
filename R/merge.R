@@ -116,11 +116,8 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
 
 merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
-
-  x_names <- names(x)
-  i_names <- names(i)
-  names(x) <- paste0("x_", names(x))
-  names(i) <- paste0("i_", names(i))
+  names(x) <- paste0("x.", x_names <- names(x))
+  names(i) <- paste0("i.", i_names <- names(i))
 
   if (is.null(nomatch)) {
     join_type <- "inner"
@@ -153,58 +150,48 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
   }
 
   on <- lapply(on, bracket_on_validator, x_names = x_names, i_names = i_names)
+
   on_x <- as.character(lapply(on, `[[`, 2L))
   on_i <- as.character(lapply(on, `[[`, 3L))
 
-  on <- lapply(on, function(u) {u[[2L]] <- as.name(paste0("x_", u[[2L]])); u})
-  on <- lapply(on, function(u) {u[[3L]] <- as.name(paste0("i_", u[[3L]])); u})
+  on <- lapply(on, function(u) {u[[2L]] <- as.name(paste0("x.", u[[2L]])); u})
+  on <- lapply(on, function(u) {u[[3L]] <- as.name(paste0("i.", u[[3L]])); u})
 
   on <- handy_andy(on)
 
   if (not_i) {
-    xi <- join(x, i, type = "left", on = on, prefixes = c("", "i."))
+    xi <- join(x, i, type = "left", on = on, prefixes = c("x.", "i."))
 
-    w <- lapply(paste0("i_", on_i), function(u) call("is.na", as.name(u)))
+    w <- lapply(paste0("i.", on_i), function(u) call("is.na", as.name(u)))
     w <- handy_andy(w)
     xi <- xi[w]
 
     if (is.null(j)) {
-      j <- names(xi)[seq_along(x_names)]
-      names(j) <- x_names
-      j <- sapply(j, as.name, simplify = FALSE)
+      j <- names_list(names(x), x_names)
     } else {
-      j_sub <- names_list(paste0("x_", x_names), x_names)
-      j <- sub_lang(j, envir = j_sub)
+      j <- sub_lang(j, envir = names_list(names(x), x_names))
     }
-  
+
     xi <- handle_j(xi, j, by = NULL)
   } else {
     xi <- join(x, i, type = join_type, on = on)
 
+    j_map <- names_list(xi)
+    i_map <- names_list(names(i), i_names)
+    j_map[names(i_map)] <- i_map
+    x_map <- names_list(names(x), x_names)
+    j_map[names(x_map)] <- x_map
+    on_map <- names_list(paste0("i.", on_i), on_x)
+    j_map[names(on_map)] <- on_map
+
     if (is.null(j)) {
-      on_x <- paste0("x_", on_x)
-      on_i <- paste0("i_", on_i)
-      on_map <- names_list(on_i, on_x)
-
-      j <- names_list(xi)
-
-      j[names(on_map)] <- on_map
-      j <- j[setdiff(names(j), on_i)]
-      j_names <- substring(names(j), 3)
-      dups <- duplicated(j_names)
-      j_names[dups] <- paste0("i.", j_names[dups])
-      names(j) <- j_names
-    } else {
-      j_sub <- xref_in(x_names, i_names, prefixes = c("", "i."))
-      cj_sub <- as.character(j_sub)
-      idx <- substring(cj_sub, 1, 2) == "i." & !(cj_sub %chin% x_names)
-      j_sub[idx] <- lapply(cj_sub[idx], sub, pattern = "i.",
-                           replacement = "i_", fixed = TRUE)
-      j_sub[!idx] <- lapply(cj_sub[!idx], function(u) paste0("x_", u))
-      j_sub <- lapply(j_sub, as.name)
-      j <- sub_lang(j, envir = j_sub, specials = NULL)
+      i_names <- setdiff(i_names, on_i)
+      dups <- intersect(i_names, x_names)
+      i_names[i_names %chin% dups] <- paste0("i.", i_names[i_names %chin% dups])
+      j <- names_list(c(x_names, i_names))
     }
 
+    j <- sub_lang(j, envir = j_map, specials = NULL)
     xi <- handle_j(xi, j, by = NULL)
   }
 
