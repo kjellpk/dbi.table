@@ -23,7 +23,7 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
       return(if_scalar(eval(e, envir = enclos)))
     }
 
-    stop("symbol ", sQuote(e), " not found")
+    stop("object '", e, "' not found", call. = FALSE)
   }
 
   if (is.call(e)) {
@@ -79,7 +79,7 @@ SQL_MODES <- c("numeric", "character", "logical")
 
 if_allowed_mode <- function(x) {
   if (!is.atomic(x) || !(mode(x) %chin% SQL_MODES)) {
-    stop(sQuote("x"), " is not atomic", call. = FALSE)
+    stop("'x' is not atomic", call. = FALSE)
   }
   use_integer(x)
 }
@@ -88,7 +88,7 @@ if_allowed_mode <- function(x) {
 
 if_scalar <- function(x) {
   if (length(x <- if_allowed_mode(x)) != 1L) {
-    stop(sQuote("x"), " is not scalar", call. = FALSE)
+    stop("'x' is not scalar", call. = FALSE)
   }
 
   x
@@ -170,7 +170,7 @@ call_can_aggregate <- function(e) {
     }
   }
 
-  stop(sQuote("e"), " is not language or atomic")
+  stop("'e' is not language or atomic")
 }
 
 

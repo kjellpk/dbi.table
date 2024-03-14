@@ -16,7 +16,7 @@ dbi.table <- function(conn, id) {
       #' @importFrom DBI Id
       id <- Id(table = id)
     } else {
-      stop(sQuote("id"), " argument invalid")
+      stop("'id' argument invalid")
     }
   }
 
@@ -305,8 +305,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   }
 
   if (is.null(j) && !is.null(by)) {
-    stop("cannot handle ", sQuote("by"), " when ", sQuote("j"),
-         " is missing or ", sQuote("NULL"))
+    stop("cannot handle 'by' when 'j' is missing or 'NULL'", call. = FALSE)
   }
 
   x <- handle_i_call(x, i, parent)

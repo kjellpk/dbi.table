@@ -21,8 +21,8 @@ dbi_connection_package <- function(conn) {
 
 check_connection <- function(conn, arg_name = "conn") {
   if (!inherits(conn, "DBIConnection")) {
-    stop("invalid connection argument - ", sQuote(arg_name), " is not a ",
-         sQuote("DBI"), " connection")
+    stop("invalid connection argument - '", arg_name, "' is not a ",
+         "'DBI' connection", call. = FALSE)
   }
 
   invisible()

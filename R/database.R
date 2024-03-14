@@ -112,7 +112,7 @@ is_dbi_database <- function(x) {
 #' @export
 db_objects <- function(db, qualify_names = FALSE, force = FALSE) {
   if (!inherits(db, "dbi_database")) {
-    stop(sQuote(deparse1(substitute(db))), " is not a ", sQuote("dbi_database"))
+    stop("'", deparse1(substitute(db)), "' is not a 'dbi_database'")
   }
 
   if (force || is.null(objs <- db$.all_db_objects)) {
@@ -144,7 +144,7 @@ db_objects <- function(db, qualify_names = FALSE, force = FALSE) {
 #' @export
 add_db_objects <- function(db, ...) {
   if (!inherits(db, "dbi_database")) {
-    stop(sQuote(deparse1(substitute(db))), " is not a ", sQuote("dbi_database"))
+    stop("'", deparse1(substitute(db)), "' is not a 'dbi_database'")
   }
 
   if (!length(dots <- list(...))) {
@@ -176,9 +176,9 @@ add_db_objects <- function(db, ...) {
       assign(names(dots)[i], dbit, pos = db)
     }
   } else {
-    missing_id <- dQuote(dots[[which(!check)[1]]]@name)
-    stop(sQuote(paste("<Id>", paste(missing_id, collapse = "."))),
-         " not found")
+    missing_id <- paste0("\"", dots[[which(!check)[1L]]]@name, "\"")
+    stop("'", paste("<Id>", paste(missing_id, collapse = ".")),
+         "' not found", call. = FALSE)
   }
 
   invisible(db)
@@ -191,7 +191,7 @@ mini_split_id <- function(by, conn) {
   stopifnot(is.character(by) && (length(by) == 3L))
   if (is.na(by[1])) by <- by[-1]
   if (is.na(by[1])) by <- by[-1]
-  if (is.na(by[1])) stop("missing ", sQuote("TABLE_NAME"))
+  if (is.na(by[1])) stop("missing 'TABLE_NAME'", call. = TRUE)
   #' @importFrom DBI Id
   round_trip(conn, Id(by))
 }

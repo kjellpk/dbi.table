@@ -25,11 +25,11 @@ sql_join <- function(x, y, type = "inner", on = NULL,
   parent_frame <- parent.frame()
 
   if (!is.dbi.table(x)) {
-    stop(sQuote("x"), " is not a dbi.table")
+    stop("'x' is not a 'dbi.table'")
   }
 
   if (!is.dbi.table(y)) {
-    stop(sQuote("y"), " is not a dbi.table")
+    stop("'y' is not a 'dbi.table'")
   }
 
   if (!can_join_as_x(x)) {
@@ -52,16 +52,15 @@ sql_join <- function(x, y, type = "inner", on = NULL,
   }
 
   if (!is.null(on) && type == "cross") {
-    stop("'on' must be 'NULL' when 'type' is \"cross\"", call. = TRUE)
+    stop("'on' must be 'NULL' when 'type' is \"cross\"")
   }
 
   if (is.null(on) && type != "cross") {
-    stop(sQuote("on"), " cannot not be ", sQuote("NULL"), " when ",
-         sQuote("type"), " is ", sQuote(type))
+    stop("'on' cannot not be 'NULL' when 'type' is '", type, "'")
   }
 
   if (!is.null(on) && !is.call(on)) {
-    stop(sQuote("on"), " is not a ", sQuote("call"))
+    stop("'on' is not a 'call'")
   }
 
   xref <- xref_in(x_names <- names(x), y_names <- names(y), prefixes)
@@ -71,11 +70,10 @@ sql_join <- function(x, y, type = "inner", on = NULL,
   on_vars <- all.vars(on)
 
   if (any(i <- !(on_vars %chin% names(xref)))) {
-    stop("ambiguous use of ", sQuote(v <- on_vars[i][1]), " in ",
-         sQuote("on"), "; use ", sQuote(paste0(prefixes[1], v)),
-         " to refer to the ", sQuote(v), " in ", sQuote("x"), " and ",
-         sQuote(paste0(prefixes[2], v)), " to refer to the ", sQuote(v),
-         " in ", sQuote("y"))
+    stop("ambiguous use of '", v <- on_vars[i][1], "' in 'on'; use '",
+         paste0(prefixes[[1L]], v), "' to refer to the '", v, "' in 'x' ",
+         "and '", paste0(prefixes[[2L]], v), "' to refer to the '", v,
+         "' in 'y'")
   }
 
 
@@ -107,8 +105,7 @@ sql_join <- function(x, y, type = "inner", on = NULL,
   # 2. Join DBI connections (fail if not same connection)
 
   if (!identical(xy_conn <- get_connection(x), get_connection(y))) {
-    stop(sQuote("x"), " and ", sQuote("y"), " do not share the same ",
-         sQuote("DBI"), " connection")
+    stop("'x' and 'y' do not share the same 'DBI' connection")
   }
 
   x_data_source <- get_data_source(x)
@@ -186,8 +183,8 @@ can_join_as_y <- function(x) {
 xref_in <- function(x_names, y_names, prefixes) {
   prefixes <- as.character(prefixes)
   if ((length(prefixes) != 2) || anyDuplicated(prefixes)) {
-    stop(sQuote("prefixes"), " is not a character vector ",
-         "containing 2 distinct values", call. = FALSE)
+    stop("'prefixes' is not a character vector containing 2 distinct values",
+         call. = FALSE)
   }
 
   if (nchar(prefixes[[2L]]) < 1L) {

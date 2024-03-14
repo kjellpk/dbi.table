@@ -33,9 +33,9 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE) {
   name <- paste(dbi_connection_package(what), name[[1L]], sep = ":")
 
   if (name %in% search()) {
-    stop(sQuote(what_name), " was not attached because ", sQuote(name),
-         " is already on the search path - use the ", sQuote("name"),
-         " argument to provide a distinct name")
+    stop("'", what_name, "' was not attached because '", name,
+         "' is already on the search path - if you want to attach the same ",
+         "database twice, use the 'name' argument to provide a distinct name")
   }
 
   # From ?attach: "In programming, functions should not change the search

@@ -130,7 +130,7 @@ preprocess_common <- function(e, dbi_table, enclos, single.ok) {
     return(names_list(dbi_table)[e])
   }
 
-  stop("syntax error")
+  stop("syntax error", call. = FALSE)
 
   NULL
 }
@@ -190,7 +190,8 @@ handle_by <- function(x, by, enclos) {
   by <- sub_lang(by, envir = x, enclos = enclos)
 
   if (length(window_calls(by, dbi_connection(x)))) {
-    stop("Aggregate and window functions are not allowed in 'by'")
+    stop("Aggregate and window functions are not allowed in 'by'",
+         call. = FALSE)
   }
 
   by
@@ -248,8 +249,8 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
     if (is_call_to(i) == "order") {
       order_by <- update_order_by(x, i, enclos = env)
     } else {
-      stop("when using :=, if 'i' is not missing ",
-           "it must be a call to 'order'")
+      stop("when using :=, if 'i' is not missing it must be a call to 'order'",
+           call. = FALSE)
     }
   } else {
     order_by <- NULL
@@ -315,7 +316,7 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
         assign(x_name, x, envir = env)
       }
     } else {
-      warning(sQuote(x_name), " could not be modified in place")
+      warning("'", x_name, "' could not be modified in place")
     }
   } else {
     warning("dbi.table could not be modified in place")

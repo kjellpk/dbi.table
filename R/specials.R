@@ -1,7 +1,7 @@
 unsupported <- function(sym) {
   eval(bquote(function(e, dbi_table, specials, env) {
-    stop("the ", sQuote("data.table"), " special symbol ", sQuote(.(sym)),
-         " is not supported by ", sQuote("dbi.table"), call. = FALSE)
+    stop("the 'data.table' special symbol '", .(sym), "' is not supported by ",
+         "'dbi.table'", call. = FALSE)
   }))
 }
 

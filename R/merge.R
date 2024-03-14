@@ -4,53 +4,44 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
                             sort = FALSE, suffixes = c(".x", ".y"),
                             no.dups = TRUE, ...) {
   if (!is.dbi.table(x)) {
-    stop(sQuote("x"), " is not a ", sQuote("dbi.table"))
+    stop("'x' is not a 'dbi.table'")
   }
 
   if (!is.dbi.table(y)) {
-    stop(sQuote("y"), " is not a ", sQuote("dbi.table"))
+    stop("'y' is not a 'dbi.table'")
   }
 
   names_x <- names(x)
   names_y <- names(y)
 
   if (anyDuplicated(names_x) || anyDuplicated(names_y)) {
-    stop("the ", sQuote("merge"), " method for ", sQuote("dbi.table"),
-         " requires that ", sQuote("x"), " and ", sQuote("y"),
-         " each have unique column names")
+    stop("the 'merge' method for 'dbi.table' requires that 'x' and 'y' ",
+         "each have unique column names")
   }
 
   if ((!is.null(by.x) || !is.null(by.y)) && length(by.x) != length(by.y))
-    stop(sQuote("by.x"), " and ", sQuote("by.y"), " are not the same length")
+    stop("'by.x' and 'by.y' are not the same length")
 
   if (!missing(by) && !missing(by.x))
-    warning("specification of ", sQuote("by"), " superseded by ",
-            sQuote("by.x"), " and ", sQuote("by.y"))
+    warning("specification of 'by' superseded by 'by.x' and 'by.y'")
 
   if (!is.null(by.x)) {
     if (length(by.x) == 0L || !is.character(by.x) || !is.character(by.y))
       stop("non-empty character vectors of column names are required for ",
-           sQuote("by.x"), " and ", sQuote("by.y"))
+           "'by.x' and 'by.y'")
 
     if (!all(by.x %chin% names_x))
-      stop("Elements listed in ", sQuote("by.x"),
-           " must be valid column names in ",
-           sQuote("x"))
+      stop("Elements listed in 'by.x' must be valid column names in 'x'")
 
     if (!all(by.y %chin% names_y))
-      stop("Elements listed in ", sQuote("by.y"),
-           " must be valid column names in ",
-           sQuote("y"))
+      stop("Elements listed in 'by.y' must be valid column names in 'y'")
   } else {
     if (!length(by)) {
-      stop("a non-empty character vector of column names is required for ",
-           sQuote("by"))
+      stop("a non-empty character vector of column names is required for 'by'")
     }
 
     if (!all(by %chin% intersect(names_x, names_y)))
-      stop("Elements listed in ", sQuote("by"),
-           " must be valid column names in ",
-           sQuote("x"), " and ", sQuote("y"))
+      stop("Elements listed in 'by' must be valid column names in 'x' and 'y'")
 
     by <- unname(by)
     by.x <- by.y <- by
