@@ -20,7 +20,8 @@
 #'                 eliminate the ambiguity.
 #'
 #' @export
-join <- function(x, y, type = "inner", on = NULL, prefixes = c("x.", "y.")) {
+sql_join <- function(x, y, type = "inner", on = NULL,
+                     prefixes = c("x.", "y.")) {
   parent_frame <- parent.frame()
 
   if (!is.dbi.table(x)) {
@@ -51,8 +52,7 @@ join <- function(x, y, type = "inner", on = NULL, prefixes = c("x.", "y.")) {
   }
 
   if (!is.null(on) && type == "cross") {
-    warning("ignoring ", sQuote("on"), " argument for cross join")
-    on <- NULL
+    stop("'on' must be 'NULL' when 'type' is \"cross\"", call. = TRUE)
   }
 
   if (is.null(on) && type != "cross") {
