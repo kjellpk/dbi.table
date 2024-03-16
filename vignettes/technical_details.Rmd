@@ -34,10 +34,10 @@ myself how my package works.
 
 # The `dbi.table` Object
 
-A `dbi.table` is a list of *language objects* with the class attribute set to
-`dbi.table` (i.e., an S3 object). Each language object is either a `call`, a
-`name` (single-variable expressions), or a scalar constant (a length-1 vector
-with mode numeric, logical, or character).
+A `dbi.table` is a list of *expressions* (Hadley Wickham's definition, not base
+R's) with the class attribute set to `dbi.table` (i.e., an S3 object). Each
+expression must be able to be translated to `SQL` using `dbplyr`'s
+`translate_sql` function.
 
 ```{r element}
 c(Genre) #use `c` for the side effect of stripping off the attributes
@@ -45,7 +45,7 @@ c(Genre) #use `c` for the side effect of stripping off the attributes
 
 The names of the `dbi.table` object correspond to the column names of the
 results set and, since `Genre` is a *pristine* (i.e., corresponds exactly to a
-database object) `dbi.table`, each language object is a name.
+database object) `dbi.table`, each expression is a `name`.
 
 ```{r element.mode}
 sapply(Genre, mode)
@@ -65,7 +65,7 @@ names(attributes(Genre))
 
 ### The `conn` Attribute
 
-The `conn` attribute can either be a `DBIConnection` or an `environment`. When
+The `conn` attribute can be either a `DBIConnection` or an `environment`. When
 the `conn` attribute is an `environment`, `conn$.dbi_connection` will be used as
 the `DBIConnection`.
 
@@ -91,14 +91,14 @@ Join operations add a row to the `data_source`.
 
 ### The `fields` Attribute
 
-The `fields` attributes stores information about the database fields (columns)
+The `fields` attribute stores information about the database fields (columns)
 that are in the `data_source`. The `fields` attribute is a 3-column
 `data.frame`.
 
 | Column        | Description                                                  |
 |---------------|--------------------------------------------------------------|
 | internal_name | `character` - identifier used internally by `dbi.table`      |
-| id            | `character` - key to row in `data_source`                    |
+| id_name       | `character` - key to row in `data_source`                    |
 | field         | `character` - column name in the connected database          |
 
 ```{r fields}
@@ -142,10 +142,10 @@ empty `list`s). The `dbi.tables` in `ctes` are rendered as SQL to form the
 
 # Manipulating `dbi.table`s
 
-The `sub_lang` function (not exported by the package) substitutes language
-elements into a language element. The idea is to manipulate the columns of a
-`dbi.table` while preserving the property that all `name`s in the language
-elements are in the `fields` attribute.
+The `sub_lang` function (not exported by the package) selectively substitutes
+expressions into expressions. The idea is to be able to manipulate the columns
+of a `dbi.table` while preserving the property that all `name`s in the
+expressions are in the `fields` attribute.
 
 The function is defined as follows.
 
