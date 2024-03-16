@@ -242,6 +242,7 @@ test_that("bracket anti-join works w/ call non-equi join", {
 
 
 
+
 test_that("bracket anti-join works w/ char-call non-equi join", {
   expect_no_error(conn <- chinook.sqlite())
   expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
@@ -250,5 +251,32 @@ test_that("bracket anti-join works w/ char-call non-equi join", {
     Artist[!Album, on = c("ArtistId > ArtistId")],
     verbose = FALSE
   ))
+  expect_no_error(DBI::dbDisconnect(conn))
+})
+
+
+
+test_that("merge preserves where and order by", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+
+  expect_true(reference_test({
+    Artist <- Artist[ArtistId > 5 & ArtistId < 10]
+    Album <- Album[nchar(Title) > 15]
+    merge(Album, Artist, by = "ArtistId")},
+    verbose = FALSE
+  ))
+
+  expect_no_error(Artist <- dbi.table(conn, DBI::Id(table = "Artist")))
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+
+  expect_true(reference_test({
+    Artist <- Artist[order(Name)]
+    Album <- Album[order(-Title)]
+    merge(Album, Artist, by = "ArtistId")},
+    verbose = FALSE
+  ))
+
   expect_no_error(DBI::dbDisconnect(conn))
 })
