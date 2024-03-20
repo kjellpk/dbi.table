@@ -63,10 +63,11 @@ names_list <- function(x, names.out = NULL) {
 
 
 
-use_integer <- function(x) {
-  if (is.double(x)) {
-    if (max(abs(x - as.integer(x))) < .Machine$double.eps) {
-      x <- as.integer(x)
+use_integer64 <- function(x) {
+  if (is.double(x) && !any(class(x) %chin% c("AsIs", "POSIXct", "Date"))) {
+    if (max(abs(x - (rx <- round(x, digits = 0L)))) < .Machine$double.eps) {
+      #' @importFrom bit64 as.integer64
+      x <- as.integer64(rx)
     }
   }
 
@@ -81,7 +82,7 @@ if_allowed_mode <- function(x) {
   if (!is.atomic(x) || !(mode(x) %chin% SQL_MODES)) {
     stop("'x' is not atomic", call. = FALSE)
   }
-  use_integer(x)
+  use_integer64(x)
 }
 
 
