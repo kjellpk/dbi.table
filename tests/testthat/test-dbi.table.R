@@ -142,3 +142,20 @@ test_that("j syntax consistent with data.table", {
 
   expect_no_error(DBI::dbDisconnect(conn))
 })
+
+
+
+test_that("", {
+  expect_no_error(conn <- chinook.sqlite())
+  expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+
+  expect_true(reference_test(
+    Album[ArtistId == ArtistId],
+    verbose = FALSE
+  ))
+
+  expect_no_error(ArtistId <- 7)
+  expect_true(Album[ArtistId == local(ArtistId), .N][]$N == 1L)
+
+  expect_no_error(DBI::dbDisconnect(conn))
+})
