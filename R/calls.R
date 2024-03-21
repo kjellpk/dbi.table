@@ -7,31 +7,44 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
   if (is.name(e)) {
     e_char <- as.character(e)
 
-    if (nchar(e_char) < 1) {
+    if (nchar(e_char) < 1L) {
       return(NULL)
     }
 
-    if (!is.null(envir) && (e_char %chin% names(envir))) {
-      return(c(envir)[[e_char]])
+    if (!is.null(envir[[e_char]])) {
+      return(eval(e, envir, NULL))
     }
 
-    if (!is.null(specials) && (e_char %chin% names(specials))) {
-      return(specials[[e_char]](e, envir, specials, enclos))
+    if (!is.null(specials[[e_char]])) {
+      return(eval(e, specials, NULL)(e, envir, specials, enclos))
     }
 
-    if (!is.null(enclos) && !is.null(enclos[[e_char]])) {
-      return(if_scalar(eval(e, envir = enclos)))
+    if (is.call(e <- eval(e, NULL, enclos))) {
+      return(sub_lang(e, envir, specials, enclos))
     }
 
-    stop("object '", e, "' not found", call. = FALSE)
+    if (is.dbi.table(e)) {
+      return(e)
+    }
+
+    return(if_scalar(e))
   }
 
   if (is.call(e)) {
-    if ((ec <- as.character(e[[1]])) %chin% names(specials)) {
-      return(specials[[ec]](e, envir, specials, enclos))
+    if (!is.null(specials[[as.character(e[[1L]])]])) {
+      return(eval(e[[1L]], specials, NULL)(e, envir, specials, enclos))
     }
 
-    e[-1] <- lapply(e[-1], sub_lang, envir = envir,
+    if (!any(all.vars(e) %chin% names(envir))) {
+
+      if (is.dbi.table(e <- eval(e, NULL, enclos))) {
+        return(e)
+      }
+
+      return(if_scalar(e))
+    }
+
+    e[-1] <- lapply(e[-1L], sub_lang, envir = envir,
                     specials = specials, enclos = enclos)
 
     return(e)
@@ -63,11 +76,15 @@ names_list <- function(x, names.out = NULL) {
 
 
 
-use_integer64 <- function(x) {
-  if (is.double(x) && !any(class(x) %chin% c("AsIs", "POSIXct", "Date"))) {
+use_integer <- function(x) {
+  if (is.numeric(x) && !any(class(x) %chin% c("POSIXct", "Date"))) {
     if (max(abs(x - (rx <- round(x, digits = 0L)))) < .Machine$double.eps) {
-      #' @importFrom bit64 as.integer64
-      x <- as.integer64(rx)
+      if (max(abs(rx)) > .Machine$integer.max) {
+        #' @importFrom bit64 as.integer64
+        x <- as.integer64(rx)
+      } else {
+        x <- as.integer(rx)
+      }
     }
   }
 
@@ -82,7 +99,7 @@ if_allowed_mode <- function(x) {
   if (!is.atomic(x) || !(mode(x) %chin% SQL_MODES)) {
     stop("'x' is not atomic", call. = FALSE)
   }
-  use_integer64(x)
+  use_integer(x)
 }
 
 

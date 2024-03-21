@@ -70,6 +70,18 @@ special_in <- function(e, dbi_table, specials, env) {
 
 
 
+special_local <- function(e, dbi_table, specials, env) {
+  eval(e[[2L]], NULL, env)
+}
+
+
+
+special_not <- function(e, dbi_table, specials, env) {
+  call("!", sub_lang(e[[2L]], dbi_table, enclos = env))
+}
+
+
+
 add_special <- function(symbol, fun = unsupported(symbol)) {
   stopifnot(is.character(symbol) && (length(symbol) == 1L) && nchar(symbol) > 0)
   session$special_symbols[[symbol]] <- fun

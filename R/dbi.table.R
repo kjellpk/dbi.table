@@ -248,25 +248,11 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   if (missing(i)) {
     i <- NULL
   } else {
-    sub_i <- substitute(i)
+    i <- sub_lang(substitute(i), x, enclos = parent)
 
-    if (inherits(i <- try(i, silent = TRUE), "try-error")) {
-      if (!is.call(i <- sub_i)) {
-        stop("'i' is not a call")
-      }
-
-      if (!any(all.vars(i) %chin% names(x))) {
-        if (is_call_to(i) == "!") {
-          not_i <- TRUE
-          i <- i[[2L]]
-        }
-
-        i <- eval(i, envir = parent)
-      }
-    } else {
-      if (!(is.dbi.table(i) || is.call(i))) {
-        stop("'i' must be a call or a dbi.table")
-      }
+    if (is_call_to(i) == "!" && is.dbi.table(i[[2L]])) {
+      not_i <- TRUE
+      i <- i[[2L]]
     }
   }
 

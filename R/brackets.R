@@ -146,7 +146,6 @@ handle_i_call <- function(x, i, enclos) {
     return(handle_i_order(x, i, enclos))
   }
 
-  i <- sub_lang(i, envir = x, enclos = enclos)
   handle_i_where(x, i)
 }
 
@@ -160,7 +159,6 @@ update_order_by <- function(x, i, enclos) {
     return(list())
   }
 
-  i <- sub_lang(i, x, enclos = enclos)
   unique(c(i, get_order_by(x)))
 }
 
