@@ -28,3 +28,11 @@ translate_sql_ <- function(dots, con, vars_group = NULL, vars_order = NULL,
                         vars_order = vars_order, vars_frame = vars_frame,
                         window = window, context = context)
 }
+
+
+
+# Need to import something from dbplyr to avoid R CMD check note.
+dummy <- function() {
+  #' @importFrom dbplyr test_register_src
+  test_register_src("name", "src")
+}
