@@ -59,6 +59,11 @@ information_schema.default <- function(conn) {
   }
 
   info_tables <- c("TABLES", "COLUMNS")
+
+  #' @importFrom DBI Id
+  info_ids <- lapply(info_tables,
+                     function(u) Id(schema = "INFORMATION_SCHEMA", table = u))
+
   info_ids <- paste("INFORMATION_SCHEMA", info_tables, sep = ".")
 
   #' @importFrom DBI dbExistsTable
@@ -66,11 +71,6 @@ information_schema.default <- function(conn) {
                          MoreArgs = list(conn = conn)))
 
   if (has_info) {
-    #' @importFrom DBI Id
-
-    info_ids <- lapply(info_tables,
-                       function(u) Id(schema = "INFORMATION_SCHEMA", table = u))
-
     x <- mapply(new_dbi_table, id = info_ids, MoreArgs = list(conn = conn),
                 SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
