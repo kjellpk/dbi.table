@@ -21,6 +21,8 @@ session$key_base <- "._.xcwrl_"
   add_special("%chin%", special_in)
   add_special("local", special_local)
   add_special("!", special_not)
+  add_special("%like%", special_like)
+  add_special("%LIKE%", special_LIKE)
 
   NULL
 }

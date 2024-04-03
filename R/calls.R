@@ -162,7 +162,6 @@ OVER_PATTERN <- "\\)\\s*OVER\\s*\\("
 
 window_calls <- function(x, conn) {
   suppressWarnings(
-    #' @importFrom dbplyr translate_sql_
     grep(OVER_PATTERN, translate_sql_(x, con = conn, window = TRUE))
   )
 }

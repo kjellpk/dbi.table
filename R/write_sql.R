@@ -29,20 +29,17 @@ write_select <- function(x) {
   conn <- dbi_connection(x)
 
   if (all(vapply(setdiff(c(x), get_group_by(x)), call_can_aggregate, FALSE))) {
-    ## @importFrom dbplyr translate_sql_
     select <- translate_sql_(c(x), con = conn, window = FALSE)
   } else {
     select <- list()
     for (i in seq_along(x)) {
       if (!is.null(over <- attr(x[[i]], "over", exact = TRUE))) {
-        ## @importFrom dbplyr translate_sql_
         pb <- translate_sql_(over$partition_by, con = conn, window = FALSE)
         ob <- translate_sql_(over$order_by, con = conn, window = FALSE)
       } else {
         pb <- ob <- NULL
       }
 
-      ## @importFrom dbplyr translate_sql_
       select[[i]] <- translate_sql_(unname(c(x)[i]), con = conn,
                                     vars_group = pb, vars_order = ob)
     }
@@ -74,7 +71,6 @@ write_from <- function(x) {
                    dbQuoteIdentifier(conn, data_source[[i, "id_name"]]))
 
     if (!is.null(on <- data_source[[i, "on"]])) {
-      ## @importFrom dbplyr translate_sql_
       on <- translate_sql_(list(on), con = conn, window = FALSE)
 
       from <- paste0(from,
@@ -98,7 +94,6 @@ write_where <- function(x) {
   conn <- dbi_connection(x)
 
   if (length(where <- get_where(x))) {
-    ## @importFrom dbplyr translate_sql_
     where <- translate_sql_(list(handy_andy(where)), con = conn, window = FALSE)
     where <- sub_db_identifier(where, conn, get_fields(x))
     paste(pad_left("WHERE"), where)
@@ -113,7 +108,6 @@ write_group_by <- function(x) {
   conn <- dbi_connection(x)
 
   if (length(group_by <- get_group_by(x))) {
-    ## @importFrom dbplyr translate_sql_
     group_by <- translate_sql_(c(group_by), con = conn, window = FALSE)
     group_by <- sub_db_identifier(group_by, conn, get_fields(x))
     paste(pad_left("GROUP BY"), paste(group_by, collapse = ", "))
@@ -136,7 +130,6 @@ write_order_by <- function(x) {
     desc <- vapply(order_by, is_unary_minus, FALSE)
     order_by[desc] <- lapply(order_by[desc], `[[`, i = 2)
 
-    ## @importFrom dbplyr translate_sql_
     order_by <- translate_sql_(order_by, con = conn, window = FALSE)
     order_by <- sub_db_identifier(order_by, conn, get_fields(x))
     order_by[desc] <- paste(order_by[desc], "DESC")
