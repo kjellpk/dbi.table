@@ -26,7 +26,6 @@ dbi.table <- function(conn, id) {
 
 
 new_dbi_table <- function(conn, id, fields = NULL) {
-  id <- round_trip(conn, id)[[1L]]
   id_name <- id@name[["table"]]
 
   data_source <- data.frame(clause = "FROM",
@@ -35,7 +34,6 @@ new_dbi_table <- function(conn, id, fields = NULL) {
                             on = I(list(NULL)))
 
   if (is.null(fields)) {
-    #' @importFrom DBI dbListFields
     fields <- dbListFields(conn, id)
   }
 

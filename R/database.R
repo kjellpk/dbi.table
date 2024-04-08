@@ -193,7 +193,7 @@ mini_split_id <- function(by, conn) {
   if (is.na(by[1])) by <- by[-1]
   if (is.na(by[1])) stop("missing 'TABLE_NAME'", call. = TRUE)
   #' @importFrom DBI Id
-  round_trip(conn, Id(by))
+  list(Id(by))
 }
 
 
@@ -203,18 +203,20 @@ list_database_objects <- function(info_s) {
   columns <- as.data.table(info_s$COLUMNS)
   columns[, list(table_id = mini_split_id(.BY, conn),
                  column_names = list(COLUMN_NAME)),
-          by = list(TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME)]
+          by = list(catalog = TABLE_CATALOG,
+                    schema = TABLE_SCHEMA,
+                    table = TABLE_NAME)]
 }
 
 
 
 default_object_names <- function(objs, qualify_names = FALSE) {
-  obj_names <- objs$TABLE_NAME
+  obj_names <- objs$table
   if (anyDuplicated(obj_names) || qualify_names) {
-    obj_names <- paste(objs$TABLE_SCHEMA, obj_names, sep = ".")
+    obj_names <- paste(objs$schema, obj_names, sep = ".")
   }
   if (anyDuplicated(obj_names) || qualify_names) {
-    obj_names <- paste(objs$TABLE_CATALOG, obj_names, sep = ".")
+    obj_names <- paste(objs$catalog, obj_names, sep = ".")
   }
 
   obj_names

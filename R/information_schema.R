@@ -64,8 +64,6 @@ information_schema.default <- function(conn) {
   info_ids <- lapply(info_tables,
                      function(u) Id(schema = "INFORMATION_SCHEMA", table = u))
 
-  info_ids <- paste("INFORMATION_SCHEMA", info_tables, sep = ".")
-
   #' @importFrom DBI dbExistsTable
   has_info <- all(mapply(dbExistsTable, name = info_ids,
                          MoreArgs = list(conn = conn)))
@@ -103,7 +101,6 @@ bare_bones_information_schema <- function(info_s) {
 
   assign("TABLES", TABLES, pos = info_s)
 
-  #' @importFrom DBI dbListFields
   COLUMNS <- mapply(dbListFields, name = TABLES$TABLE_NAME,
                     MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
   COLUMNS <- lapply(COLUMNS, function(u) data.table(COLUMN_NAME = u))
