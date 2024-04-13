@@ -343,6 +343,10 @@ as.dbi.table <- function(x, conn) {
 
   temp_name <- unique_table_name(session$tmp_base)
 
+  if (inherits(dbi_conn, "Microsoft SQL Server")) {
+    temp_name <- paste0("#", temp_name)
+  }
+
   #' @importFrom DBI dbWriteTable
   dev_null <- dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)
 
