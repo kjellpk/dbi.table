@@ -1,6 +1,6 @@
 #' Create a \code{dbi.table} accessible via a \code{DBI} connection
 #'
-#' @description Create a \code{dbi.table} based on a SQL table.
+#' @description Create a \code{dbi.table} from an existing SQL object.
 #'
 #' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}}.
 #'
@@ -64,13 +64,8 @@ dbi_table_object <- function(cdefs, conn, data_source, fields,
 
 
 get_connection <- function(x) {
-  if (is.dbi.table(x)) {
-    attr(x, "conn", exact = TRUE)
-  } else {
-    NULL
-  }
+  attr(x, "conn", exact = TRUE)
 }
-
 
 
 
@@ -310,4 +305,65 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
   attr(x, "order_by") <- intersect(get_order_by(x), unname(c(x)))
   attr(x, "distinct") <- TRUE
   x
+}
+
+
+
+#' Coerce to a DBI Table
+#'
+#' @description Write a \code{\link[base]{data.frame}} to a temporary table on a
+#'              \code{DBI} connection and return a \code{\link{dbi.table}}.
+#'
+#' @param x any \R object that can be coerced to a
+#'          \code{\link[base]{data.frame}}.
+#'
+#' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}}.
+#'             Alternatively, \code{conn} may be a \code{\link{dbi.table}} or a
+#'             \code{\link{dbi_database}}; in these cases, the connection handle
+#'             is extracted from the provided object.
+#'
+#' @section Note: The temporary tables created by this function are dropped
+#'                (by calling \code{\link[DBI]{dbRemoveTable}}) during garbage
+#'                collection.
+#'
+#' @export
+as.dbi.table <- function(x, conn) {
+  if (!is.data.table(x)) {
+    x <- as.data.frame(x)
+  }
+
+  if (inherits(conn, "DBIConnection")) {
+    dbi_conn <- conn
+  } else {
+    conn <- get_connection(conn)
+    dbi_conn <- dbi_connection(conn)
+  }
+
+  stopifnot(inherits(dbi_conn, "DBIConnection"))
+
+  temp_name <- unique_table_name(session$tmp_base)
+
+  #' @importFrom DBI dbWriteTable
+  dev_null <- dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)
+
+  #' @importFrom DBI Id
+  temp_id <- Id(table = temp_name)
+  x <- dbi.table(conn, temp_id)
+
+  temp_dbi_table <- new.env(parent = emptyenv())
+  temp_dbi_table$id <- temp_id
+  temp_dbi_table$conn <- conn
+  reg.finalizer(temp_dbi_table, finalize_temp_dbi_table)
+
+  attr(x, "temp_dbi_table") <- temp_dbi_table
+  x
+}
+
+
+
+finalize_temp_dbi_table <- function(e) {
+  #' @importFrom DBI dbRemoveTable
+  try(dbRemoveTable(e$conn, e$id), silent = TRUE)
+
+  NULL
 }

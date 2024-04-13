@@ -13,5 +13,5 @@ dbi.table(conn, id)
 table accessible via a \code{conn}.}
 }
 \description{
-Create a \code{dbi.table} based on a SQL table.
+Create a \code{dbi.table} from an existing SQL object.
 }

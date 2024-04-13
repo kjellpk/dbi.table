@@ -5,6 +5,7 @@ session$table_name_counter <- 0L
 session$print <- ""
 session$special_symbols <- new.env(parent = emptyenv())
 session$key_base <- "._.xcwrl_"
+session$tmp_base <- "DBI_TABLE_PACKAGE_TEMPORARY_TABLE_"
 
 .onLoad <- function(libname, pkgname) {
   add_special(".N", function(e, dbi_table, specials, env) call("n"))
