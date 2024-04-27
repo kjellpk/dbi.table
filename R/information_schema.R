@@ -58,21 +58,21 @@ information_schema.default <- function(conn) {
     reg.finalizer(info_s, information_schema_disconnect, onexit = TRUE)
   }
 
-  info_tables <- c("TABLES", "COLUMNS")
+  bare_bones_tables <- c("TABLES", "COLUMNS")
 
   #' @importFrom DBI Id
-  info_ids <- lapply(info_tables,
-                     function(u) Id(schema = "INFORMATION_SCHEMA", table = u))
+  ids <- lapply(bare_bones_tables,
+                function(u) Id(schema = "INFORMATION_SCHEMA", table = u))
 
   #' @importFrom DBI dbExistsTable
-  has_info <- all(mapply(dbExistsTable, name = info_ids,
-                         MoreArgs = list(conn = conn)))
+  has_bare_bones <- all(mapply(dbExistsTable, name = ids,
+                               MoreArgs = list(conn = conn)))
 
-  if (has_info) {
-    x <- mapply(new_dbi_table, id = info_ids, MoreArgs = list(conn = conn),
+  if (has_bare_bones) {
+    x <- mapply(new_dbi_table, id = ids, MoreArgs = list(conn = conn),
                 SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
-    dev_null <- mapply(assign, x = info_tables, value = x,
+    dev_null <- mapply(assign, x = bare_bones_tables, value = x,
                        MoreArgs = list(pos = info_s))
   } else {
     bare_bones_information_schema(info_s)
