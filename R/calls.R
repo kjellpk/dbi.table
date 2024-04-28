@@ -23,7 +23,7 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
       return(sub_lang(e, envir, specials, enclos))
     }
 
-    if (is.dbi.table(e)) {
+    if (is.dbi.table(e) || is.data.frame(e)) {
       return(e)
     }
 

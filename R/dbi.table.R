@@ -243,6 +243,10 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
   } else {
     i <- sub_lang(substitute(i), x, enclos = parent)
 
+    if (is.data.frame(i)) {
+      i <- as.dbi.table(i, x)
+    }
+
     if (is_call_to(i) == "!" && is.dbi.table(i[[2L]])) {
       not_i <- TRUE
       i <- i[[2L]]
@@ -328,15 +332,15 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #'
 #' @export
 as.dbi.table <- function(x, conn) {
-  if (!is.data.table(x)) {
+  if (!is.data.frame(x)) {
     x <- as.data.frame(x)
   }
 
   if (inherits(conn, "DBIConnection")) {
     dbi_conn <- conn
   } else {
-    conn <- get_connection(conn)
     dbi_conn <- dbi_connection(conn)
+    conn <- get_connection(conn)
   }
 
   stopifnot(inherits(dbi_conn, "DBIConnection"))
@@ -352,7 +356,8 @@ as.dbi.table <- function(x, conn) {
 
   #' @importFrom DBI Id
   temp_id <- Id(table = temp_name)
-  x <- dbi.table(conn, temp_id)
+  x <- dbi.table(dbi_conn, temp_id)
+  attr(x, "conn") <- conn
 
   temp_dbi_table <- new.env(parent = emptyenv())
   temp_dbi_table$id <- temp_id
