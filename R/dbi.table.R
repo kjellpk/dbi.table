@@ -34,7 +34,7 @@ new_dbi_table <- function(conn, id, fields = NULL) {
                             on = I(list(NULL)))
 
   if (is.null(fields)) {
-    fields <- dbListFields(conn, id)
+    fields <- dbListFields(dbi_connection(conn), id)
   }
 
   internal_name <- paste0(session$key_base, seq_len(length(fields)))
@@ -70,13 +70,16 @@ get_connection <- function(x) {
 
 
 dbi_connection <- function(x) {
-  conn <- get_connection(x)
-
-  if (!is.null(conn) && is.environment(conn)) {
-    conn <- conn$.dbi_connection
+  if (is.dbi.table(x)) {
+    x <- get_connection(x)
   }
 
-  conn
+  if (is.environment(x) && !is.null(x$.dbi_connection)) {
+    x <- x$.dbi_connection
+  }
+
+  stopifnot(inherits(x, "DBIConnection"))
+  x
 }
 
 
@@ -356,8 +359,7 @@ as.dbi.table <- function(x, conn) {
 
   #' @importFrom DBI Id
   temp_id <- Id(table = temp_name)
-  x <- dbi.table(dbi_conn, temp_id)
-  attr(x, "conn") <- conn
+  x <- new_dbi_table(conn, temp_id)
 
   temp_dbi_table <- new.env(parent = emptyenv())
   temp_dbi_table$id <- temp_id
