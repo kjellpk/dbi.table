@@ -6,7 +6,7 @@
 #' \code{\link{dbi_database}} when initializing a new \code{dbi_database}.
 #'
 #' An \code{information_schema} is an \code{\link[base]{environment}} that
-#' contains
+#' must contain
 #'  \enumerate{
 #'  \item a \code{\link[DBI]{DBIConnection-class}} named \code{.dbi_connection},
 #'  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
@@ -14,18 +14,14 @@
 #'  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
 #'        named \code{COLUMNS}.
 #' }
-#' The \code{TABLES} \code{*.table} must have columns named
-#' \code{TABLE_CATALOG}, \code{TABLE_SCHEMA}, and \code{TABLE_NAME}. If
-#' \code{TABLE_CATALOG} and/or \code{TABLE_SCHEMA} are not needed they may be
-#' \code{NA_character_}. \code{TABLE_NAME} must be type \code{character} and
-#' cannot have any missing values (\code{NA}s).
+#' The \code{TABLES} table must have a column named \code{TABLE_NAME} and should
+#' contain columns named \code{TABLE_CATALOG} and \code{TABLE_SCHEMA} if at all
+#' possible. Missing values are not allowed.
 #'
-#' The \code{COLUMNS} \code{*.table} must have columns named
-#' \code{TABLE_CATALOG}, \code{TABLE_SCHEMA}, \code{TABLE_NAME},
-#' \code{COLUMN_NAME}, and \code{ORDINAL_POSITION}. If
-#' \code{TABLE_CATALOG} and/or \code{TABLE_SCHEMA} are not needed they may be
-#' \code{NA_character_}. \code{TABLE_NAME} and \code{COLUMN_NAME} must be type
-#' \code{character} and cannot have any missing values (\code{NA}s).
+#' The \code{COLUMNS} table must have columns named \code{TABLE_NAME},
+#' \code{COLUMN_NAME}, and \code{ORDINAL_POSITION}. If \code{TABLES} has columns
+#' \code{TABLE_CATALOG} and \code{TABLE_SCHEMA} then these must be present in
+#' \code{COLUMNS} as well. Missing values are not allowed.
 #'
 #' \code{information_schema} is an S3 generic. The default method uses the
 #' RDBMS's Information Schema if it exists (in which case \code{TABLES} and
@@ -39,7 +35,7 @@
 #'             \code{\link[DBI]{DBIConnection-class}} handle returned by
 #'             \code{\link[DBI]{dbConnect}} and NOT a function that creates one.
 #'
-#' @return an \code{\link[base]{environment}} containing the componenets
+#' @return an \code{\link[base]{environment}} containing the components
 #'         enumerated in Details.
 #'
 #' @export
@@ -94,9 +90,7 @@ information_schema_disconnect <- function(e) {
 bare_bones_information_schema <- function(info_s) {
   conn <- info_s[[".dbi_connection"]]
   #' @importFrom DBI dbListTables
-  TABLES <- data.table(TABLE_CATALOG = NA_character_,
-                       TABLE_SCHEMA = NA_character_,
-                       TABLE_NAME	= dbListTables(conn),
+  TABLES <- data.table(TABLE_NAME	= dbListTables(conn),
                        TABLE_TYPE = "BASE TABLE")
 
   assign("TABLES", TABLES, pos = info_s)
@@ -106,10 +100,7 @@ bare_bones_information_schema <- function(info_s) {
   COLUMNS <- lapply(COLUMNS, function(u) data.table(COLUMN_NAME = u))
   COLUMNS <- rbindlist(COLUMNS, idcol = "TABLE_NAME")
   COLUMNS[, ORDINAL_POSITION := seq_len(.N), by = list(TABLE_NAME)]
-  COLUMNS[, TABLE_CATALOG := NA_character_]
-  COLUMNS[, TABLE_SCHEMA := NA_character_]
-  setcolorder(COLUMNS, c("TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME",
-                         "COLUMN_NAME", "ORDINAL_POSITION"))
+  setcolorder(COLUMNS, c("TABLE_NAME", "COLUMN_NAME", "ORDINAL_POSITION"))
 
   assign("COLUMNS", COLUMNS, pos = info_s)
 
@@ -124,3 +115,4 @@ TABLE_NAME <- NULL
 TABLE_SCHEMA <- NULL
 COLUMN_NAME <- NULL
 ORDINAL_POSITION <- NULL
+

@@ -14,7 +14,7 @@ Note: unlike other functions in the \code{dbi.table} package,
 \code{\link[DBI]{dbConnect}} and NOT a function that creates one.}
 }
 \value{
-an \code{\link[base]{environment}} containing the componenets
+an \code{\link[base]{environment}} containing the components
         enumerated in Details.
 }
 \description{
@@ -25,7 +25,7 @@ Schema, you do not need to work with this function directly; it is called by
 }
 \details{
 An \code{information_schema} is an \code{\link[base]{environment}} that
-contains
+must contain
  \enumerate{
  \item a \code{\link[DBI]{DBIConnection-class}} named \code{.dbi_connection},
  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
@@ -33,18 +33,14 @@ contains
  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
        named \code{COLUMNS}.
 }
-The \code{TABLES} \code{*.table} must have columns named
-\code{TABLE_CATALOG}, \code{TABLE_SCHEMA}, and \code{TABLE_NAME}. If
-\code{TABLE_CATALOG} and/or \code{TABLE_SCHEMA} are not needed they may be
-\code{NA_character_}. \code{TABLE_NAME} must be type \code{character} and
-cannot have any missing values (\code{NA}s).
+The \code{TABLES} table must have a column named \code{TABLE_NAME} and should
+contain columns named \code{TABLE_CATALOG} and \code{TABLE_SCHEMA} if at all
+possible. Missing values are not allowed.
 
-The \code{COLUMNS} \code{*.table} must have columns named
-\code{TABLE_CATALOG}, \code{TABLE_SCHEMA}, \code{TABLE_NAME},
-\code{COLUMN_NAME}, and \code{ORDINAL_POSITION}. If
-\code{TABLE_CATALOG} and/or \code{TABLE_SCHEMA} are not needed they may be
-\code{NA_character_}. \code{TABLE_NAME} and \code{COLUMN_NAME} must be type
-\code{character} and cannot have any missing values (\code{NA}s).
+The \code{COLUMNS} table must have columns named \code{TABLE_NAME},
+\code{COLUMN_NAME}, and \code{ORDINAL_POSITION}. If \code{TABLES} has columns
+\code{TABLE_CATALOG} and \code{TABLE_SCHEMA} then these must be present in
+\code{COLUMNS} as well. Missing values are not allowed.
 
 \code{information_schema} is an S3 generic. The default method uses the
 RDBMS's Information Schema if it exists (in which case \code{TABLES} and

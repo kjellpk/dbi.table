@@ -186,26 +186,40 @@ add_db_objects <- function(db, ...) {
 
 
 
-mini_split_id <- function(by, conn) {
-  by <- unlist(by)
-  stopifnot(is.character(by) && (length(by) == 3L))
-  if (is.na(by[1])) by <- by[-1]
-  if (is.na(by[1])) by <- by[-1]
-  if (is.na(by[1])) stop("missing 'TABLE_NAME'", call. = TRUE)
-  #' @importFrom DBI Id
-  list(Id(by))
-}
-
-
-
 list_database_objects <- function(info_s) {
   conn <- info_s[[".dbi_connection"]]
-  columns <- as.data.table(info_s$COLUMNS)
-  columns[, list(table_id = mini_split_id(.BY, conn),
+
+  #' @importFrom DBI dbGetInfo
+  dbname <- as.character(dbGetInfo(conn)$dbname)[[1L]]
+
+  COLUMNS <- info_s$COLUMNS
+
+  continue <- FALSE
+  if (!is.null(COLUMNS$TABLE_CATALOG)) {
+    catalog <- as.data.table(unique(COLUMNS[, list(TABLE_CATALOG)]))$TABLE_CATALOG
+    if (dbname %chin% catalog) {
+      COLUMNS <- COLUMNS[TABLE_CATALOG == dbname]
+      continue <- TRUE
+    }
+  }
+
+  if (!continue && !is.null(COLUMNS$TABLE_SCHEMA)) {
+    schema <- as.data.table(unique(COLUMNS[, list(TABLE_SCHEMA)]))$TABLE_SCHEMA
+    if (dbname %chin% schema) {
+      COLUMNS <- COLUMNS[TABLE_SCHEMA == dbname]
+    }
+  }
+
+  columns <- as.data.table(COLUMNS)
+
+  id_columns <- c(catalog = "TABLE_CATALOG",
+                  schema = "TABLE_SCHEMA",
+                  table = "TABLE_NAME")
+  id_columns <- id_columns[id_columns %chin% names(columns)]
+
+  columns[, list(table_id = list(Id(unlist(.BY))),
                  column_names = list(COLUMN_NAME)),
-          by = list(catalog = TABLE_CATALOG,
-                    schema = TABLE_SCHEMA,
-                    table = TABLE_NAME)]
+          by = id_columns]
 }
 
 
