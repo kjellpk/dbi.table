@@ -2,9 +2,12 @@
 % Please edit documentation in R/examples.R
 \name{chinook.sqlite}
 \alias{chinook.sqlite}
+\alias{chinook.duckdb}
 \title{Example Databases}
 \usage{
 chinook.sqlite()
+
+chinook.duckdb()
 }
 \description{
 These functions return connections to example databases
@@ -13,5 +16,7 @@ These functions return connections to example databases
 \section{Functions}{
 \itemize{
 \item \code{chinook.sqlite()}: 
+
+\item \code{chinook.duckdb()}: 
 
 }}

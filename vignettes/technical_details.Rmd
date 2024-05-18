@@ -202,6 +202,6 @@ function is called to reestablish the connection.
 
 ```{r cleanup, include = FALSE, output = "hide"}
 # Detach so that the finalizer closes the DBI connection
-detach("RSQLite:Chinook_Sqlite")
+detach("RSQLite:chinook_sqlite")
 ```
 

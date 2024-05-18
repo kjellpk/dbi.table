@@ -18,15 +18,16 @@ Open a `DBI` connection to the Chinook database included in the package.
 
     db_path <- file.path(system.file(package = "dbi.table"),
                          "example_files",
-                         "Chinook_Sqlite.sqlite")
+                         "chinook_sqlite.sqlite")
     chinook <- DBI::dbConnect(RSQLite::SQLite(), db_path)
 
 Create a `dbi.table` using the `Album` table in the Chinook database.
 
     (Album <- dbi.table(chinook, DBI::Id(table = "Album")))
 
-    ## <Chinook_Sqlite> Album 
+    ## <chinook_sqlite> Album 
     ##  AlbumId                                 Title ArtistId
+    ##    <int>                                <char>    <int>
     ##        1 For Those About To Rock We Salute You        1
     ##        2                     Balls to the Wall        2
     ##        3                     Restless and Wild        2
@@ -43,8 +44,9 @@ remote table `Album` where `AlbumId` is less than 100 and equal to
 
     (x <- Album[AlbumId < 100 & AlbumId == ArtistId, .(AlbumId, Title)])
 
-    ## <Chinook_Sqlite> Album 
+    ## <chinook_sqlite> Album 
     ##  AlbumId                                 Title
+    ##    <int>                                <char>
     ##        1 For Those About To Rock We Salute You
     ##        2                     Balls to the Wall
     ##       58                   Come Taste The Band
@@ -60,6 +62,7 @@ the `as.data.table` function to fetch the results set as a `data.table`.
     x[]
 
     ##    AlbumId                                 Title
+    ##      <int>                                <char>
     ## 1:       1 For Those About To Rock We Salute You
     ## 2:       2                     Balls to the Wall
     ## 3:      58                   Come Taste The Band

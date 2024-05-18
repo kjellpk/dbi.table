@@ -29,7 +29,7 @@ Open a `DBI` connection to the Chinook database included in the package.
 ```{r}
 db_path <- file.path(system.file(package = "dbi.table"),
                      "example_files",
-                     "Chinook_Sqlite.sqlite")
+                     "chinook_sqlite.sqlite")
 chinook <- DBI::dbConnect(RSQLite::SQLite(), db_path)
 ```
 

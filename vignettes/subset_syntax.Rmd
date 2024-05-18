@@ -131,6 +131,6 @@ DT[, 1]
 
 
 ```{r detach}
-detach("RSQLite:Chinook_Sqlite")
+detach("RSQLite:chinook_sqlite")
 ```
 

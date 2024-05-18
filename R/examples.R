@@ -7,23 +7,34 @@
 #'
 #' @export
 chinook.sqlite <- function() {
-  Chinook_Sqlite.sqlite <- "Chinook_Sqlite.sqlite"
+  example_connection("chinook_sqlite.sqlite", RSQLite::SQLite)
+}
+
+
+
+#' @describeIn example_databases
+#'
+#' @export
+chinook.duckdb <- function() {
+  example_connection("chinook_duckdb.duckdb", duckdb::duckdb)
+}
+
+
+
+example_connection <- function(db, drv) {
   path <- system.file(package = "dbi.table")
-  path <- file.path(path, "example_files", Chinook_Sqlite.sqlite)
+  path <- file.path(path, "example_files", db)
 
   if (!dir.create(tmp_path <- tempfile("ex"))) {
     stop("could not create directory ", tmp_path)
   }
 
-  tmp_path <- file.path(tmp_path, Chinook_Sqlite.sqlite)
+  tmp_path <- file.path(tmp_path, db)
 
   if (!file.copy(path, tmp_path, overwrite = FALSE, copy.mode = FALSE)) {
-    stop("could not copy 'Chinook_Sqlite.sqlite' to temporary directory")
+    stop("could not copy '", db, "' to temporary directory")
   }
 
-  if (requireNamespace("RSQLite")) {
-    return(DBI::dbConnect(RSQLite::SQLite(), tmp_path))
-  }
-
-  stop("the ", dQuote("RSQLite"), " package is required to use this example")
+  #' @importFrom DBI dbConnect
+  dbConnect(drv(), tmp_path)
 }
