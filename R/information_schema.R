@@ -74,6 +74,10 @@ information_schema.default <- function(conn) {
     bare_bones_information_schema(info_s)
   }
 
+  for (nm in ls(info_s)) {
+    names(info_s[[nm]]) <- toupper(names(info_s[[nm]]))
+  }
+
   info_s
 }
 
