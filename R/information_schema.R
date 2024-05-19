@@ -55,20 +55,26 @@ information_schema.default <- function(conn) {
   }
 
   bare_bones_tables <- c("TABLES", "COLUMNS")
+  info_tables <- c(bare_bones_tables,
+                   "CHARACTER_SETS",
+                   "KEY_COLUMN_USAGE",
+                   "REFERENTIAL_CONSTRAINTS",
+                   "TABLE_CONSTRAINTS")
 
   #' @importFrom DBI Id
-  ids <- lapply(bare_bones_tables,
+  ids <- lapply(info_tables,
                 function(u) Id(schema = "INFORMATION_SCHEMA", table = u))
 
   #' @importFrom DBI dbExistsTable
-  has_bare_bones <- all(mapply(dbExistsTable, name = ids,
-                               MoreArgs = list(conn = conn)))
+  has <- mapply(dbExistsTable, name = ids, MoreArgs = list(conn = conn))
+  info_tables <- info_tables[has]
+  ids <- ids[has]
 
-  if (has_bare_bones) {
+  if (all(bare_bones_tables %chin% info_tables)) {
     x <- mapply(new_dbi_table, id = ids, MoreArgs = list(conn = conn),
                 SIMPLIFY = FALSE, USE.NAMES = FALSE)
 
-    dev_null <- mapply(assign, x = bare_bones_tables, value = x,
+    dev_null <- mapply(assign, x = info_tables, value = x,
                        MoreArgs = list(pos = info_s))
   } else {
     bare_bones_information_schema(info_s)
