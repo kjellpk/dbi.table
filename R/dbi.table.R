@@ -26,7 +26,9 @@ dbi.table <- function(conn, id) {
 
 
 new_dbi_table <- function(conn, id, fields = NULL) {
-  id_name <- id@name[["table"]]
+  if (substring(id_name <- id@name[["table"]], 1L, 1L) == "#") {
+    id_name <- substring(id_name, 2L)
+  }
 
   data_source <- data.frame(clause = "FROM",
                             id = I(list(id)),
