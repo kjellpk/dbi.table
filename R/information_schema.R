@@ -119,6 +119,16 @@ bare_bones_information_schema <- function(info_s) {
 
 
 
+get_information_schema <- function(x) {
+  conn <- get_connection(x)
+  if (is.environment(conn) && exists(".dbi_connection", where = conn)) {
+    return(conn)
+  }
+
+  NULL
+}
+
+
 # Define globally for R CMD check
 TABLE_CATALOG <- NULL
 TABLE_NAME <- NULL
