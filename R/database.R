@@ -186,39 +186,45 @@ add_db_objects <- function(db, ...) {
 
 
 
-list_database_objects <- function(info_s) {
-  conn <- info_s[[".dbi_connection"]]
+list_database_objects <- function(info) {
+  conn <- info[[".dbi_connection"]]
 
   #' @importFrom DBI dbGetInfo
   dbname <- as.character(dbGetInfo(conn)$dbname)[[1L]]
 
-  COLUMNS <- info_s$COLUMNS
+  if (!is.null(columns <- info$.init_cols)) {
+    rm(".init_cols", pos = info)
+  } else {
+    columns <- info$columns
+  }
 
   continue <- FALSE
-  if (!is.null(COLUMNS$TABLE_CATALOG)) {
-    catalog <- as.data.table(unique(COLUMNS[, list(TABLE_CATALOG)]))$TABLE_CATALOG
+  if (!is.null(columns$table_catalog)) {
+    catalog <- unique(columns[, list(table_catalog)])
+    catalog <- as.data.table(catalog)$table_catalog
     if (dbname %chin% catalog) {
-      COLUMNS <- COLUMNS[TABLE_CATALOG == dbname]
+      columns <- columns[table_catalog == dbname]
       continue <- TRUE
     }
   }
 
-  if (!continue && !is.null(COLUMNS$TABLE_SCHEMA)) {
-    schema <- as.data.table(unique(COLUMNS[, list(TABLE_SCHEMA)]))$TABLE_SCHEMA
+  if (!continue && !is.null(columns$table_schema)) {
+    schema <- unique(columns[, list(table_schema)])
+    schema <- as.data.table(schema)$table_schema
     if (dbname %chin% schema) {
-      COLUMNS <- COLUMNS[TABLE_SCHEMA == dbname]
+      columns <- columns[table_schema == dbname]
     }
   }
 
-  columns <- as.data.table(COLUMNS)
+  columns <- as.data.table(columns)
 
-  id_columns <- c(catalog = "TABLE_CATALOG",
-                  schema = "TABLE_SCHEMA",
-                  table = "TABLE_NAME")
+  id_columns <- c(catalog = "table_catalog",
+                  schema = "table_schema",
+                  table = "table_name")
   id_columns <- id_columns[id_columns %chin% names(columns)]
 
   columns[, list(table_id = list(Id(unlist(.BY))),
-                 column_names = list(COLUMN_NAME)),
+                 column_names = list(column_name)),
           by = id_columns]
 }
 

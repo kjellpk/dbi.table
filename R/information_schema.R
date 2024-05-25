@@ -14,18 +14,18 @@
 #'  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
 #'        named \code{COLUMNS}.
 #' }
-#' The \code{TABLES} table must have a column named \code{TABLE_NAME} and should
-#' contain columns named \code{TABLE_CATALOG} and \code{TABLE_SCHEMA} if at all
+#' The \code{TABLES} table must have a column named \code{table_name} and should
+#' contain columns named \code{table_catalog} and \code{table_schema} if at all
 #' possible. Missing values are not allowed.
 #'
-#' The \code{COLUMNS} table must have columns named \code{TABLE_NAME},
-#' \code{COLUMN_NAME}, and \code{ORDINAL_POSITION}. If \code{TABLES} has columns
-#' \code{TABLE_CATALOG} and \code{TABLE_SCHEMA} then these must be present in
-#' \code{COLUMNS} as well. Missing values are not allowed.
+#' The \code{columns} table must have columns named \code{table_name},
+#' \code{column_name}, and \code{ordinal_position}. If \code{tables} has columns
+#' \code{table_catalog} and \code{table_schema} then these must be present in
+#' \code{columns} as well. Missing values are not allowed.
 #'
 #' \code{information_schema} is an S3 generic. The default method uses the
-#' RDBMS's Information Schema if it exists (in which case \code{TABLES} and
-#' \code{COLUMNS} are \code{\link{dbi.table}}s). Otherwise, it uses
+#' RDBMS's Information Schema if it exists (in which case \code{tables} and
+#' \code{columns} are \code{\link{dbi.table}}s). Otherwise, it uses
 #' \code{\link[DBI]{dbListTables}} and \code{\link[DBI]{dbListFields}} to create
 #' a \emph{bare bones} information schema.
 #'
@@ -47,44 +47,52 @@ information_schema <- function(conn) {
 
 #' @export
 information_schema.default <- function(conn) {
-  info_s <- new.env(parent = emptyenv())
-  assign(".dbi_connection", conn, pos = info_s)
+  info <- new.env(parent = emptyenv())
+  assign(".dbi_connection", conn, pos = info)
 
   if (!is.null(attr(conn, "recon", exact = TRUE))) {
-    reg.finalizer(info_s, information_schema_disconnect, onexit = TRUE)
+    reg.finalizer(info, information_schema_disconnect, onexit = TRUE)
   }
 
-  bare_bones_tables <- c("TABLES", "COLUMNS")
-  info_tables <- c(bare_bones_tables,
-                   "CHARACTER_SETS",
-                   "KEY_COLUMN_USAGE",
-                   "REFERENTIAL_CONSTRAINTS",
-                   "TABLE_CONSTRAINTS")
+  init_cols <- try(dbGetQuery(conn, "SELECT * FROM information_schema.columns"),
+                   silent = TRUE)
 
-  #' @importFrom DBI Id
-  ids <- lapply(info_tables,
-                function(u) Id(schema = "INFORMATION_SCHEMA", table = u))
+  if (is.data.frame(init_cols)) {
+    setDT(init_cols)
+    setnames(init_cols, tolower(names(init_cols)))
 
-  #' @importFrom DBI dbExistsTable
-  has <- mapply(dbExistsTable, name = ids, MoreArgs = list(conn = conn))
-  info_tables <- info_tables[has]
-  ids <- ids[has]
-
-  if (all(bare_bones_tables %chin% info_tables)) {
-    x <- mapply(new_dbi_table, id = ids, MoreArgs = list(conn = conn),
-                SIMPLIFY = FALSE, USE.NAMES = FALSE)
-
-    dev_null <- mapply(assign, x = info_tables, value = x,
-                       MoreArgs = list(pos = info_s))
+    if (nrow(ss <- init_cols[tolower(table_schema) == "information_schema"])) {
+      for (tab in unique(ss$table_name)) {
+        tmp <- ss[table_name == tab][order(ordinal_position)]
+        id <- tmp[1, list(catalog = table_catalog,
+                          schema = table_schema,
+                          table = table_name)]
+        id <- DBI::Id(unlist(id))
+        assign(tab, new_dbi_table(info, id, tmp$column_name), info)
+      }
+    } else {
+      info_tables <- c("columns",
+                       "key_column_usage",
+                       "referential_constraints",
+                       "tables")
+      for (tab in info_tables) {
+        id <- DBI::SQL(paste0("information_schema.", tab))
+        assign(tab, new_dbi_table(info, id), info)
+      }
+    }
   } else {
-    bare_bones_information_schema(info_s)
+    bare_bones_information_schema(info)
   }
 
-  for (nm in ls(info_s)) {
-    names(info_s[[nm]]) <- toupper(names(info_s[[nm]]))
+  for (nm in ls(info)) {
+    names(info[[nm]]) <- tolower(names(info[[nm]]))
   }
 
-  info_s
+  if (is.data.table(init_cols)) {
+    info$.init_cols <- init_cols
+  }
+
+  info
 }
 
 
@@ -97,22 +105,22 @@ information_schema_disconnect <- function(e) {
 
 
 
-bare_bones_information_schema <- function(info_s) {
-  conn <- info_s[[".dbi_connection"]]
+bare_bones_information_schema <- function(info) {
+  conn <- info$.dbi_connection
   #' @importFrom DBI dbListTables
-  TABLES <- data.table(TABLE_NAME	= dbListTables(conn),
-                       TABLE_TYPE = "BASE TABLE")
+  tables <- data.table(table_name	= dbListTables(conn),
+                       table_type = "BASE TABLE")
 
-  assign("TABLES", TABLES, pos = info_s)
+  assign("tables", tables, pos = info)
 
-  COLUMNS <- mapply(dbListFields, name = TABLES$TABLE_NAME,
+  columns <- mapply(dbListFields, name = tables$table_name,
                     MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
-  COLUMNS <- lapply(COLUMNS, function(u) data.table(COLUMN_NAME = u))
-  COLUMNS <- rbindlist(COLUMNS, idcol = "TABLE_NAME")
-  COLUMNS[, ORDINAL_POSITION := seq_len(.N), by = list(TABLE_NAME)]
-  setcolorder(COLUMNS, c("TABLE_NAME", "COLUMN_NAME", "ORDINAL_POSITION"))
+  columns <- lapply(columns, function(u) data.table(column_name = u))
+  columns <- rbindlist(columns, idcol = "table_name")
+  columns[, ordinal_position := seq_len(.N), by = list(table_name)]
+  setcolorder(columns, c("table_name", "column_name", "ordinal_position"))
 
-  assign("COLUMNS", COLUMNS, pos = info_s)
+  assign("columns", columns, pos = info)
 
   invisible()
 }
@@ -130,9 +138,9 @@ get_information_schema <- function(x) {
 
 
 # Define globally for R CMD check
-TABLE_CATALOG <- NULL
-TABLE_NAME <- NULL
-TABLE_SCHEMA <- NULL
-COLUMN_NAME <- NULL
-ORDINAL_POSITION <- NULL
+table_catalog <- NULL
+table_schema <- NULL
+table_name <- NULL
+column_name <- NULL
+ordinal_position <- NULL
 

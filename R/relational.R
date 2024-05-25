@@ -1,37 +1,37 @@
 related_tables <- function(x, y = NULL) {
   info <- get_information_schema(x)
-  if (is.null(info$REFERENTIAL_CONSTRAINTS) || is.null(info$KEY_COLUMN_USAGE)) {
+  if (is.null(info$referential_constraints) || is.null(info$key_column_usage)) {
     return(NULL)
   }
 
-  r <- merge(info$REFERENTIAL_CONSTRAINTS,
-             info$KEY_COLUMN_USAGE,
-             by = c("CONSTRAINT_CATALOG",
-                    "CONSTRAINT_SCHEMA",
-                    "CONSTRAINT_NAME"))
+  r <- merge(info$referential_constraints,
+             info$key_column_usage,
+             by = c("constraint_catalog",
+                    "constraint_schema",
+                    "constraint_name"))
 
-  names(r) <- paste0("FK_", names(r))
+  names(r) <- paste0("fk_", names(r))
 
   r <- merge(r,
-             info$KEY_COLUMN_USAGE,
-             by.x = c("FK_UNIQUE_CONSTRAINT_CATALOG",
-                      "FK_UNIQUE_CONSTRAINT_SCHEMA",
-                      "FK_UNIQUE_CONSTRAINT_NAME",
-                      "FK_ORDINAL_POSITION"),
-             by.y = c("CONSTRAINT_CATALOG",
-                      "CONSTRAINT_SCHEMA",
-                      "CONSTRAINT_NAME",
-                      "ORDINAL_POSITION"))
+             info$key_column_usage,
+             by.x = c("fk_unique_constraint_catalog",
+                      "fk_unique_constraint_schema",
+                      "fk_unique_constraint_name",
+                      "fk_ordinal_position"),
+             by.y = c("constraint_catalog",
+                      "constraint_schema",
+                      "constraint_name",
+                      "ordinal_position"))
 
-  r <- r[, list(constraint = FK_CONSTRAINT_NAME,
-                catalog_x = FK_TABLE_CATALOG,
-                schema_x = FK_TABLE_SCHEMA,
-                table_x = FK_TABLE_NAME,
-                field_x = FK_COLUMN_NAME,
-                catalog_y = TABLE_CATALOG,
-                schema_y = TABLE_SCHEMA,
-                table_y = TABLE_NAME,
-                field_y = COLUMN_NAME)]
+  r <- r[, list(constraint = fk_constraint_name,
+                catalog_x = fk_table_catalog,
+                schema_x = fk_table_schema,
+                table_x = fk_table_name,
+                field_x = fk_column_name,
+                catalog_y = table_catalog,
+                schema_y = table_schema,
+                table_y = table_name,
+                field_y = column_name)]
 
   xids <- unique(get_data_source(x)$id)
   xids <- as.data.table(t(sapply(xids, function(u) u@name)))
@@ -60,7 +60,7 @@ related_tables <- function(x, y = NULL) {
                "catalog_y", "schema_y", "table_y", "field_y"),
              c("catalog_y", "schema_y", "table_y", "field_y",
                "catalog_x", "schema_x", "table_x", "field_x"))
-    setcolorder(ry, names(rx))               
+    setcolorder(ry, names(rx))
     rx <- rbind(rx, ry)
   }
 
@@ -74,57 +74,57 @@ relational_merge <- function(x) {
     return(x)
   }
 
-  if (is.null(info$REFERENTIAL_CONSTRAINTS) || is.null(info$KEY_COLUMN_USAGE)) {
+  if (is.null(info$referential_constraints) || is.null(info$key_column_usage)) {
     return(x)
   }
 
-  rel <- merge(info$REFERENTIAL_CONSTRAINTS,
-               info$KEY_COLUMN_USAGE,
-               by = c("CONSTRAINT_CATALOG",
-                      "CONSTRAINT_SCHEMA",
-                      "CONSTRAINT_NAME"))
+  rel <- merge(info$referential_constraints,
+               info$key_column_usage,
+               by = c("constraint_catalog",
+                      "constraint_schema",
+                      "constraint_name"))
 
-  names(rel) <- paste0("FK_", names(rel))
+  names(rel) <- paste0("fk_", names(rel))
 
   rel <- merge(rel,
-               info$KEY_COLUMN_USAGE,
-               by.x = c("FK_UNIQUE_CONSTRAINT_CATALOG",
-                        "FK_UNIQUE_CONSTRAINT_SCHEMA",
-                        "FK_UNIQUE_CONSTRAINT_NAME",
-                        "FK_ORDINAL_POSITION"),
-               by.y = c("CONSTRAINT_CATALOG",
-                        "CONSTRAINT_SCHEMA",
-                        "CONSTRAINT_NAME",
-                        "ORDINAL_POSITION"))
+               info$key_column_usage,
+               by.x = c("fk_unique_constraint_catalog",
+                        "fk_unique_constraint_schema",
+                        "fk_unique_constraint_name",
+                        "fk_ordinal_position"),
+               by.y = c("constraint_catalog",
+                        "constraint_schema",
+                        "constraint_name",
+                        "ordinal_position"))
 
-  rel <- rel[, list(FK_CONSTRAINT_NAME,
-                    FK_TABLE_CATALOG,
-                    FK_TABLE_SCHEMA,
-                    FK_TABLE_NAME,
-                    FK_COLUMN_NAME,
-                    PK_TABLE_CATALOG = TABLE_CATALOG,
-                    PK_TABLE_SCHEMA = TABLE_SCHEMA,
-                    PK_TABLE_NAME = TABLE_NAME,
-                    PK_COLUMN_NAME = COLUMN_NAME)]
+  rel <- rel[, list(fk_constraint_name,
+                    fk_table_catalog,
+                    fk_table_schema,
+                    fk_table_name,
+                    fk_column_name,
+                    pk_table_catalog = table_catalog,
+                    pk_table_schema = table_schema,
+                    pk_table_name = table_name,
+                    pk_column_name = column_name)]
 
   ids <- unique(get_data_source(x)$id)
   ids <- sapply(ids, function(u) u@name)
   ids <- as.data.table(t(ids))
 
-  setnames(ids, c("FK_TABLE_CATALOG", "FK_TABLE_SCHEMA", "FK_TABLE_NAME"))
+  setnames(ids, c("fk_table_catalog", "fk_table_schema", "fk_table_name"))
   rel <- as.data.table(rel[ids, on = names(ids)])
 
-  setnames(ids, c("PK_TABLE_CATALOG", "PK_TABLE_SCHEMA", "PK_TABLE_NAME"))
+  setnames(ids, c("pk_table_catalog", "pk_table_schema", "pk_table_name"))
   rel <- rel[!ids, on = names(ids)]
 
-  ids <- unique(rel[, list(TABLE_CATALOG = PK_TABLE_CATALOG,
-                           TABLE_SCHEMA = PK_TABLE_SCHEMA,
-                           TABLE_NAME = PK_TABLE_NAME)])
-  columns <- as.data.table(info$COLUMNS[ids, list(catalog = TABLE_CATALOG,
-                                                  schema = TABLE_SCHEMA,
-                                                  table = TABLE_NAME,
-                                                  field = COLUMN_NAME,
-                                                  position = ORDINAL_POSITION),
+  ids <- unique(rel[, list(table_catalog = pk_table_catalog,
+                           table_schema = pk_table_schema,
+                           table_name = pk_table_name)])
+  columns <- as.data.table(info$columns[ids, list(catalog = table_catalog,
+                                                  schema = table_schema,
+                                                  table = table_name,
+                                                  field = column_name,
+                                                  position = ordinal_position),
                                         on = names(ids)])
 
   a <- attributes(x)
@@ -145,16 +145,16 @@ relational_merge <- function(x) {
 
   x <- c(x)
 
-  for (cnstr in unique(rel$FK_CONSTRAINT_NAME)) {
-    tmp <- rel[FK_CONSTRAINT_NAME == cnstr]
+  for (cnstr in unique(rel$fk_constraint_name)) {
+    tmp <- rel[fk_constraint_name == cnstr]
 
-    fk <- tmp[, list(id_name = FK_TABLE_NAME, field = FK_COLUMN_NAME)]
+    fk <- tmp[, list(id_name = fk_table_name, field = fk_column_name)]
     fk <- fields[fk, on = names(fk)]
 
-    pk <- tmp[, list(catalog = PK_TABLE_CATALOG,
-                     schema = PK_TABLE_SCHEMA,
-                     table = PK_TABLE_NAME,
-                     field = PK_COLUMN_NAME)]
+    pk <- tmp[, list(catalog = pk_table_catalog,
+                     schema = pk_table_schema,
+                     table = pk_table_name,
+                     field = pk_column_name)]
 
     if (nrow(merge(fields, pk, by = c("catalog", "schema", "table"))) == 0L) {
       n <- nrow(fields)
@@ -181,7 +181,7 @@ relational_merge <- function(x) {
       on <- paste(pk$internal_name, fk$internal_name, sep = " == ")
       on <- handy_andy(as.list(parse(text = on)))
 
-      new_ds <- pk[1, list(clause = "LEFT OUTER JOIN",
+      new_ds <- pk[1, list(clause = "left outer join",
                            id = I(list(new_id)),
                            id_name = new_id_name,
                            on = I(list(on)),
@@ -210,15 +210,15 @@ relational_merge <- function(x) {
 
 
 
-FK_COLUMN_NAME <- NULL
-FK_CONSTRAINT_NAME <- NULL
-FK_TABLE_CATALOG <- NULL
-FK_TABLE_NAME <- NULL
-FK_TABLE_SCHEMA <- NULL
-PK_COLUMN_NAME <- NULL
-PK_TABLE_CATALOG <- NULL
-PK_TABLE_NAME <- NULL
-PK_TABLE_SCHEMA <- NULL
+fk_column_name <- NULL
+fk_constraint_name <- NULL
+fk_table_catalog <- NULL
+fk_table_name <- NULL
+fk_table_schema <- NULL
+pk_column_name <- NULL
+pk_table_catalog <- NULL
+pk_table_name <- NULL
+pk_table_schema <- NULL
 
 catalog <- NULL
 schema <- NULL

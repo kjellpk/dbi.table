@@ -26,7 +26,14 @@ dbi.table <- function(conn, id) {
 
 
 new_dbi_table <- function(conn, id, fields = NULL) {
-  if (substring(id_name <- id@name[["table"]], 1L, 1L) == "#") {
+  if (inherits(id, "Id")) {
+    id_name <- id@name[["table"]]
+  } else {
+    id_name <- strsplit(as.character(id), split = ".", fixed = TRUE)[[1L]]
+    id_name <- id_name[[length(id_name)]]
+  }
+
+  if (substring(id_name, 1L, 1L) == "#") {
     id_name <- substring(id_name, 2L)
   }
 

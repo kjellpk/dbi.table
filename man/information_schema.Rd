@@ -33,18 +33,18 @@ must contain
  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
        named \code{COLUMNS}.
 }
-The \code{TABLES} table must have a column named \code{TABLE_NAME} and should
-contain columns named \code{TABLE_CATALOG} and \code{TABLE_SCHEMA} if at all
+The \code{TABLES} table must have a column named \code{table_name} and should
+contain columns named \code{table_catalog} and \code{table_schema} if at all
 possible. Missing values are not allowed.
 
-The \code{COLUMNS} table must have columns named \code{TABLE_NAME},
-\code{COLUMN_NAME}, and \code{ORDINAL_POSITION}. If \code{TABLES} has columns
-\code{TABLE_CATALOG} and \code{TABLE_SCHEMA} then these must be present in
-\code{COLUMNS} as well. Missing values are not allowed.
+The \code{columns} table must have columns named \code{table_name},
+\code{column_name}, and \code{ordinal_position}. If \code{tables} has columns
+\code{table_catalog} and \code{table_schema} then these must be present in
+\code{columns} as well. Missing values are not allowed.
 
 \code{information_schema} is an S3 generic. The default method uses the
-RDBMS's Information Schema if it exists (in which case \code{TABLES} and
-\code{COLUMNS} are \code{\link{dbi.table}}s). Otherwise, it uses
+RDBMS's Information Schema if it exists (in which case \code{tables} and
+\code{columns} are \code{\link{dbi.table}}s). Otherwise, it uses
 \code{\link[DBI]{dbListTables}} and \code{\link[DBI]{dbListFields}} to create
 a \emph{bare bones} information schema.
 }
