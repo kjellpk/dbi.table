@@ -37,8 +37,12 @@ related_tables <- function(x, y = NULL) {
   xids <- as.data.table(t(sapply(xids, function(u) u@name)))
 
   setnames(xids, c("catalog_x", "schema_x", "table_x"))
-  dbi_xids <- as.dbi.table(xids, get_connection(r))
-  rx <- as.data.table(r[dbi_xids, nomatch = NULL, on = names(dbi_xids)])
+
+  rx <- as.data.table(r[catalog_x %in% xids$catalog_x &
+                          schema_x %in% xids$schema_x &
+                          table_x %in% xids$table_x])
+
+  rx <- rx[xids, nomatch = NULL, on = names(xids)]
 
   setnames(xids, c("catalog_y", "schema_y", "table_y"))
   rx <- rx[!xids, on = names(xids)]
@@ -188,7 +192,7 @@ relational_merge <- function(x) {
                            catalog,
                            schema,
                            table)]
-      
+
       new_x <- names_list(new_fields$internal_name)
       names(new_x) <- paste(new_id_name, new_fields$field, sep = ".")
 
@@ -227,3 +231,7 @@ id <- NULL
 id_name <- NULL
 internal_name <- NULL
 position <- NULL
+
+catalog_x <- NULL
+schema_x <- NULL
+table_x <- NULL
