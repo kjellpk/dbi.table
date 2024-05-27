@@ -4,10 +4,14 @@
 \alias{csql}
 \title{See SQL}
 \usage{
-csql(x)
+csql(x, n = session$max_fetch, offset = NULL)
 }
 \arguments{
 \item{x}{a \code{\link{dbi.table}}.}
+
+\item{n}{a single integer value.}
+
+\item{offset}{a single integer value or \code{NULL}.}
 }
 \description{
 View a \code{\link{dbi.table}} as a SQL query.

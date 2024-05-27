@@ -113,6 +113,7 @@ bare_bones_information_schema <- function(info) {
 
   assign("tables", tables, pos = info)
 
+  #' @importFrom DBI dbListFields
   columns <- mapply(dbListFields, name = tables$table_name,
                     MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
   columns <- lapply(columns, function(u) data.table(column_name = u))

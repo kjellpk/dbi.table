@@ -43,6 +43,7 @@ new_dbi_table <- function(conn, id, fields = NULL) {
                             on = I(list(NULL)))
 
   if (is.null(fields)) {
+    #' @importFrom DBI dbListFields
     fields <- dbListFields(dbi_connection(conn), id)
   }
 
@@ -189,9 +190,11 @@ print.dbi.table <- function(x, ...) {
 
 
 #' @export
-as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ..., n = -1) {
+as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
+                                    n = session$max_fetch, offset = NULL) {
   #' @importFrom DBI dbSendStatement
-  res <- try(dbSendStatement(dbi_connection(x), write_select_query(x)),
+  res <- try(dbSendStatement(dbi_connection(x),
+                             write_select_query(x, n, offset)),
              silent = TRUE)
 
   if (inherits(res, "DBIResult")) {

@@ -1,10 +1,11 @@
-write_select_query <- function(x) {
+write_select_query <- function(x, n, offset) {
   query <- list(ctes = write_ctes(x),
                 select = write_select(x),
                 from = write_from(x),
                 where = write_where(x),
                 group_by = write_group_by(x),
-                order_by = write_order_by(x))
+                order_by = write_order_by(x),
+                limit = write_limit(x, n, offset))
 
   paste(query[!sapply(query, is.null)], collapse = "\n\n")
 }
@@ -13,7 +14,7 @@ write_select_query <- function(x) {
 
 write_ctes <- function(x) {
   if (length(ctes <- get_ctes(x))) {
-    ctes <- lapply(ctes, write_select_query)
+    ctes <- lapply(ctes, write_select_query, n = -1L)
     ctes <- paste0(dbQuoteIdentifier(dbi_connection(x), names(ctes)),
                    " AS (\n", ctes)
     ctes <- paste(ctes, collapse = "\n),\n\n")
@@ -137,4 +138,20 @@ write_order_by <- function(x) {
   } else {
     NULL
   }
+}
+
+
+
+write_limit <- function(x, n = -1L, offset = NULL) {
+  if (n < 0L) {
+    return(NULL)
+  }
+
+  limit <- paste(" LIMIT", as.integer(n)[[1L]])
+
+  if (!is.null(offset)) {
+    limit <- paste(limit, "OFFSET", as.integer(offset)[[1L]])
+  }
+
+  limit
 }

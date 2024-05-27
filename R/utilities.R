@@ -53,9 +53,14 @@ paren <- function(x) {
 #' @description View a \code{\link{dbi.table}} as a SQL query.
 #'
 #' @param x a \code{\link{dbi.table}}.
+#'
+#' @param n a single integer value.
+#'
+#' @param offset a single integer value or \code{NULL}.
+#'
 #' @export
-csql <- function(x) {
-  cat(paste0("\n", write_select_query(x), "\n\n"))
+csql <- function(x, n = session$max_fetch, offset = NULL) {
+  cat(paste0("\n", write_select_query(x, n, offset), "\n\n"))
 }
 
 
