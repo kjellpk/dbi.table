@@ -143,7 +143,7 @@ write_order_by <- function(x) {
 
 
 write_limit <- function(x, n = -1L, offset = NULL) {
-  if (n < 0L) {
+  if (n < 0L || inherits(dbi_connection(x), "Microsoft SQL Server")) {
     return(NULL)
   }
 
