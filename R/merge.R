@@ -2,9 +2,13 @@
 merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
                             all = FALSE, all.x = all, all.y = all,
                             sort = FALSE, suffixes = c(".x", ".y"),
-                            no.dups = TRUE, ...) {
+                            no.dups = TRUE, recursive = FALSE, ...) {
   if (!is.dbi.table(x)) {
     stop("'x' is not a 'dbi.table'")
+  }
+
+  if (missing(y)) {
+    return(relational_merge(x, recursive))
   }
 
   if (!is.dbi.table(y)) {
@@ -17,6 +21,15 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   if (anyDuplicated(names_x) || anyDuplicated(names_y)) {
     stop("the 'merge' method for 'dbi.table' requires that 'x' and 'y' ",
          "each have unique column names")
+  }
+
+  if (is.null(by) && is.null(by.x) && is.null(by.y)) {
+    rt <- related_tables(x, y)
+    by.x <- match_fields(x, rt$field_x)
+    by.y <- match_fields(y, rt$field_y)
+    use <- !is.na(by.x) & !is.na(by.y)
+    by.x <- by.x[use]
+    by.y <- by.y[use]
   }
 
   if ((!is.null(by.x) || !is.null(by.y)) && length(by.x) != length(by.y))

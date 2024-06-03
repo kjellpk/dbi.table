@@ -1,7 +1,7 @@
 related_tables <- function(x, y = NULL) {
   info <- get_information_schema(x)
   if (is.null(info$referential_constraints) || is.null(info$key_column_usage)) {
-    return(NULL)
+    return(data.table())
   }
 
   r <- merge(info$referential_constraints, info$key_column_usage,
