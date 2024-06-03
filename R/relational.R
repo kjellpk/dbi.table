@@ -102,9 +102,9 @@ relational_merge <- function(x, recursive = FALSE) {
                                      schema %in% rt$schema_y &
                                      table %in% rt$table_y])
 
-  columns <- columns[rt[, list(catalog = catalog_y,
-                               schema = schema_y,
-                               table = table_y)],
+  columns <- columns[unique(rt[, list(catalog = catalog_y,
+                                      schema = schema_y,
+                                      table = table_y)]),
                      on = c("catalog", "schema", "table")]
 
   a <- attributes(x)
