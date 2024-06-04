@@ -1,52 +1,4 @@
-#' Create an Information Schema for a \code{DBIConnection}
-#'
-#' Caution: this function is not intended for end-users. Unless you are a
-#' developer adding a method for an RDBMS that does not provide an Information
-#' Schema, you do not need to work with this function directly; it is called by
-#' \code{\link{dbi_database}} when initializing a new \code{dbi_database}.
-#'
-#' An \code{information_schema} is an \code{\link[base]{environment}} that
-#' must contain
-#'  \enumerate{
-#'  \item a \code{\link[DBI]{DBIConnection-class}} named \code{.dbi_connection},
-#'  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
-#'        named \code{TABLES}, and
-#'  \item a \code{\link[data.table]{data.table}} or \code{\link{dbi.table}}
-#'        named \code{COLUMNS}.
-#' }
-#' The \code{TABLES} table must have a column named \code{table_name} and should
-#' contain columns named \code{table_catalog} and \code{table_schema} if at all
-#' possible. Missing values are not allowed.
-#'
-#' The \code{columns} table must have columns named \code{table_name},
-#' \code{column_name}, and \code{ordinal_position}. If \code{tables} has columns
-#' \code{table_catalog} and \code{table_schema} then these must be present in
-#' \code{columns} as well. Missing values are not allowed.
-#'
-#' \code{information_schema} is an S3 generic. The default method uses the
-#' RDBMS's Information Schema if it exists (in which case \code{tables} and
-#' \code{columns} are \code{\link{dbi.table}}s). Otherwise, it uses
-#' \code{\link[DBI]{dbListTables}} and \code{\link[DBI]{dbListFields}} to create
-#' a \emph{bare bones} information schema.
-#'
-#' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}}.
-#'             Note: unlike other functions in the \code{dbi.table} package,
-#'             \code{conn} must be the actual
-#'             \code{\link[DBI]{DBIConnection-class}} handle returned by
-#'             \code{\link[DBI]{dbConnect}} and NOT a function that creates one.
-#'
-#' @return an \code{\link[base]{environment}} containing the components
-#'         enumerated in Details.
-#'
-#' @export
 information_schema <- function(conn) {
-  UseMethod("information_schema")
-}
-
-
-
-#' @export
-information_schema.default <- function(conn) {
   info <- new.env(parent = emptyenv())
   assign(".dbi_connection", conn, pos = info)
 
@@ -144,4 +96,3 @@ table_schema <- NULL
 table_name <- NULL
 column_name <- NULL
 ordinal_position <- NULL
-

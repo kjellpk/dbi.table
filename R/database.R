@@ -8,7 +8,7 @@
 #'
 #' A \code{dbi_database} is an \code{environment} with the class
 #' attribute set to \code{"dbi_database"}. Initially, the \code{dbi_database}
-#' contains only the \code{\link{information_schema}}. When a database object
+#' contains only the \code{information_schema}. When a database object
 #' (e.g., a table or view identified by an \code{\link[DBI]{Id}}) is
 #' added to the \code{dbi_database} using \code{add_db_objects}, a
 #' \code{\link{dbi.table}} is created in the \code{dbi_database}. Since the
@@ -81,7 +81,8 @@ print.dbi_database <- function(x, ...) {
   cat(paste0("<", name, ">"), "\n")
   #' @importFrom DBI dbGetInfo
   cat("  Database:", dbGetInfo(conn)$dbname, "\n")
-  cat("  \u2022", length(db_objects(x)), "available objects (tables, views, etc.)\n")
+  cat("  \u2022", length(db_objects(x)),
+      "available objects (tables, views, etc.)\n")
   cat("  \u2022", length(ls(x)), "connected objects\n")
 
   invisible(x)
