@@ -7,6 +7,11 @@
 #'
 #' @export
 chinook.sqlite <- function() {
+  if (!requireNamespace("RSQLite", quietly = TRUE)) {
+    stop("the \"RSQLite\" package must be installed to use 'chinook.sqlite'",
+         call. = FALSE)
+  }
+
   path <- file.path(system.file(package = "dbi.table"),
                     "example_files",
                     "chinook_sqlite.sqlite")
@@ -30,6 +35,12 @@ chinook.sqlite <- function() {
 #'
 #' @export
 chinook.duckdb <- function() {
+  if (!requireNamespace("duckdb", quietly = TRUE)) {
+    stop("the \"duckdb\" package must be installed to use 'chinook.duckdb'",
+         call. = FALSE)
+  }
+
+
   path <- file.path(system.file(package = "dbi.table"),
                     "example_files",
                     "chinook_parquet")
