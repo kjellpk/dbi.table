@@ -66,8 +66,7 @@ dbi.catalog <- function(conn) {
 
 dbi.catalog_disconnect <- function(e) {
   on.exit(rm(list = ".dbi_connection", envir = e))
-  #' @importFrom DBI dbDisconnect
-  try(dbDisconnect(e[[".dbi_connection"]]), silent = TRUE)
+  try(DBI::dbDisconnect(e[[".dbi_connection"]]), silent = TRUE)
 }
 
 
@@ -104,7 +103,7 @@ list_database_objects <- function(conn, info) {
                   table = "table_name")
   id_columns <- id_columns[id_columns %chin% names(columns)]
 
-  columns[, list(table_id = list(Id(unlist(.BY))),
+  columns[, list(table_id = list(DBI::Id(unlist(.BY))),
                  column_names = list(column_name)),
           by = id_columns]
 }

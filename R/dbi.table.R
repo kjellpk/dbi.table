@@ -13,8 +13,7 @@ dbi.table <- function(conn, id) {
 
   if (!inherits(id, "Id")) {
     if (is.character(id) && length(id) == 1L) {
-      #' @importFrom DBI Id
-      id <- Id(table = id)
+      id <- DBI::Id(table = id)
     } else {
       stop("'id' argument invalid")
     }
@@ -43,8 +42,7 @@ new_dbi_table <- function(conn, id, fields = NULL) {
                             on = I(list(NULL)))
 
   if (is.null(fields)) {
-    #' @importFrom DBI dbListFields
-    fields <- dbListFields(dbi_connection(conn), id)
+    fields <- DBI::dbListFields(dbi_connection(conn), id)
   }
 
   internal_name <- paste0(session$key_base, seq_len(length(fields)))
@@ -192,23 +190,20 @@ print.dbi.table <- function(x, ...) {
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
                                     n = session$max_fetch, offset = NULL) {
-  #' @importFrom DBI dbSendStatement
-  res <- try(dbSendStatement(dbi_connection(x),
-                             write_select_query(x, n, offset)),
+  res <- try(DBI::dbSendStatement(dbi_connection(x),
+                                  write_select_query(x, n, offset)),
              silent = TRUE)
 
   if (inherits(res, "DBIResult")) {
-    #' @importFrom DBI dbClearResult
-    on.exit(dbClearResult(res))
+    on.exit(DBI::dbClearResult(res))
   }
 
   if (inherits(res, "try-error")) {
-    #' @importFrom DBI dbIsValid
-    is_valid <- dbIsValid(conn <- dbi_connection(x))
+    is_valid <- DBI::dbIsValid(conn <- dbi_connection(x))
 
     if (is_valid) {
-      #' @importFrom DBI dbGetQuery
-      simple_query_works <- try(dbGetQuery(conn, "SELECT 1;"), silent = TRUE)
+      simple_query_works <- try(DBI::dbGetQuery(conn, "SELECT 1;"),
+                                silent = TRUE)
       is_valid <- !inherits(simple_query_works, "try-error")
     }
 
@@ -225,19 +220,16 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
       }
     }
 
-    #' @importFrom DBI dbSendStatement
-    res <- dbSendStatement(dbi_connection(x), write_select_query(x))
+    res <- DBI::dbSendStatement(dbi_connection(x), write_select_query(x))
 
     if (inherits(res, "DBIResult")) {
-      #' @importFrom DBI dbClearResult
-      on.exit(dbClearResult(res))
+      on.exit(DBI::dbClearResult(res))
     } else {
       stop(res, call. = FALSE)
     }
   }
 
-  #' @importFrom DBI dbFetch
-  setDT(dbFetch(res, n = n))
+  setDT(DBI::dbFetch(res, n = n))
 }
 
 
@@ -366,11 +358,9 @@ as.dbi.table <- function(x, conn) {
     temp_name <- paste0("#", temp_name)
   }
 
-  #' @importFrom DBI dbWriteTable
-  dev_null <- dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)
+  dev_null <- DBI::dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)
 
-  #' @importFrom DBI Id
-  temp_id <- Id(table = temp_name)
+  temp_id <- DBI::Id(table = temp_name)
   x <- new_dbi_table(conn, temp_id)
 
   temp_dbi_table <- new.env(parent = emptyenv())
@@ -385,8 +375,7 @@ as.dbi.table <- function(x, conn) {
 
 
 finalize_temp_dbi_table <- function(e) {
-  #' @importFrom DBI dbRemoveTable
-  try(dbRemoveTable(e$conn, e$id), silent = TRUE)
+  try(DBI::dbRemoveTable(e$conn, e$id), silent = TRUE)
 
   NULL
 }

@@ -21,8 +21,7 @@ chinook.sqlite <- function() {
     stop("could not copy 'chinook_sqlite.sqlite' to temporary directory")
   }
 
-  #' @importFrom DBI dbConnect
-  dbConnect(RSQLite::SQLite(), tmp_path)
+  DBI::dbConnect(RSQLite::SQLite(), tmp_path)
 }
 
 
@@ -41,11 +40,9 @@ chinook.duckdb <- function() {
 
   tmp_path <- file.path(tmp_path, "chinook_duckdb.duckdb")
 
-  #' @importFrom DBI dbConnect
-  conn <- dbConnect(duckdb::duckdb(), tmp_path)
+  conn <- DBI::dbConnect(duckdb::duckdb(), tmp_path)
 
-  #' @importFrom DBI dbExecute
-  status <- dbExecute(conn, paste0("IMPORT DATABASE '", path, "';"))
+  status <- DBI::dbExecute(conn, paste0("IMPORT DATABASE '", path, "';"))
 
   conn
 }

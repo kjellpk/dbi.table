@@ -16,9 +16,8 @@ as_cte <- function(x) {
     }
   }
 
-  #' @importFrom DBI Id
   data_source <- data.frame(clause = "FROM",
-                            id = I(list(Id(table = id_name))),
+                            id = I(list(DBI::Id(table = id_name))),
                             id_name = id_name,
                             on = I(list(NULL)))
 

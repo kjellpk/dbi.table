@@ -80,8 +80,7 @@ use_integer <- function(x) {
   if (is.numeric(x) && !any(class(x) %chin% c("POSIXct", "Date"))) {
     if (max(abs(x - (rx <- round(x, digits = 0L)))) < .Machine$double.eps) {
       if (max(abs(rx)) > .Machine$integer.max) {
-        #' @importFrom bit64 as.integer64
-        x <- as.integer64(rx)
+        x <- bit64::as.integer64(rx)
       } else {
         x <- as.integer(rx)
       }

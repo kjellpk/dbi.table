@@ -1,7 +1,8 @@
 information_schema <- function(conn, db) {
   info <- new.env(parent = emptyenv())
 
-  init_cols <- try(dbGetQuery(conn, "SELECT * FROM information_schema.columns"),
+  init_cols <- try(DBI::dbGetQuery(conn,
+                                   "SELECT * FROM information_schema.columns"),
                    silent = TRUE)
 
   if (is.data.frame(init_cols)) {
@@ -45,14 +46,12 @@ information_schema <- function(conn, db) {
 
 
 bare_bones_information_schema <- function(conn, info) {
-  #' @importFrom DBI dbListTables
-  tables <- data.table(table_name	= dbListTables(conn),
+  tables <- data.table(table_name	= DBI::dbListTables(conn),
                        table_type = "BASE TABLE")
 
   info$tables <- tables
 
-  #' @importFrom DBI dbListFields
-  columns <- mapply(dbListFields, name = tables$table_name,
+  columns <- mapply(DBI::dbListFields, name = tables$table_name,
                     MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
   columns <- lapply(columns, function(u) data.table(column_name = u))
   columns <- rbindlist(columns, idcol = "table_name")

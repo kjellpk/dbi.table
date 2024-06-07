@@ -15,7 +15,7 @@ write_select_query <- function(x, n, offset) {
 write_ctes <- function(x) {
   if (length(ctes <- get_ctes(x))) {
     ctes <- lapply(ctes, write_select_query, n = -1L)
-    ctes <- paste0(dbQuoteIdentifier(dbi_connection(x), names(ctes)),
+    ctes <- paste0(DBI::dbQuoteIdentifier(dbi_connection(x), names(ctes)),
                    " AS (\n", ctes)
     ctes <- paste(ctes, collapse = "\n),\n\n")
     paste0("WITH ", ctes, "\n)")
@@ -48,8 +48,7 @@ write_select <- function(x) {
 
   select <- sub_db_identifier(unlist(select), conn, get_fields(x))
 
-  #' @importFrom DBI dbQuoteIdentifier
-  select <- paste(select, "AS", dbQuoteIdentifier(conn, names(x)))
+  select <- paste(select, "AS", DBI::dbQuoteIdentifier(conn, names(x)))
 
   pad1 <- ifelse(get_distinct(x), "SELECT DISTINCT", "SELECT")
   pad <- rep(ws(nchar(pad1)), length(x))
@@ -67,9 +66,9 @@ write_from <- function(x) {
     from <- paste0(from,
                    pad_left(data_source[i, "clause"]),
                    " ",
-                   dbQuoteIdentifier(conn, data_source[[i, "id"]]),
+                   DBI::dbQuoteIdentifier(conn, data_source[[i, "id"]]),
                    " AS ",
-                   dbQuoteIdentifier(conn, data_source[[i, "id_name"]]))
+                   DBI::dbQuoteIdentifier(conn, data_source[[i, "id_name"]]))
 
     if (!is.null(on <- data_source[[i, "on"]])) {
       on <- translate_sql_(list(on), con = conn, window = FALSE)

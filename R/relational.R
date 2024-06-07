@@ -142,8 +142,7 @@ relational_merge <- function(x, recursive = FALSE) {
       new_id_name <- unique_table_name()
     }
 
-    #' @importFrom DBI Id
-    new_id <- Id(unlist(pk[1, list(catalog, schema, table)]))
+    new_id <- DBI::Id(unlist(pk[1, list(catalog, schema, table)]))
 
     new_fields <- columns[pk[, c("catalog", "schema", "table")],
                           on = c("catalog", "schema", "table")]
