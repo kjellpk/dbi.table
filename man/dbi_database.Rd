@@ -2,47 +2,18 @@
 % Please edit documentation in R/database.R
 \name{dbi_database}
 \alias{dbi_database}
-\alias{db_objects}
-\alias{add_db_objects}
 \title{Create a \code{dbi_database}}
 \usage{
 dbi_database(conn)
-
-db_objects(db, qualify_names = FALSE, force = FALSE)
-
-add_db_objects(db, ...)
 }
 \arguments{
 \item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}} or
 a zero-argument function that returns a connection handle.}
-
-\item{db}{a \code{dbi_database} created by \code{\link{dbi_database}}.}
-
-\item{qualify_names}{a logical value. When \code{TRUE}, the names of the
-returned list have the form:
-\code{catalog.schema.table}. When \code{FALSE},
-\code{catalog} and \code{schema} are only included when
-needed to make the names distinct.}
-
-\item{force}{a logical value. When \code{TRUE}, the objects list is obtained
-by quering the information schema. When \code{FALSE}, a cached
-value is used. Useful for database in development.}
-
-\item{\dots}{a comma-separated list of named \code{\link[DBI]{Id}}s. See
-Examples. Alternatively, if \dots contains a single element and
-that element is a named list of \code{\link[DBI]{Id}}s
-(for example, the list returned by \code{list_db_objects}),
-then the \code{\link[DBI]{Id}}s in that list will be added.}
 }
 \value{
 \code{dbi_database} returns a \code{dbi_database} (internally an
         \code{\link[base]{environment}} with the class attribute set to
         \code{"dbi_database"}).
-
-        \code{list_db_objects} returns a named list of
-        \code{\link[DBI]{Id}}s.
-
-        \code{add_db_objects} invisibly returns \code{db}.
 }
 \description{
 Use \code{dbi_database} to create a \code{dbi_database},
@@ -63,36 +34,14 @@ be accessed using the \code{$} operator. Further, one can use
 \code{\link[base]{ls}} and \code{\link[base]{objects}} to list the
 \code{\link{dbi.table}}s in the \code{dbi_database}. See Examples.
 }
-\section{Functions}{
-\itemize{
-\item \code{db_objects()}: List the database objects in \code{db} that are available to add.
-
-\item \code{add_db_objects()}: add database objects to \code{db}.
-
-}}
 \examples{
 # chinook.sqlite is a zero-argument function that returns a DBI handle
-chinook_db <- dbi_database(chinook.sqlite)
+db <- dbi_database(chinook.duckdb)
 
-# Initially, only the information.schema is included
-ls(chinook_db, all = TRUE)
+# a dbi_database corresponds to a catalog - list the schemas
+ls(db)
 
-# List the available database objects
-(chinook_objects <- db_objects(chinook_db))
-
-# Add the Playlist table to chinook_db, name it Boss_Playlist
-add_db_objects(chinook_db, Boss_Playlist = DBI::Id(table = "Playlist"))
-
-ls(chinook_db)
-
-# Preview the dbi.table
-chinook_db$Boss_Playlist
-
-# Add the Artist and Album tables to chinook_db
-(ArtistAndAlbum <- chinook_objects[c("Artist", "Album")])
-add_db_objects(chinook_db, ArtistAndAlbum)
-
-# chinook_db now contains 3 dbi.tables
-ls(chinook_db)
+# list the tables in the schema 'main'
+ls(db$main)
 
 }

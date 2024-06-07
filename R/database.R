@@ -25,65 +25,74 @@
 #'         \code{\link[base]{environment}} with the class attribute set to
 #'         \code{"dbi_database"}).
 #'
-#'         \code{list_db_objects} returns a named list of
-#'         \code{\link[DBI]{Id}}s.
-#'
-#'         \code{add_db_objects} invisibly returns \code{db}.
-#'
 #' @examples
 #' # chinook.sqlite is a zero-argument function that returns a DBI handle
-#' chinook_db <- dbi_database(chinook.sqlite)
+#' db <- dbi_database(chinook.duckdb)
 #'
-#' # Initially, only the information.schema is included
-#' ls(chinook_db, all = TRUE)
+#' # a dbi_database corresponds to a catalog - list the schemas
+#' ls(db)
 #'
-#' # List the available database objects
-#' (chinook_objects <- db_objects(chinook_db))
-#'
-#' # Add the Playlist table to chinook_db, name it Boss_Playlist
-#' add_db_objects(chinook_db, Boss_Playlist = DBI::Id(table = "Playlist"))
-#'
-#' ls(chinook_db)
-#'
-#' # Preview the dbi.table
-#' chinook_db$Boss_Playlist
-#'
-#' # Add the Artist and Album tables to chinook_db
-#' (ArtistAndAlbum <- chinook_objects[c("Artist", "Album")])
-#' add_db_objects(chinook_db, ArtistAndAlbum)
-#'
-#' # chinook_db now contains 3 dbi.tables
-#' ls(chinook_db)
+#' # list the tables in the schema 'main'
+#' ls(db$main)
 #'
 #' @export
 dbi_database <- function(conn) {
-  initialize_dbi_database(conn, new.env(parent = emptyenv()))
+  check_connection(conn <- init_connection(conn))
+  db <- new.env(parent = emptyenv())
+
+  db$.dbi_connection <- conn
+  class(db) <- "dbi_database"
+
+  if (!is.null(attr(conn, "recon", exact = TRUE))) {
+    reg.finalizer(db, dbi_database_disconnect, onexit = TRUE)
+  }
+
+  db$information_schema <- information_schema(conn, db)
+
+  objs <- list_database_objects(conn, db$information_schema)
+
+  for (i in seq_len(nrow(objs))) {
+    obj <- objs[i]
+    if (is.null(schema <- obj$schema)) {
+      schema <- "main"
+    }
+
+    if (tolower(schema) == "information_schema") next
+
+    if (is.null(db[[schema]])) {
+      db[[schema]] <- new.env(parent = emptyenv())
+    }
+
+    table <- obj$table
+    id <- obj$table_id[[1L]]
+    column_names <- obj$column_names[[1L]]
+
+    db[[schema]][[table]] <- new_dbi_table(db, id, column_names)
+  }
+
+  for (schema in ls(db)) {
+    db[[schema]][[".."]] <- db
+  }
+
+  db
 }
 
 
 
-initialize_dbi_database <- function(conn, db) {
-  conn <- init_connection(conn)
-  check_connection(conn)
-  info_s <- information_schema(conn)
-  assign(".information_schema", info_s, pos = db)
-  class(db) <- "dbi_database"
-  db
+dbi_database_disconnect <- function(e) {
+  on.exit(rm(list = ".dbi_connection", envir = e))
+  #' @importFrom DBI dbDisconnect
+  try(dbDisconnect(e[[".dbi_connection"]]), silent = TRUE)
 }
 
 
 
 #' @export
 print.dbi_database <- function(x, ...) {
-  conn <- x$.information_schema$.dbi_connection
+  conn <- x$.dbi_connection
   name <- paste(dbi_connection_package(conn), db_short_name(conn), sep = "::")
 
   cat(paste0("<", name, ">"), "\n")
-  #' @importFrom DBI dbGetInfo
-  cat("  Database:", dbGetInfo(conn)$dbname, "\n")
-  cat("  \u2022", length(db_objects(x)),
-      "available objects (tables, views, etc.)\n")
-  cat("  \u2022", length(ls(x)), "connected objects\n")
 
   invisible(x)
 }
@@ -96,125 +105,11 @@ is_dbi_database <- function(x) {
 
 
 
-#' @describeIn dbi_database
-#'
-#' List the database objects in \code{db} that are available to add.
-#'
-#' @param qualify_names a logical value. When \code{TRUE}, the names of the
-#'                      returned list have the form:
-#'                      \code{catalog.schema.table}. When \code{FALSE},
-#'                      \code{catalog} and \code{schema} are only included when
-#'                      needed to make the names distinct.
-#'
-#' @param force a logical value. When \code{TRUE}, the objects list is obtained
-#'              by quering the information schema. When \code{FALSE}, a cached
-#'              value is used. Useful for database in development.
-#'
-#' @export
-db_objects <- function(db, qualify_names = FALSE, force = FALSE) {
-  if (!inherits(db, "dbi_database")) {
-    stop("'", deparse1(substitute(db)), "' is not a 'dbi_database'")
-  }
-
-  if (force || is.null(objs <- db$.all_db_objects)) {
-    info_s <- db[[".information_schema"]]
-    objs <- list_database_objects(info_s)
-    default_names <- default_object_names(objs, qualify_names)
-    objs <- objs$table_id
-    names(objs) <- default_names
-    db[[".all_db_objects"]] <- objs
-  }
-
-  objs
-}
-
-
-
-#' @describeIn dbi_database
-#'
-#' add database objects to \code{db}.
-#'
-#' @param db a \code{dbi_database} created by \code{\link{dbi_database}}.
-#'
-#' @param \dots a comma-separated list of named \code{\link[DBI]{Id}}s. See
-#'              Examples. Alternatively, if \dots contains a single element and
-#'              that element is a named list of \code{\link[DBI]{Id}}s
-#'              (for example, the list returned by \code{list_db_objects}),
-#'              then the \code{\link[DBI]{Id}}s in that list will be added.
-#'
-#' @export
-add_db_objects <- function(db, ...) {
-  if (!inherits(db, "dbi_database")) {
-    stop("'", deparse1(substitute(db)), "' is not a 'dbi_database'")
-  }
-
-  if (!length(dots <- list(...))) {
-    warning("no objects were provided to add")
-    return(invisible(db))
-  }
-
-  d1 <- dots[[1]]
-  if (is.list(d1) && all(vapply(d1, inherits, TRUE, what = "Id"))) {
-    dots <- d1
-  }
-
-  dn <- names(dots)
-
-  if (is.null(dn) || any(nchar(dn) == 0L) || anyDuplicated(dn)) {
-    stop("all elements must be named and each name must have at least ",
-         "one character; duplicate names are not allowed")
-  }
-
-  info_s <- db[[".information_schema"]]
-  objs <- list_database_objects(info_s)
-
-  if (all(check <- (dots %in% objs$table_id))) {
-    for (i in seq_along(dots)) {
-      idx <- match(dots[i], objs$table_id)
-      dbit <- new_dbi_table(conn = info_s,
-                            id = objs[[idx, "table_id"]],
-                            fields = objs[[idx, "column_names"]])
-      assign(names(dots)[i], dbit, pos = db)
-    }
-  } else {
-    missing_id <- paste0("\"", dots[[which(!check)[1L]]]@name, "\"")
-    stop("'", paste("<Id>", paste(missing_id, collapse = ".")),
-         "' not found", call. = FALSE)
-  }
-
-  invisible(db)
-}
-
-
-
-list_database_objects <- function(info) {
-  conn <- info[[".dbi_connection"]]
-
-  #' @importFrom DBI dbGetInfo
-  dbname <- as.character(dbGetInfo(conn)$dbname)[[1L]]
-
-  if (!is.null(columns <- info$.init_cols)) {
-    rm(".init_cols", pos = info)
-  } else {
+list_database_objects <- function(conn, info) {
+  if (is.null(columns <- info$.init_cols)) {
     columns <- info$columns
-  }
-
-  continue <- FALSE
-  if (!is.null(columns$table_catalog)) {
-    catalog <- unique(columns[, list(table_catalog)])
-    catalog <- as.data.table(catalog)$table_catalog
-    if (dbname %chin% catalog) {
-      columns <- columns[table_catalog == dbname]
-      continue <- TRUE
-    }
-  }
-
-  if (!continue && !is.null(columns$table_schema)) {
-    schema <- unique(columns[, list(table_schema)])
-    schema <- as.data.table(schema)$table_schema
-    if (dbname %chin% schema) {
-      columns <- columns[table_schema == dbname]
-    }
+  } else {
+    rm(".init_cols", pos = info)
   }
 
   columns <- as.data.table(columns)
@@ -227,18 +122,4 @@ list_database_objects <- function(info) {
   columns[, list(table_id = list(Id(unlist(.BY))),
                  column_names = list(column_name)),
           by = id_columns]
-}
-
-
-
-default_object_names <- function(objs, qualify_names = FALSE) {
-  obj_names <- objs$table
-  if (anyDuplicated(obj_names) || qualify_names) {
-    obj_names <- paste(objs$schema, obj_names, sep = ".")
-  }
-  if (anyDuplicated(obj_names) || qualify_names) {
-    obj_names <- paste(objs$catalog, obj_names, sep = ".")
-  }
-
-  obj_names
 }

@@ -19,10 +19,15 @@
 #'                       function masking a function, or a non-function
 #'                       masking a non-function.
 #'
+#' @param schema a character string specifying the name of the schema to attach.
+#'
+#' @param graphics a logical value; passed to \code{\link[utils]{menu}}.
+#'
 #' @seealso \code{\link[base]{attach}}
 #'
 #' @export
-dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE) {
+dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
+                       schema = NULL, graphics = TRUE) {
   what_name <- deparse1(substitute(what))
   what <- init_connection(what)
 
@@ -38,6 +43,31 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE) {
          "database twice, use the 'name' argument to provide a distinct name")
   }
 
+  db <- dbi_database(what)
+
+  schemas <- setdiff(ls(db), c("information_schema", "pg_catalog"))
+
+  if (is.null(schema)) {
+    if (length(schemas) == 1L) {
+      schema <- schemas[[1L]]
+    } else if (length(schemas) && interactive()) {
+      schema <- utils::menu(schemas,
+                            graphics = graphics,
+                            title = "Select Schema")
+      if (schema > 0) {
+        schema <- schemas[[schema]]
+      } else {
+        warning("no schema selected")
+      }
+    } else {
+      stop("error setting up database")
+    }
+  } else {
+    if (!(schema %chin% schemas)) {
+      stop("schema '", schema, "' not found")
+    }
+  }
+
   # From ?attach: "In programming, functions should not change the search
   #                path unless that is their purpose."
   #
@@ -47,8 +77,12 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE) {
   e <- get("attach", "package:base")(NULL, pos = pos, name = name,
            warn.conflicts = warn.conflicts)
 
-  initialize_dbi_database(what, e)
-  add_db_objects(e, db_objects(e))
+  for (tab in ls(db[[schema]], all.names = TRUE)) {
+    e[[tab]] <- db[[schema]][[tab]]
+  }
+
+  rm(list = schema, pos = db)
+  db[[schema]] <- e
 
   invisible(e)
 }

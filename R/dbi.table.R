@@ -84,7 +84,7 @@ dbi_connection <- function(x) {
     x <- get_connection(x)
   }
 
-  if (is.environment(x) && !is.null(x$.dbi_connection)) {
+  if (is_dbi_database(x)) {
     x <- x$.dbi_connection
   }
 

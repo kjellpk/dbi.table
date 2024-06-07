@@ -4,7 +4,14 @@
 \alias{dbi.attach}
 \title{Attach a Database Schema to the Search Path}
 \usage{
-dbi.attach(what, pos = 2L, name = NULL, warn.conflicts = FALSE)
+dbi.attach(
+  what,
+  pos = 2L,
+  name = NULL,
+  warn.conflicts = FALSE,
+  schema = NULL,
+  graphics = TRUE
+)
 }
 \arguments{
 \item{what}{a connection handle returned by \code{\link[DBI]{dbConnect}} or
@@ -22,6 +29,10 @@ attaching the database, unless that database contains
 an object \code{.conflicts.OK}. A conflict is a
 function masking a function, or a non-function
 masking a non-function.}
+
+\item{schema}{a character string specifying the name of the schema to attach.}
+
+\item{graphics}{a logical value; passed to \code{\link[utils]{menu}}.}
 }
 \description{
 Create a \code{\link{dbi.table}} for each database object in

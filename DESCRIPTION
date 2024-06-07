@@ -11,7 +11,8 @@ Imports:
     bit64,
     dbplyr,
     rlang,
-    stringi
+    stringi,
+    utils
 Suggests: 
     RSQLite,
     duckdb,
