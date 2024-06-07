@@ -40,7 +40,6 @@ chinook.duckdb <- function() {
          call. = FALSE)
   }
 
-
   path <- file.path(system.file(package = "dbi.table"),
                     "example_files",
                     "chinook_parquet")
