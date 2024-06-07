@@ -31,18 +31,6 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   what_name <- deparse1(substitute(what))
   what <- init_connection(what)
 
-  if (is.null(name)) {
-    name <- db_short_name(what)
-  }
-
-  name <- paste(dbi_connection_package(what), name[[1L]], sep = ":")
-
-  if (name %in% search()) {
-    stop("'", what_name, "' was not attached because '", name,
-         "' is already on the search path - if you want to attach the same ",
-         "database twice, use the 'name' argument to provide a distinct name")
-  }
-
   db <- dbi.catalog(what)
 
   schemas <- setdiff(ls(db), c("information_schema", "pg_catalog"))
@@ -66,6 +54,24 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
     if (!(schema %chin% schemas)) {
       stop("schema '", schema, "' not found")
     }
+  }
+
+  if (is.null(name)) {
+    name <- c(dbi_connection_package(what),
+              db_short_name(what),
+              schema)
+    keep <- (nchar(name) > 0L) & (name != "main")
+    name <- paste(name[keep], collapse = ":")
+  } else {
+    name <- paste(dbi_connection_package(what),
+                  as.character(name)[[1L]],
+                  sep = ":")
+  }
+
+  if (name %in% search()) {
+    stop("'", what_name, "' was not attached because '", name,
+         "' is already on the search path - if you want to attach the same ",
+         "database twice, use the 'name' argument to provide a distinct name")
   }
 
   # From ?attach: "In programming, functions should not change the search
