@@ -43,7 +43,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
          "database twice, use the 'name' argument to provide a distinct name")
   }
 
-  db <- dbi_database(what)
+  db <- dbi.catalog(what)
 
   schemas <- setdiff(ls(db), c("information_schema", "pg_catalog"))
 

@@ -67,7 +67,7 @@ bare_bones_information_schema <- function(conn, info) {
 
 
 get_information_schema <- function(x) {
-  if (is_dbi_database(conn <- get_connection(x))) {
+  if (is_dbi_catalog(conn <- get_connection(x))) {
     return(conn$information_schema)
   }
 

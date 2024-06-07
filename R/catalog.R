@@ -1,50 +1,35 @@
-#' Create a \code{dbi_database}
+#' Create a \code{dbi.catalog}
 #'
-#' Use \code{dbi_database} to create a \code{dbi_database},
-#' \code{list_db_objects} to get a list of database objects (e.g., tables and
-#' views) that can be added to the \code{dbi_database}, and
-#' \code{add_db_objects} to add one or more of these objects. See Details and
-#' Examples.
-#'
-#' A \code{dbi_database} is an \code{environment} with the class
-#' attribute set to \code{"dbi_database"}. Initially, the \code{dbi_database}
-#' contains only the \code{information_schema}. When a database object
-#' (e.g., a table or view identified by an \code{\link[DBI]{Id}}) is
-#' added to the \code{dbi_database} using \code{add_db_objects}, a
-#' \code{\link{dbi.table}} is created in the \code{dbi_database}. Since the
-#' \code{dbi_database} is an envionment, the added \code{\link{dbi.table}} can
-#' be accessed using the \code{$} operator. Further, one can use
-#' \code{\link[base]{ls}} and \code{\link[base]{objects}} to list the
-#' \code{\link{dbi.table}}s in the \code{dbi_database}. See Examples.
+#' A \code{dbi.catalog} is an \code{environment} with the class
+#' attribute set to \code{"dbi.catalog"}.
 #'
 #' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}} or
 #'             a zero-argument function that returns a connection handle.
 #'
-#'
-#' @return \code{dbi_database} returns a \code{dbi_database} (internally an
+#' @return \code{dbi.catalog} returns a \code{dbi.catalog} (internally an
 #'         \code{\link[base]{environment}} with the class attribute set to
-#'         \code{"dbi_database"}).
+#'         \code{"dbi.catalog"}).
 #'
 #' @examples
 #' # chinook.sqlite is a zero-argument function that returns a DBI handle
-#' db <- dbi_database(chinook.duckdb)
+#' db <- dbi.catalog(chinook.duckdb)
 #'
-#' # a dbi_database corresponds to a catalog - list the schemas
+#' # a dbi.catalog corresponds to a catalog - list the schemas
 #' ls(db)
 #'
 #' # list the tables in the schema 'main'
 #' ls(db$main)
 #'
 #' @export
-dbi_database <- function(conn) {
+dbi.catalog <- function(conn) {
   check_connection(conn <- init_connection(conn))
   db <- new.env(parent = emptyenv())
 
   db$.dbi_connection <- conn
-  class(db) <- "dbi_database"
+  class(db) <- "dbi.catalog"
 
   if (!is.null(attr(conn, "recon", exact = TRUE))) {
-    reg.finalizer(db, dbi_database_disconnect, onexit = TRUE)
+    reg.finalizer(db, dbi.catalog_disconnect, onexit = TRUE)
   }
 
   db$information_schema <- information_schema(conn, db)
@@ -79,7 +64,7 @@ dbi_database <- function(conn) {
 
 
 
-dbi_database_disconnect <- function(e) {
+dbi.catalog_disconnect <- function(e) {
   on.exit(rm(list = ".dbi_connection", envir = e))
   #' @importFrom DBI dbDisconnect
   try(dbDisconnect(e[[".dbi_connection"]]), silent = TRUE)
@@ -88,7 +73,7 @@ dbi_database_disconnect <- function(e) {
 
 
 #' @export
-print.dbi_database <- function(x, ...) {
+print.dbi.catalog <- function(x, ...) {
   conn <- x$.dbi_connection
   name <- paste(dbi_connection_package(conn), db_short_name(conn), sep = "::")
 
@@ -99,8 +84,8 @@ print.dbi_database <- function(x, ...) {
 
 
 
-is_dbi_database <- function(x) {
-  inherits(x, "dbi_database")
+is_dbi_catalog <- function(x) {
+  inherits(x, "dbi.catalog")
 }
 
 

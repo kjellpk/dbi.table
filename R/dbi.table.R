@@ -84,7 +84,7 @@ dbi_connection <- function(x) {
     x <- get_connection(x)
   }
 
-  if (is_dbi_database(x)) {
+  if (is_dbi_catalog(x)) {
     x <- x$.dbi_connection
   }
 
@@ -338,7 +338,7 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #'
 #' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}}.
 #'             Alternatively, \code{conn} may be a \code{\link{dbi.table}} or a
-#'             \code{\link{dbi_database}}; in these cases, the connection handle
+#'             \code{\link{dbi.catalog}}; in these cases, the connection handle
 #'             is extracted from the provided object.
 #'
 #' @section Note: The temporary tables created by this function are dropped
