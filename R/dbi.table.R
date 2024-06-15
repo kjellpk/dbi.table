@@ -220,7 +220,8 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
       }
     }
 
-    res <- DBI::dbSendStatement(dbi_connection(x), write_select_query(x))
+    res <- DBI::dbSendStatement(dbi_connection(x),
+                                write_select_query(x, n, offset))
 
     if (inherits(res, "DBIResult")) {
       on.exit(DBI::dbClearResult(res))
