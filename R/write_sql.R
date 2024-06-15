@@ -1,11 +1,11 @@
-write_select_query <- function(x, n, offset) {
+write_select_query <- function(x, n = -1L, offset = NULL) {
   query <- list(ctes = write_ctes(x),
-                select = write_select(x),
+                select = write_select(dbi_connection(x), x),
                 from = write_from(x),
                 where = write_where(x),
                 group_by = write_group_by(x),
                 order_by = write_order_by(x),
-                limit = write_limit(x, n, offset))
+                limit = write_limit(dbi_connection(x), x, n, offset))
 
   paste(query[!sapply(query, is.null)], collapse = "\n\n")
 }
@@ -26,9 +26,13 @@ write_ctes <- function(x) {
 
 
 
-write_select <- function(x) {
-  conn <- dbi_connection(x)
+write_select <- function(conn, x) {
+  UseMethod("write_select")
+}
 
+
+
+write_select.default <- function(conn, x) {
   if (all(vapply(setdiff(c(x), get_group_by(x)), call_can_aggregate, FALSE))) {
     select <- translate_sql_(c(x), con = conn, window = FALSE)
   } else {
@@ -141,8 +145,14 @@ write_order_by <- function(x) {
 
 
 
-write_limit <- function(x, n = -1L, offset = NULL) {
-  if (n < 0L || inherits(dbi_connection(x), "Microsoft SQL Server")) {
+write_limit <- function(conn, x, n, offset) {
+  UseMethod("write_limit")
+}
+
+
+
+write_limit.default <- function(conn, x, n, offset) {
+  if (n < 0L) {
     return(NULL)
   }
 
@@ -153,4 +163,10 @@ write_limit <- function(x, n = -1L, offset = NULL) {
   }
 
   limit
+}
+
+
+
+"write_limit.Microsoft SQL Server" <- function(conn, x, n, offset) {
+  NULL
 }
