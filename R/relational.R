@@ -1,5 +1,12 @@
-related_tables <- function(x, y = NULL) {
+related_tables <- function(conn, x, y = NULL) {
+  UseMethod("related_tables")
+}
+
+
+
+related_tables.default <- function(conn, x, y = NULL) {
   info <- get_information_schema(x)
+
   if (is.null(info$referential_constraints) || is.null(info$key_column_usage)) {
     return(data.table())
   }
@@ -86,7 +93,7 @@ match_fields <- function(x, fields) {
 
 
 relational_merge <- function(x, recursive = FALSE) {
-  if (nrow(rt <- related_tables(x)) == 0L) {
+  if (nrow(rt <- related_tables(dbi_connection(x), x)) == 0L) {
     return(x)
   }
 

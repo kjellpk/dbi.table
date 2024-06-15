@@ -164,9 +164,3 @@ write_limit.default <- function(conn, x, n, offset) {
 
   limit
 }
-
-
-
-"write_limit.Microsoft SQL Server" <- function(conn, x, n, offset) {
-  NULL
-}
