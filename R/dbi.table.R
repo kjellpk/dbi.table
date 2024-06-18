@@ -380,3 +380,29 @@ finalize_temp_dbi_table <- function(e) {
 
   NULL
 }
+
+
+
+in_query_cte <- function(conn, data) {
+  cte_name <- unique_table_name("CTE")
+  id <- DBI::Id(table = cte_name)
+  x <- new_dbi_table(conn, id, names(data))
+
+  qnames <- DBI::dbQuoteIdentifier(conn, names(data))
+  data <- mapply(DBI::dbQuoteLiteral, data, MoreArgs = list(conn = conn))
+
+  for (j in seq_len(ncol(data))) {
+    data[, j] <- paste(data[, j], "AS", qnames[[j]])
+  }
+
+  data <- apply(data, 1L, paste, collapse = ", ")
+  data <- paste("SELECT", data)
+
+  data <- DBI::SQL(paste(data, collapse = "\nUNION ALL\n"))
+
+  ctes <- list()
+  ctes[[cte_name]] <- data
+
+  attr(x, "ctes") <- ctes
+  x
+}
