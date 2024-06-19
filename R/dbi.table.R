@@ -189,9 +189,9 @@ print.dbi.table <- function(x, ...) {
 
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
-                                    n = session$max_fetch, offset = NULL) {
+                                    n = session$max_fetch) {
   res <- try(DBI::dbSendStatement(dbi_connection(x),
-                                  write_select_query(x, n, offset)),
+                                  write_select_query(x, n)),
              silent = TRUE)
 
   if (inherits(res, "DBIResult")) {
@@ -220,8 +220,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
       }
     }
 
-    res <- DBI::dbSendStatement(dbi_connection(x),
-                                write_select_query(x, n, offset))
+    res <- DBI::dbSendStatement(dbi_connection(x), write_select_query(x, n))
 
     if (inherits(res, "DBIResult")) {
       on.exit(DBI::dbClearResult(res))

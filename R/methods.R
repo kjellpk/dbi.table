@@ -1,6 +1,6 @@
 ### MS SQL Server ##############################################################
 
-"write_limit.Microsoft SQL Server" <- function(conn, x, n, offset) {
+"write_limit.Microsoft SQL Server" <- function(conn, x, n) {
   NULL
 }
 

@@ -55,11 +55,9 @@ paren <- function(x) {
 #'
 #' @param n a single integer value.
 #'
-#' @param offset a single integer value or \code{NULL}.
-#'
 #' @export
-csql <- function(x, n = session$max_fetch, offset = NULL) {
-  cat(paste0("\n", write_select_query(x, n, offset), "\n\n"))
+csql <- function(x, n = session$max_fetch) {
+  cat(paste0("\n", write_select_query(x, n), "\n\n"))
 }
 
 

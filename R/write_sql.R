@@ -1,11 +1,15 @@
-write_select_query <- function(x, n = -1L, offset = NULL) {
+write_select_query <- function(x, n = -1L) {
+  if (inherits(x, "SQL")) {
+    return(x)
+  }
+
   query <- list(ctes = write_ctes(x),
                 select = write_select(dbi_connection(x), x),
                 from = write_from(x),
                 where = write_where(x),
                 group_by = write_group_by(x),
                 order_by = write_order_by(x),
-                limit = write_limit(dbi_connection(x), x, n, offset))
+                limit = write_limit(dbi_connection(x), x, n))
 
   paste(query[!sapply(query, is.null)], collapse = "\n\n")
 }
@@ -145,22 +149,16 @@ write_order_by <- function(x) {
 
 
 
-write_limit <- function(conn, x, n, offset) {
+write_limit <- function(conn, x, n) {
   UseMethod("write_limit")
 }
 
 
 
-write_limit.default <- function(conn, x, n, offset) {
+write_limit.default <- function(conn, x, n) {
   if (n < 0L) {
     return(NULL)
   }
 
-  limit <- paste(" LIMIT", as.integer(n)[[1L]])
-
-  if (!is.null(offset)) {
-    limit <- paste(limit, "OFFSET", as.integer(offset)[[1L]])
-  }
-
-  limit
+  paste(" LIMIT", as.integer(n)[[1L]])
 }
