@@ -251,7 +251,11 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
     i <- sub_lang(substitute(i), x, enclos = parent)
 
     if (is.data.frame(i)) {
-      i <- as.dbi.table(i, x)
+      if (nrow(i) > session$max_in_query) {
+        i <- as.dbi.table(i, x)
+      } else {
+        i <- in_query_cte(x, i)
+      }
     }
 
     if (is_call_to(i) == "!" && is.dbi.table(i[[2L]])) {
@@ -383,12 +387,17 @@ finalize_temp_dbi_table <- function(e) {
 
 
 in_query_cte <- function(conn, data) {
+  if (is.dbi.table(conn)) {
+    conn <- get_connection(conn)
+  }
+  dbi_conn <- dbi_connection(conn)
+
   cte_name <- unique_table_name("CTE")
   id <- DBI::Id(table = cte_name)
   x <- new_dbi_table(conn, id, names(data))
 
-  qnames <- DBI::dbQuoteIdentifier(conn, names(data))
-  data <- mapply(DBI::dbQuoteLiteral, data, MoreArgs = list(conn = conn))
+  qnames <- DBI::dbQuoteIdentifier(dbi_conn, names(data))
+  data <- mapply(DBI::dbQuoteLiteral, data, MoreArgs = list(conn = dbi_conn))
 
   for (j in seq_len(ncol(data))) {
     data[, j] <- paste(data[, j], "AS", qnames[[j]])
