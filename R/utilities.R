@@ -41,6 +41,29 @@ init_connection <- function(conn) {
 
 
 
+get_connection <- function(x) {
+  if (is.dbi.table(x)) {
+    return(attr(x, "conn", exact = TRUE))
+  }
+
+  x
+}
+
+
+
+dbi_connection <- function(x) {
+  x <- get_connection(x)
+
+  if (is_dbi_catalog(x)) {
+    x <- x$.dbi_connection
+  }
+
+  stopifnot(inherits(x, "DBIConnection"))
+  x
+}
+
+
+
 paren <- function(x) {
   paste0("(", x, ")")
 }

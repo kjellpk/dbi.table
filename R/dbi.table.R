@@ -71,27 +71,6 @@ dbi_table_object <- function(cdefs, conn, data_source, fields,
 
 
 
-get_connection <- function(x) {
-  attr(x, "conn", exact = TRUE)
-}
-
-
-
-dbi_connection <- function(x) {
-  if (is.dbi.table(x)) {
-    x <- get_connection(x)
-  }
-
-  if (is_dbi_catalog(x)) {
-    x <- x$.dbi_connection
-  }
-
-  stopifnot(inherits(x, "DBIConnection"))
-  x
-}
-
-
-
 get_data_source <- function(x) {
   attr(x, "data_source", exact = TRUE)
 }
@@ -252,7 +231,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
 
     if (is.data.frame(i)) {
       if (nrow(i) > session$max_in_query) {
-        i <- as.dbi.table(i, x)
+        i <- as.dbi.table(x, i)
       } else {
         i <- in_query_cte(x, i)
       }
@@ -329,31 +308,54 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #' @description Write a \code{\link[base]{data.frame}} to a temporary table on a
 #'              \code{DBI} connection and return a \code{\link{dbi.table}}.
 #'
-#' @param x any \R object that can be coerced to a
-#'          \code{\link[base]{data.frame}}.
-#'
 #' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}}.
 #'             Alternatively, \code{conn} may be a \code{\link{dbi.table}} or a
 #'             \code{\link{dbi.catalog}}; in these cases, the connection handle
 #'             is extracted from the provided object.
 #'
+#' @param x an \R object that can be coerced to a
+#'          \code{\link[base]{data.frame}}.
+#'
+#' @param type a character string. Possible choices are code{"query"}, and
+#'             \code{"temporary"}. See Details.
+#'
+#' @details Two types of tables are provided: \emph{Temporary} (when
+#'          \code{type == "query"}) and \emph{In Query}
+#'          (when \code{type == "query"}). For Temporary, the data are written
+#'          to a SQL temporary table and a \code{\link{dbi.table}} is returned.
+#'          For In Query, the data are written into a CTE as part of the query
+#'          itself. Useful when the connection does not permit creating
+#'          temporary tables.
+#'
 #' @section Note: The temporary tables created by this function are dropped
 #'                (by calling \code{\link[DBI]{dbRemoveTable}}) during garbage
-#'                collection.
+#'                collection when they are no longer referenced.
+#'
+#' @examples
+#' duck <- dbi.catalog(chinook.duckdb)
+#' csql(as.dbi.table(duck, iris[1:4, 1:3], type = "query"))
 #'
 #' @export
-as.dbi.table <- function(x, conn) {
-  if (!is.data.frame(x)) {
-    x <- as.data.frame(x)
+as.dbi.table <- function(conn, x, type = c("temporary", "query")) {
+  conn <- get_connection(conn)
+  x <- as.data.frame(x)
+  type <- match.arg(type)
+
+  if (type == "temporary") {
+    return(temporary_dbi_table(conn, x))
   }
 
-  if (inherits(conn, "DBIConnection")) {
-    dbi_conn <- conn
-  } else {
-    dbi_conn <- dbi_connection(conn)
-    conn <- get_connection(conn)
+  if (type == "query") {
+    return(in_query_cte(conn, x))
   }
 
+  NULL
+}
+
+
+
+temporary_dbi_table <- function(conn, x) {
+  dbi_conn <- dbi_connection(conn)
   stopifnot(inherits(dbi_conn, "DBIConnection"))
 
   temp_name <- unique_table_name(session$tmp_base)
@@ -387,9 +389,6 @@ finalize_temp_dbi_table <- function(e) {
 
 
 in_query_cte <- function(conn, data) {
-  if (is.dbi.table(conn)) {
-    conn <- get_connection(conn)
-  }
   dbi_conn <- dbi_connection(conn)
 
   cte_name <- unique_table_name("CTE")

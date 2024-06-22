@@ -4,24 +4,41 @@
 \alias{as.dbi.table}
 \title{Coerce to a DBI Table}
 \usage{
-as.dbi.table(x, conn)
+as.dbi.table(conn, x, type = c("temporary", "query"))
 }
 \arguments{
-\item{x}{any \R object that can be coerced to a
-\code{\link[base]{data.frame}}.}
-
 \item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}}.
 Alternatively, \code{conn} may be a \code{\link{dbi.table}} or a
 \code{\link{dbi.catalog}}; in these cases, the connection handle
 is extracted from the provided object.}
+
+\item{x}{an \R object that can be coerced to a
+\code{\link[base]{data.frame}}.}
+
+\item{type}{a character string. Possible choices are code{"query"}, and
+\code{"temporary"}. See Details.}
 }
 \description{
 Write a \code{\link[base]{data.frame}} to a temporary table on a
              \code{DBI} connection and return a \code{\link{dbi.table}}.
 }
+\details{
+Two types of tables are provided: \emph{Temporary} (when
+         \code{type == "query"}) and \emph{In Query}
+         (when \code{type == "query"}). For Temporary, the data are written
+         to a SQL temporary table and a \code{\link{dbi.table}} is returned.
+         For In Query, the data are written into a CTE as part of the query
+         itself. Useful when the connection does not permit creating
+         temporary tables.
+}
 \section{Note}{
  The temporary tables created by this function are dropped
                (by calling \code{\link[DBI]{dbRemoveTable}}) during garbage
-               collection.
+               collection when they are no longer referenced.
 }
 
+\examples{
+duck <- dbi.catalog(chinook.duckdb)
+csql(as.dbi.table(duck, iris[1:4, 1:3], type = "query"))
+
+}
