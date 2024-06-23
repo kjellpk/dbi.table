@@ -13,7 +13,8 @@ Imports:
     rlang,
     stringi,
     utils
-Suggests: 
+Suggests:
+    RMariaDB (>= 1.3.2),
     RSQLite,
     duckdb,
     testthat (>= 3.0.0),

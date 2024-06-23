@@ -27,30 +27,5 @@ session$max_in_query <- 1000L
   add_special("%like%", special_like)
   add_special("%LIKE%", special_LIKE)
 
-
-
-  dbQuoteIdentifier_MariaDBConnection_Id <- function(conn, x, ...) {
-    if (length(name <- x@name) == 3L && name[[1L]] == "def") {
-      name <- name[-1L]
-    }
-
-    DBI::SQL(paste0(DBI::dbQuoteIdentifier(conn, name), collapse = "."))
-  }
-
-  meth <- call("setMethod",
-               f = "dbQuoteIdentifier",
-               signature = c("MariaDBConnection", "Id"),
-               definition = dbQuoteIdentifier_MariaDBConnection_Id)
-
-  if (isNamespaceLoaded("RMariaDB")) {
-    eval(meth, envir = .GlobalEnv)
-  } else {
-    setHook(packageEvent("RMariaDB", "onLoad"),
-      function(...) {
-        eval(meth, envir = .GlobalEnv)
-      }
-    )
-  }
-
   NULL
 }
