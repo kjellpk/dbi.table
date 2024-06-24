@@ -4,12 +4,12 @@ write_select_query <- function(x, n = -1L) {
   }
 
   query <- list(ctes = write_ctes(x),
-                select = write_select(dbi_connection(x), x),
+                select = write_select(x, n),
                 from = write_from(x),
                 where = write_where(x),
                 group_by = write_group_by(x),
                 order_by = write_order_by(x),
-                limit = write_limit(dbi_connection(x), x, n))
+                limit = write_limit(x, n))
 
   paste(query[!sapply(query, is.null)], collapse = "\n\n")
 }
@@ -30,13 +30,8 @@ write_ctes <- function(x) {
 
 
 
-write_select <- function(conn, x) {
-  UseMethod("write_select")
-}
-
-
-
-write_select.default <- function(conn, x) {
+write_select <- function(x, n) {
+  conn <- dbi_connection(x)
   if (all(vapply(setdiff(c(x), get_group_by(x)), call_can_aggregate, FALSE))) {
     select <- translate_sql_(c(x), con = conn, window = FALSE)
   } else {
@@ -59,6 +54,11 @@ write_select.default <- function(conn, x) {
   select <- paste(select, "AS", DBI::dbQuoteIdentifier(conn, names(x)))
 
   pad1 <- ifelse(get_distinct(x), "SELECT DISTINCT", "SELECT")
+
+  if (n > 0L && inherits(conn, "Microsoft SQL Server")) {
+    pad1 <- paste(pad1, "TOP", paren(n))
+  }
+
   pad <- rep(ws(nchar(pad1)), length(x))
   pad[1] <- pad1
   paste(paste(pad, select), collapse = ",\n")
@@ -149,14 +149,8 @@ write_order_by <- function(x) {
 
 
 
-write_limit <- function(conn, x, n) {
-  UseMethod("write_limit")
-}
-
-
-
-write_limit.default <- function(conn, x, n) {
-  if (n < 0L) {
+write_limit <- function(x, n) {
+  if (n < 0L || inherits(dbi_connection(x), "Microsoft SQL Server")) {
     return(NULL)
   }
 

@@ -1,11 +1,3 @@
-### MS SQL Server ##############################################################
-
-"write_limit.Microsoft SQL Server" <- function(conn, x, n) {
-  NULL
-}
-
-
-
 ### MariaDB ####################################################################
 
 related_tables.MariaDBConnection <- function(conn, x, y = NULL) {
