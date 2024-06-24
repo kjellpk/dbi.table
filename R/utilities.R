@@ -1,9 +1,16 @@
 db_short_name <- function(conn) {
-  if (is.dbi.table(conn)) {
-    conn <- dbi_connection(conn)
+  conn <- dbi_connection(conn)
+
+  info <- DBI::dbGetInfo(conn)
+  if (nchar(dbname <- info$dbname)) {
+    short_name <- sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(dbname))
+  } else if (nchar(host <- info$host)) {
+    short_name <- host
+  } else {
+    short_name <- "default_catalog"
   }
 
-  sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(DBI::dbGetInfo(conn)$dbname))
+  short_name
 }
 
 
@@ -44,6 +51,10 @@ init_connection <- function(conn) {
 get_connection <- function(x) {
   if (is.dbi.table(x)) {
     return(attr(x, "conn", exact = TRUE))
+  }
+
+  if (is_dbi_schema(x)) {
+    return(x[["..catalog"]])
   }
 
   x

@@ -11,8 +11,8 @@
 #'         \code{"dbi.catalog"}).
 #'
 #' @examples
-#' # chinook.sqlite is a zero-argument function that returns a DBI handle
-#' db <- dbi.catalog(chinook.duckdb)
+#' # chinook.duckdb is a zero-argument function that returns a DBI handle
+#' (db <- dbi.catalog(chinook.duckdb))
 #'
 #' # a dbi.catalog corresponds to a catalog - list the schemas
 #' ls(db)
@@ -33,8 +33,17 @@ dbi.catalog <- function(conn) {
   }
 
   db$information_schema <- information_schema(conn, db)
-
   objs <- list_database_objects(conn, db$information_schema)
+
+  dbname <- DBI::dbGetInfo(conn)$dbname
+
+  if (nchar(dbname)) {
+    if (nrow(schema <- objs[schema == dbname])) {
+      objs <- schema
+    } else if (nrow(catalog <- objs[catalog == dbname])) {
+      objs <- catalog
+    }
+  }
 
   for (i in seq_len(nrow(objs))) {
     obj <- objs[i]
@@ -45,7 +54,7 @@ dbi.catalog <- function(conn) {
     if (tolower(schema) == "information_schema") next
 
     if (is.null(db[[schema]])) {
-      db[[schema]] <- new.env(parent = emptyenv())
+      db[[schema]] <- new_schema(name = schema, catalog = db)
     }
 
     table <- obj$table
@@ -53,10 +62,6 @@ dbi.catalog <- function(conn) {
     column_names <- obj$column_names[[1L]]
 
     db[[schema]][[table]] <- new_dbi_table(db, id, column_names)
-  }
-
-  for (schema in ls(db)) {
-    db[[schema]][[".."]] <- db
   }
 
   db
@@ -73,10 +78,25 @@ dbi.catalog_disconnect <- function(e) {
 
 #' @export
 print.dbi.catalog <- function(x, ...) {
-  conn <- x$.dbi_connection
+  conn <- dbi_connection(x)
   name <- paste(dbi_connection_package(conn), db_short_name(conn), sep = "::")
+  desc <- paste(length(lsx <- ls(x)), "schemas containing",
+                sum(as.integer(eapply(x, function(u) length(ls(u))))),
+                "objects")
+  if ((n <- length(lsx)) > 30L) {
+    lsx <- lsx[1L:30L]
+    n_schemas_omitted <- n - 30L
+  } else {
+    n_schemas_omitted <- 0L
+  }
 
-  cat(paste0("<", name, ">"), "\n")
+  cat("<Database Catalog>", name, paste0("(", desc, ")"), "\n")
+  print(lsx)
+
+  if (n_schemas_omitted > 0L) {
+    cat("(an additional", n_schemas_omitted, "schemas were not displayed -",
+        "use 'ls' to list all schemas)\n")
+  }
 
   invisible(x)
 }
@@ -106,4 +126,54 @@ list_database_objects <- function(conn, info) {
   columns[, list(table_id = list(DBI::Id(unlist(.BY))),
                  column_names = list(column_name)),
           by = id_columns]
+}
+
+
+
+new_schema <- function(name, catalog) {
+  init_schema <- init_schema(new.env(parent = emptyenv()), name, catalog)
+}
+
+
+
+init_schema <- function(e, name, catalog) {
+  name <- as.character(name)[[1L]]
+  stopifnot(is_dbi_catalog(catalog))
+
+  assign(".schema_name", name, pos = e)
+  assign("..catalog", catalog, pos = e)
+
+  class(e) <- "dbi.schema"
+  e
+}
+
+
+
+is_dbi_schema <- function(x) {
+  inherits(x, "dbi.schema")
+}
+
+
+
+#' @export
+print.dbi.schema <- function(x, ...) {
+  conn <- dbi_connection(x)
+  desc <- paste("contains", length(lsx <- ls(x)), "objects")
+
+  if ((n <- length(lsx)) > 30L) {
+    lsx <- lsx[1L:30L]
+    n_objects_omitted <- n - 30L
+  } else {
+    n_objects_omitted <- 0L
+  }
+
+  cat("<Database Schema>", x[[".schema_name"]], paste0("(", desc, ")\n"))
+  print(lsx)
+
+  if (n_objects_omitted > 0L) {
+    cat("(an additional", n_objects_omitted, "objects were not displayed -",
+        "use 'ls' to list all objects in schema)\n")
+  }
+
+  invisible(x)
 }

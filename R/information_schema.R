@@ -1,5 +1,5 @@
 information_schema <- function(conn, db) {
-  info <- new.env(parent = emptyenv())
+  info <- new_schema(name = "information_schema", catalog = db)
 
   init_cols <- try(DBI::dbGetQuery(conn,
                                    "SELECT * FROM information_schema.columns"),

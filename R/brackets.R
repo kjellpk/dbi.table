@@ -307,7 +307,7 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
     x_name <- as.character(x_sub)
 
     if (!is.null(env[[x_name]]) || identical(env, .GlobalEnv)) {
-      if (is_dbi_catalog(env$..)) {
+      if (is_dbi_catalog(env[["..catalog"]])) {
         stop("'dbi.table's in 'dbi.catalog's cannot be modified by reference",
              call. = FALSE)
       } else {

@@ -20,8 +20,8 @@ A \code{dbi.catalog} is an \code{environment} with the class
 attribute set to \code{"dbi.catalog"}.
 }
 \examples{
-# chinook.sqlite is a zero-argument function that returns a DBI handle
-db <- dbi.catalog(chinook.duckdb)
+# chinook.duckdb is a zero-argument function that returns a DBI handle
+(db <- dbi.catalog(chinook.duckdb))
 
 # a dbi.catalog corresponds to a catalog - list the schemas
 ls(db)

@@ -45,7 +45,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
       if (schema > 0) {
         schema <- schemas[[schema]]
       } else {
-        warning("no schema selected")
+        return(invisible())
       }
     } else {
       stop("error setting up database")
@@ -57,11 +57,13 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   }
 
   if (is.null(name)) {
-    name <- c(dbi_connection_package(what),
-              db_short_name(what),
-              schema)
-    keep <- (nchar(name) > 0L) & (name != "main")
-    name <- paste(name[keep], collapse = ":")
+    if (schema %chin% c("main", "dbo")) {
+      name <- db_short_name(what)
+    } else {
+      name <- schema
+    }
+
+    name <- paste(dbi_connection_package(what), name, sep = ":")
   } else {
     name <- paste(dbi_connection_package(what),
                   as.character(name)[[1L]],
@@ -83,7 +85,9 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   e <- get("attach", "package:base")(NULL, pos = pos, name = name,
            warn.conflicts = warn.conflicts)
 
-  for (tab in ls(db[[schema]], all.names = TRUE)) {
+  e <- init_schema(e, schema, db)
+
+  for (tab in ls(db[[schema]])) {
     e[[tab]] <- db[[schema]][[tab]]
   }
 
