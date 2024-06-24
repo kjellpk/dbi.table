@@ -15,7 +15,7 @@ is extracted from the provided object.}
 \item{x}{an \R object that can be coerced to a
 \code{\link[base]{data.frame}}.}
 
-\item{type}{a character string. Possible choices are code{"query"}, and
+\item{type}{a character string. Possible choices are \code{"query"}, and
 \code{"temporary"}. See Details.}
 }
 \description{

@@ -316,7 +316,7 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #' @param x an \R object that can be coerced to a
 #'          \code{\link[base]{data.frame}}.
 #'
-#' @param type a character string. Possible choices are code{"query"}, and
+#' @param type a character string. Possible choices are \code{"query"}, and
 #'             \code{"temporary"}. See Details.
 #'
 #' @details Two types of tables are provided: \emph{Temporary} (when
