@@ -369,7 +369,7 @@ temporary_dbi_table <- function(conn, x) {
   dev_null <- DBI::dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)
 
   temp_id <- DBI::Id(temp_name)
-  x <- new_dbi_table(conn, temp_id)
+  x <- new_dbi_table(conn, temp_id, names(x))
 
   temp_dbi_table <- new.env(parent = emptyenv())
   temp_dbi_table$id <- temp_id
@@ -391,6 +391,7 @@ finalize_temp_dbi_table <- function(e) {
 
 
 in_query_cte <- function(conn, data) {
+
   dbi_conn <- dbi_connection(conn)
 
   cte_name <- unique_table_name("CTE")
