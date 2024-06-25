@@ -233,9 +233,9 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
 
     if (is.data.frame(i)) {
       if (nrow(i) > session$max_in_query) {
-        i <- as.dbi.table(x, i)
+        i <- as.dbi.table(x, i, type = "temporary")
       } else {
-        i <- in_query_cte(x, i)
+        i <- as.dbi.table(x, i, type = "query")
       }
     }
 
