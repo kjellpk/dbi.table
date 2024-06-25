@@ -2,14 +2,14 @@ conns <- list(chinook.sqlite(), chinook.duckdb())
 
 for (conn in conns) {
   test_that("dbi.table works", {
-    expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+    expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
     expect_true(is.dbi.table(Album))
   })
 
 
 
   test_that("simple subset works", {
-    expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+    expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
     expect_true(reference_test(
       Album[AlbumId > 7 & AlbumId < 13],
       verbose = FALSE
@@ -19,7 +19,7 @@ for (conn in conns) {
 
 
   test_that("aggregation works", {
-    expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+    expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference_test(
       Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
                 MEAN = mean(Milliseconds, na.rm = TRUE))],
@@ -30,7 +30,7 @@ for (conn in conns) {
 
 
   test_that("aggregation works with by", {
-    expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+    expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference_test(
       Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
                 MEAN = mean(Milliseconds, na.rm = TRUE)),
@@ -42,7 +42,7 @@ for (conn in conns) {
 
 
   test_that("window works", {
-    expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+    expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference_test(
       Track[, .(TrackId,
                 x = as.numeric(Milliseconds) /
@@ -54,7 +54,7 @@ for (conn in conns) {
 
 
   test_that("window works with by", {
-    expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+    expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference_test(
       Track[, .(TrackId,
                 x = as.numeric(Milliseconds) /
@@ -67,7 +67,7 @@ for (conn in conns) {
 
 
   test_that("j syntax consistent with data.table", {
-    expect_no_error(Track <- dbi.table(conn, DBI::Id(table = "Track")))
+    expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
 
     expect_true(reference_test(
       Track[, Name:MediaTypeId],
@@ -134,7 +134,7 @@ for (conn in conns) {
 
 
   test_that("local works", {
-    expect_no_error(Album <- dbi.table(conn, DBI::Id(table = "Album")))
+    expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
 
     expect_true(reference_test(
       Album[ArtistId == ArtistId],

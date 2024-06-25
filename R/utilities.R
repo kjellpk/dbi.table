@@ -25,6 +25,28 @@ dbi_connection_package <- function(conn) {
 
 
 
+check_id <- function(id) {
+  if ((n <- length(id@name)) > 3L) {
+    stop("'id' has more than 3 components", call. = FALSE)
+  }
+
+  valid_names <- last(c("table_catalog", "table_schema", "table_name"), n)
+
+  if (is.null(id_names <- names(id@name))) {
+    names(id@name) <- valid_names
+  } else {
+    for (i in which(id_names != valid_names)) {
+      warning("renaming 'id' component: '", id_names[i],
+              "'; new name: '", valid_names[i], "'")
+    }
+    names(id@name) <- valid_names
+  }
+
+  id
+}
+
+
+
 check_connection <- function(conn, arg_name = "conn") {
   if (!inherits(conn, "DBIConnection")) {
     stop("invalid connection argument - '", arg_name, "' is not a ",

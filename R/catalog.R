@@ -47,21 +47,21 @@ dbi.catalog <- function(conn) {
 
   for (i in seq_len(nrow(objs))) {
     obj <- objs[i]
-    if (is.null(schema <- obj$schema)) {
-      schema <- "main"
+    if (is.null(table_schema <- obj$table_schema)) {
+      table_schema <- "main"
     }
 
-    if (tolower(schema) == "information_schema") next
+    if (tolower(table_schema) == "information_schema") next
 
-    if (is.null(db[[schema]])) {
-      db[[schema]] <- new_schema(name = schema, catalog = db)
+    if (is.null(db[[table_schema]])) {
+      db[[table_schema]] <- new_schema(name = table_schema, catalog = db)
     }
 
-    table <- obj$table
+    table_name <- obj$table_name
     id <- obj$table_id[[1L]]
     column_names <- obj$column_names[[1L]]
 
-    db[[schema]][[table]] <- new_dbi_table(db, id, column_names)
+    db[[table_schema]][[table_name]] <- new_dbi_table(db, id, column_names)
   }
 
   db
@@ -118,9 +118,7 @@ list_database_objects <- function(conn, info) {
 
   columns <- as.data.table(columns)
 
-  id_columns <- c(catalog = "table_catalog",
-                  schema = "table_schema",
-                  table = "table_name")
+  id_columns <- c("table_catalog", "table_schema", "table_name")
   id_columns <- id_columns[id_columns %chin% names(columns)]
 
   columns[, list(table_id = list(DBI::Id(unlist(.BY))),

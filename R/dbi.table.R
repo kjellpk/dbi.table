@@ -11,9 +11,11 @@
 dbi.table <- function(conn, id) {
   check_connection(conn)
 
-  if (!inherits(id, "Id")) {
+  if (inherits(id, "Id")) {
+    id <- check_id(id)
+  } else {
     if (is.character(id) && length(id) == 1L) {
-      id <- DBI::Id(table = id)
+      id <- DBI::Id(id)
     } else {
       stop("'id' argument invalid")
     }
@@ -26,10 +28,10 @@ dbi.table <- function(conn, id) {
 
 new_dbi_table <- function(conn, id, fields = NULL) {
   if (inherits(id, "Id")) {
-    id_name <- id@name[["table"]]
+    id_name <- last(id@name)
   } else {
     id_name <- strsplit(as.character(id), split = ".", fixed = TRUE)[[1L]]
-    id_name <- id_name[[length(id_name)]]
+    id_name <- last(id_name)
   }
 
   if (substring(id_name, 1L, 1L) == "#") {
@@ -366,7 +368,7 @@ temporary_dbi_table <- function(conn, x) {
 
   dev_null <- DBI::dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)
 
-  temp_id <- DBI::Id(table = temp_name)
+  temp_id <- DBI::Id(temp_name)
   x <- new_dbi_table(conn, temp_id)
 
   temp_dbi_table <- new.env(parent = emptyenv())
@@ -392,7 +394,7 @@ in_query_cte <- function(conn, data) {
   dbi_conn <- dbi_connection(conn)
 
   cte_name <- unique_table_name("CTE")
-  id <- DBI::Id(table = cte_name)
+  id <- DBI::Id(cte_name)
   x <- new_dbi_table(conn, id, names(data))
 
   qnames <- DBI::dbQuoteIdentifier(dbi_conn, names(data))

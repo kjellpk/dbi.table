@@ -10,7 +10,7 @@ test_that("dbi.table works on data.table help examples", {
   for (conn in conns) {
     expect_no_error({
       DBI::dbWriteTable(conn, "DT", DT)
-      DBIT <- dbi.table(conn, DBI::Id(table = "DT"))
+      DBIT <- dbi.table(conn, DBI::Id("DT"))
     })
 
     expect_s3_class(DT, "data.table")

@@ -12,9 +12,7 @@ information_schema <- function(conn, db) {
     if (nrow(ss <- init_cols[tolower(table_schema) == "information_schema"])) {
       for (tab in unique(ss$table_name)) {
         tmp <- ss[table_name == tab][order(ordinal_position)]
-        id <- tmp[1L, list(catalog = table_catalog,
-                           schema = table_schema,
-                           table = table_name)]
+        id <- tmp[1L, list(table_catalog, table_schema, table_name)]
         id <- DBI::Id(unlist(id))
         info[[tolower(tab)]] <- new_dbi_table(db, id, tolower(tmp$column_name))
       }

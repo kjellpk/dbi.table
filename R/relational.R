@@ -116,9 +116,10 @@ relational_merge <- function(x, recursive = FALSE) {
 
   a <- attributes(x)
   data_source <- as.data.table(a$data_source)
-  data_source[, catalog := vapply(id, function(u) u@name[["catalog"]], "")]
-  data_source[, schema := vapply(id, function(u) u@name[["schema"]], "")]
-  data_source[, table := vapply(id, function(u) u@name[["table"]], "")]
+  data_source[, catalog := vapply(id, function(u) u@name[["table_catalog"]], "")]
+  data_source[, schema := vapply(id, function(u) u@name[["table_schema"]], "")]
+  data_source[, table := vapply(id, function(u) u@name[["table_name"]], "")]
+#table_catalog table_schema table_name
 
   fields <- as.data.table(a$fields)
   fields <- fields[data_source,
@@ -149,7 +150,9 @@ relational_merge <- function(x, recursive = FALSE) {
       new_id_name <- unique_table_name()
     }
 
-    new_id <- DBI::Id(unlist(pk[1, list(catalog, schema, table)]))
+    new_id <- DBI::Id(unlist(pk[1L, list(table_catalog = catalog,
+                                         table_schema = schema,
+                                         table_name = table)]))
 
     new_fields <- columns[pk[, c("catalog", "schema", "table")],
                           on = c("catalog", "schema", "table")]
