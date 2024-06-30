@@ -318,11 +318,14 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #' @param x an \R object that can be coerced to a
 #'          \code{\link[base]{data.frame}}.
 #'
-#' @param type a character string. Possible choices are \code{"query"}, and
-#'             \code{"temporary"}. See Details.
+#' @param type a character string. Possible choices are \code{"auto"},
+#'             \code{"query"}, and \code{"temporary"}. See Details. The default
+#'             \code{"auto"} uses \emph{In Query} tables when \code{x} has 500
+#'             or fewer rows or when creating a temporary table on the database
+#'             fails.
 #'
 #' @details Two types of tables are provided: \emph{Temporary} (when
-#'          \code{type == "query"}) and \emph{In Query}
+#'          \code{type == "temporary"}) and \emph{In Query}
 #'          (when \code{type == "query"}). For Temporary, the data are written
 #'          to a SQL temporary table and a \code{\link{dbi.table}} is returned.
 #'          For In Query, the data are written into a CTE as part of the query
@@ -338,9 +341,10 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #' csql(as.dbi.table(duck, iris[1:4, 1:3], type = "query"))
 #'
 #' @export
-as.dbi.table <- function(conn, x, type = c("temporary", "query")) {
+as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
   conn <- get_connection(conn)
   x <- as.data.frame(x)
+  n <- nrow(x)
   type <- match.arg(type)
 
   if (type == "temporary") {
@@ -351,7 +355,28 @@ as.dbi.table <- function(conn, x, type = c("temporary", "query")) {
     return(in_query_cte(conn, x))
   }
 
-  NULL
+  if (n > session$max_in_query) {
+    if (is_dbi_catalog(conn) && isTRUE(conn[[".temporary_table_denied"]])) {
+      warning("writing ", n, " row data.frame into query statement since ",
+              "permission to create temporary table was denied - processing ",
+              "will fail if statement is too large")
+      return(in_query_cte(conn, x))
+    }
+
+    if (is.dbi.table(tmp <- try(temporary_dbi_table(conn, x), silent = TRUE))) {
+      return(tmp)
+    }
+
+    if (is_dbi_catalog(conn)) {
+      conn[[".temporary_table_denied"]] <- TRUE
+    }
+
+    warning("writing ", n, " row data.frame into query statement since ",
+            "permission to create temporary table was denied - processing ",
+            "will fail if statement is too large")
+  }
+
+  in_query_cte(conn, x)
 }
 
 
@@ -366,7 +391,9 @@ temporary_dbi_table <- function(conn, x) {
     temp_name <- paste0("#", temp_name)
   }
 
-  dev_null <- DBI::dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)
+  if (!DBI::dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)) {
+    stop("could not create temporary table - permission denied")
+  }
 
   temp_id <- DBI::Id(temp_name)
   x <- new_dbi_table(conn, temp_id, names(x))
@@ -391,10 +418,9 @@ finalize_temp_dbi_table <- function(e) {
 
 
 in_query_cte <- function(conn, data) {
-
   dbi_conn <- dbi_connection(conn)
 
-  cte_name <- unique_table_name("CTE")
+  cte_name <- unique_table_name("IN_QUERY_CTE")
   id <- DBI::Id(cte_name)
   x <- new_dbi_table(conn, id, names(data))
 

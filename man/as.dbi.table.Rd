@@ -4,7 +4,7 @@
 \alias{as.dbi.table}
 \title{Coerce to a DBI Table}
 \usage{
-as.dbi.table(conn, x, type = c("temporary", "query"))
+as.dbi.table(conn, x, type = c("auto", "query", "temporary"))
 }
 \arguments{
 \item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}}.
@@ -15,8 +15,11 @@ is extracted from the provided object.}
 \item{x}{an \R object that can be coerced to a
 \code{\link[base]{data.frame}}.}
 
-\item{type}{a character string. Possible choices are \code{"query"}, and
-\code{"temporary"}. See Details.}
+\item{type}{a character string. Possible choices are \code{"auto"},
+\code{"query"}, and \code{"temporary"}. See Details. The default
+\code{"auto"} uses \emph{In Query} tables when \code{x} has 500
+or fewer rows or when creating a temporary table on the database
+fails.}
 }
 \description{
 Write a \code{\link[base]{data.frame}} to a temporary table on a
@@ -24,7 +27,7 @@ Write a \code{\link[base]{data.frame}} to a temporary table on a
 }
 \details{
 Two types of tables are provided: \emph{Temporary} (when
-         \code{type == "query"}) and \emph{In Query}
+         \code{type == "temporary"}) and \emph{In Query}
          (when \code{type == "query"}). For Temporary, the data are written
          to a SQL temporary table and a \code{\link{dbi.table}} is returned.
          For In Query, the data are written into a CTE as part of the query
