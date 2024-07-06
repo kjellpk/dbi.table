@@ -156,11 +156,18 @@ print.dbi.table <- function(x, ...) {
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
 
-  if (nrow(ans) > 5) {
+  if (nrow(ans) > 5L) {
     print(ans[1:5], row.names = FALSE)
-    cat("---\n\n")
-  } else {
+    cat(" ---\n")
+  } else if (nrow(ans) > 0L) {
     print(ans, row.names = FALSE)
+  } else {
+    m <- paste("Empty dbi.table (0 rows and", length(ans), "cols):",
+               paste(names(ans), collapse = ","))
+    if (nchar(m) > (width <- getOption("width", 80L))) {
+      m <- paste0(substring(m, 1L, width - 3L), "...")
+    }
+    cat(m, "\n", sep = "")
   }
 
   invisible(x)
