@@ -155,7 +155,6 @@ is_dbi_schema <- function(x) {
 
 #' @export
 print.dbi.schema <- function(x, ...) {
-  conn <- dbi_connection(x)
   desc <- paste("contains", length(lsx <- ls(x)), "objects")
 
   if ((n <- length(lsx)) > 30L) {
