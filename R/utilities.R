@@ -47,56 +47,6 @@ check_id <- function(id) {
 
 
 
-check_connection <- function(conn, arg_name = "conn") {
-  if (!inherits(conn, "DBIConnection")) {
-    stop("invalid connection argument - '", arg_name, "' is not a ",
-         "'DBI' connection", call. = FALSE)
-  }
-
-  invisible()
-}
-
-
-
-init_connection <- function(conn) {
-  if (is.function(conn)) {
-    recon_fun <- conn
-    conn <- conn()
-    attr(conn, "recon") <- recon_fun
-  }
-
-  conn
-}
-
-
-
-get_connection <- function(x) {
-  if (is.dbi.table(x)) {
-    return(attr(x, "conn", exact = TRUE))
-  }
-
-  if (is_dbi_schema(x)) {
-    return(x[["..catalog"]])
-  }
-
-  x
-}
-
-
-
-dbi_connection <- function(x) {
-  x <- get_connection(x)
-
-  if (is_dbi_catalog(x)) {
-    x <- x$.dbi_connection
-  }
-
-  stopifnot(inherits(x, "DBIConnection"))
-  x
-}
-
-
-
 paren <- function(x) {
   paste0("(", x, ")")
 }
