@@ -138,8 +138,8 @@ init_schema <- function(e, name, catalog) {
   name <- as.character(name)[[1L]]
   stopifnot(is_dbi_catalog(catalog))
 
-  assign(".schema_name", name, pos = e)
-  assign("..catalog", catalog, pos = e)
+  assign("./schema_name", name, pos = e)
+  assign("../catalog", catalog, pos = e)
 
   class(e) <- "dbi.schema"
   e
@@ -165,7 +165,7 @@ print.dbi.schema <- function(x, ...) {
     n_objects_omitted <- 0L
   }
 
-  cat("<Database Schema>", x[[".schema_name"]], paste0("(", desc, ")\n"))
+  cat("<Database Schema>", x[["./schema_name"]], paste0("(", desc, ")\n"))
   print(lsx)
 
   if (n_objects_omitted > 0L) {

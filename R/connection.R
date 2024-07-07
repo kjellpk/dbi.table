@@ -36,7 +36,7 @@ get_connection.dbi.catalog <- function(x) {
 
 #' @export
 get_connection.dbi.schema <- function(x) {
-  x[["..catalog"]]
+  x[["../catalog"]]
 }
 
 
