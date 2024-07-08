@@ -11,14 +11,16 @@
 dbi.table <- function(conn, id) {
   check_connection(conn)
 
+  if (inherits(id, "SQL")) {
+    if (length(id) != 1L) {
+      stop("'id' is not length 1")
+    }
+  } else if (is.character(id)) {
+    id <- DBI::Id(id)
+  }
+
   if (inherits(id, "Id")) {
     id <- check_id(id)
-  } else {
-    if (is.character(id) && length(id) == 1L) {
-      id <- DBI::Id(id)
-    } else {
-      stop("'id' argument invalid")
-    }
   }
 
   new_dbi_table(conn, id)
@@ -30,7 +32,7 @@ new_dbi_table <- function(conn, id, fields = NULL) {
   if (inherits(id, "Id")) {
     id_name <- last(id@name)
   } else {
-    id_name <- strsplit(as.character(id), split = ".", fixed = TRUE)[[1L]]
+    id_name <- DBI::dbUnquoteIdentifier(dbi_connection(conn), id)[[1L]]@name
     id_name <- last(id_name)
   }
 
