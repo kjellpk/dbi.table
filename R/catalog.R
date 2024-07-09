@@ -22,7 +22,7 @@
 #'
 #' @export
 dbi.catalog <- function(conn) {
-  check_connection(conn <- init_connection(conn))
+  conn <- get_connection(init_connection(conn))
   db <- new.env(parent = emptyenv())
 
   db$.dbi_connection <- conn

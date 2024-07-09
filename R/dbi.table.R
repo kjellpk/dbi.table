@@ -9,7 +9,7 @@
 #'
 #' @export
 dbi.table <- function(conn, id) {
-  check_connection(conn)
+  conn <- get_connection(conn)
 
   if (inherits(id, "SQL")) {
     if (length(id) != 1L) {

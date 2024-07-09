@@ -1,14 +1,3 @@
-check_connection <- function(conn, arg_name = "conn") {
-  if (!inherits(conn, "DBIConnection")) {
-    stop("invalid connection argument - '", arg_name, "' is not a ",
-         "'DBI' connection", call. = FALSE)
-  }
-
-  invisible()
-}
-
-
-
 init_connection <- function(conn) {
   if (is.function(conn)) {
     recon_fun <- conn
@@ -51,6 +40,16 @@ get_connection.dbi.table <- function(x) {
 #' @export
 get_connection.DBIConnection <- function(x) {
   x
+}
+
+
+
+#' @export
+get_connection.default <- function(x) {
+  stop("invalid connection argument - 'conn' is not a 'DBI' connection",
+       call. = FALSE)
+
+  invisible()
 }
 
 

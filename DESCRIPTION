@@ -10,6 +10,7 @@ Imports:
     DBI,
     bit64,
     dbplyr,
+    methods,
     rlang,
     stringi,
     utils
