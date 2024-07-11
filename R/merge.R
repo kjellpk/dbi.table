@@ -24,7 +24,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
-    rt <- related_tables(dbi_connection(x), x, y)
+    rt <- related_tables(x, y)
     by.x <- match_fields(x, rt$field_x)
     by.y <- match_fields(y, rt$field_y)
     use <- !is.na(by.x) & !is.na(by.y)

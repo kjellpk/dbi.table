@@ -1,32 +1,38 @@
-related_tables <- function(conn, x, y = NULL) {
-  UseMethod("related_tables")
-}
+FIRST_MERGE_BY <- c("constraint_catalog",
+                    "constraint_schema",
+                    "constraint_name",
+                    "table_name",
+                    "referenced_table_name")
 
 
 
-related_tables.default <- function(conn, x, y = NULL) {
+SECOND_MERGE_BY <- c(fk_unique_constraint_catalog = "constraint_catalog",
+                     fk_unique_constraint_schema = "constraint_schema",
+                     fk_unique_constraint_name = "constraint_name",
+                     fk_referenced_table_name = "table_name",
+                     fk_ordinal_position = "ordinal_position")
+
+
+
+related_tables <- function(x, y = NULL) {
   info <- get_information_schema(x)
 
-  if (is.null(info$referential_constraints) || is.null(info$key_column_usage)) {
-    return(data.table())
+  if (is.null(referential_constraints <- info$referential_constraints) ||
+        is.null(key_column_usage <- info$key_column_usage)) {
+    return(NULL)
   }
 
-  r <- merge(info$referential_constraints, info$key_column_usage,
-             by = c("constraint_catalog",
-                    "constraint_schema",
-                    "constraint_name"))
+  merge_by <- intersect(FIRST_MERGE_BY, names(referential_constraints))
+
+  r <- merge(referential_constraints, key_column_usage, by = merge_by)
 
   names(r) <- paste0("fk_", names(r))
 
-  r <- merge(r, info$key_column_usage,
-             by.x = c("fk_unique_constraint_catalog",
-                      "fk_unique_constraint_schema",
-                      "fk_unique_constraint_name",
-                      "fk_ordinal_position"),
-             by.y = c("constraint_catalog",
-                      "constraint_schema",
-                      "constraint_name",
-                      "ordinal_position"))
+  merge_by <- intersect(names(SECOND_MERGE_BY), names(r))
+  merge_by <- SECOND_MERGE_BY[merge_by]
+
+
+  r <- merge(key_column_usage, r, by.x = merge_by, by.y = names(merge_by))
 
   r <- r[, list(constraint = fk_constraint_name,
                 catalog_x = fk_table_catalog,
@@ -93,7 +99,7 @@ match_fields <- function(x, fields) {
 
 
 relational_merge <- function(x, recursive = FALSE) {
-  if (nrow(rt <- related_tables(dbi_connection(x), x)) == 0L) {
+  if (nrow(rt <- related_tables(x)) == 0L) {
     return(x)
   }
 
