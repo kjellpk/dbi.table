@@ -1,11 +1,60 @@
-#' Create a \code{dbi.table} accessible via a \code{DBI} connection
+#' Create and Manipulate \code{dbi.table} Objects
 #'
-#' @description Create a \code{dbi.table} from an existing SQL object.
+#' @description
+#'   A \code{dbi.table} is an SQL query that can be manipulated using
+#'   \code{\link[data.table]{data.table}}-like syntax. The constructor function
+#'   \code{dbi.table} creates a query that selects all rows and and all columns
+#'   from a database object (i.e., \code{SELECT * FROM id}), and the brackets
+#'   method creates subsets, summaries, etc.
 #'
-#' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}}.
+#' @param conn
+#'   A connection handle returned by \code{\link[DBI]{dbConnect}}.
+#'   Alternatively, a \code{\link{dbi.catalog}} or another
+#'   \code{dbi.table}, in which case the new \code{dbi.table} will share the
+#'   same connection.
 #'
-#' @param id an \code{\link[DBI]{Id}} or a character string identifying a
-#'           table accessible via a \code{conn}.
+#' @param id
+#'   An \code{Id}, a character string (which will be converted to
+#'   an \code{Id} by \code{\link[DBI]{Id}}), or a \code{\link[DBI]{SQL}} object
+#'   (advanced) identifying a database object that exists on \code{conn}.
+#'
+#' @return
+#'   A \code{dbi.table} (an S3 object). A \code{dbi.table} is a list of
+#'   \emph{expressions} representing the \code{SELECT} clause of an SQL query as
+#'   well as a set of attributes containing metadata needed for the rest of the
+#'   SQL query.
+#'
+#' @seealso
+#'   \itemize{
+#'     \item \code{\link{as.data.table}} to retrieve the \emph{results set} as
+#'           a \code{data.table},
+#'     \item \code{\link{csql}} to see the underlying SQL query.
+#'   }
+#'
+#' @examples
+#'   duck <- chinook.duckdb()
+#'
+#'   Album <- dbi.table(duck, DBI::Id(table_name = "Album"))
+#'
+#'   # use same connection as 'Album'; 'id' is a length-2 character interpreted
+#'   # as a table_schema and table_name
+#'   Artist <- dbi.table(Album, c("main", "Artist"))
+#'
+#'   # 'id' can also be 'SQL'
+#'   Genre <- dbi.table(Album, DBI::SQL("chinook_duckdb.main.Genre"))
+#'
+#'   # the print method displays a 5 row preview
+#'   Album
+#'
+#'   # use the brackets method to subset the dbi.table
+#'   Album[AlbumId < 5, .(Title, nchar = paste(nchar(Title), "characters"))]
+#'
+#'   # use csql to see the underlying SQL query
+#'   csql(Album[AlbumId < 5, #WHERE
+#'              .(Title, #SELECT
+#'                nchar = paste(nchar(Title), "characters"))])
+#'
+#'   \dontshow{DBI::dbDisconnect(duck)}
 #'
 #' @export
 dbi.table <- function(conn, id) {
@@ -224,6 +273,73 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
 
 
 
+#' @rdname dbi.table
+#'
+#' @param x
+#'   A \code{dbi.table}.
+#'
+#' @param i
+#'   A logical expression of the columns of \code{x}, a \code{dbi.table},
+#'   or a \code{data.frame}. Use \code{i} to select a subset of the rows of
+#'   \code{x}. Note: unlike \code{data.table}, \code{i} \emph{cannot} be a
+#'   vector.
+#'
+#'   When \code{i} is a logical expression, the rows where the expression is
+#'   \code{TRUE} are returned. If the expression contains a symbol \code{foo}
+#'   that is not a column name of \code{x} but that is present in the calling
+#'   scope, then the value of \code{foo} will be substituted into the expression
+#'   if \code{foo} is a scalar, or if \code{foo} is a vector and is the
+#'   right-hand-side argument to \code{\%in\%} or \code{\%chin\%} (substitution
+#'   occurs when the \code{[} method is evaluated).
+#'
+#'   When \code{i} inherits from \code{data.frame}, it is coerced to a
+#'   \code{dbi.table}.
+#'
+#'   When \code{i} is a \code{dbi.table}, the rows of \code{x} that match
+#'   (according to the condition specificed in \code{on}) the rows
+#'   of \code{i} are returned. When \code{nomatch == NA}, all rows of \code{i}
+#'   are returned (right outer join); when \code{nomatch == NULL}, only the rows
+#'   of \code{i} that match a row of \code{x} are returned (inner join).
+#'
+#' @param j
+#'   A list of expressions, a literal character vector of column names of
+#'   \code{x}, an expression of the form \code{start_name:end_name}, or a
+#'   literal numeric vector of integer values indexing the columns of \code{x}.
+#'   Use \code{j} to select (and optionally, transform) the columns of \code{x}.
+#'
+#' @param by
+#'   A list of expressions, a literal character vector of column names of
+#'   \code{x}, an expression of the form \code{start_name:end_name}, or a
+#'   literal numeric vector of integer values indexing the columns of \code{x}.
+#'   Use \code{by} to control grouping when evaluating \code{j}.
+#'
+#' @param nomatch
+#'   Either \code{NA} or \code{NULL}.
+#'
+#' @param on
+#'   \itemize{
+#'     \item An unnamed character vector, e.g., \code{x[i, on = c("a", "b")]},
+#'           used when columns \code{a} and \code{b} are common to both \code{x}
+#'           and \code{i}.
+#'
+#'     \item Foreign key joins: As a named character vector when the join
+#'           columns have different names in \code{x} and \code{i}. For example,
+#'           \code{x[i, on = c(x1 = "i1", x2 = "i2")]} joins \code{x} and
+#'           \code{i} by matching columns \code{x1} and \code{x2} in \code{x}
+#'           with columns \code{i1} and \code{i2} in \code{i}, respectively.
+#'
+#'     \item Foreign key joins can also use the binary operator \code{==}, e.g.,
+#'           \code{x[i, on = c("x1 == i1", "x2 == i2")]}.
+#'
+#'     \item It is also possible to use \code{.()} syntax as
+#'           \code{x[i, on = .(a, b)]}.
+#'
+#'     \item Non-equi joins using binary operators \code{>=}, \code{>},
+#'           \code{<=}, \code{<} are also possible, e.g.,
+#'           \code{x[i, on = c("x >= a", "y <= b")]}, or
+#'           \code{x[i, on = .(x >= a, y <= b)]}.
+#'   }
+#'
 #' @export
 "[.dbi.table" <- function(x, i, j, by, nomatch = NA, on = NULL) {
   x_sub <- substitute(x)
