@@ -166,11 +166,8 @@ get_ctes <- function(x) {
 
 
 
-#' Is DBI Table
-#'
-#' @description Function to check if an object is a \code{\link{dbi.table}}.
-#'
-#' @param x any \R object.
+#' @rdname as.dbi.table
+#' @name as.dbi.table
 #'
 #' @export
 is.dbi.table <- function(x) {
@@ -430,18 +427,16 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 
 
 
-#' Coerce to a DBI Table
+#' Coerce to DBI Table
 #'
-#' @description Write a \code{\link[base]{data.frame}} to a temporary table on a
-#'              \code{DBI} connection and return a \code{\link{dbi.table}}.
+#' Test whether an object is a \code{dbi.table}, or coerce it if possible.
 #'
 #' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}}.
 #'             Alternatively, \code{conn} may be a \code{\link{dbi.table}} or a
 #'             \code{\link{dbi.catalog}}; in these cases, the connection handle
 #'             is extracted from the provided object.
 #'
-#' @param x an \R object that can be coerced to a
-#'          \code{\link[base]{data.frame}}.
+#' @param x any \R object.
 #'
 #' @param type a character string. Possible choices are \code{"auto"},
 #'             \code{"query"}, and \code{"temporary"}. See Details. The default
@@ -451,11 +446,11 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #'
 #' @details Two types of tables are provided: \emph{Temporary} (when
 #'          \code{type == "temporary"}) and \emph{In Query}
-#'          (when \code{type == "query"}). For Temporary, the data are written
-#'          to a SQL temporary table and a \code{\link{dbi.table}} is returned.
-#'          For In Query, the data are written into a CTE as part of the query
-#'          itself. Useful when the connection does not permit creating
-#'          temporary tables.
+#'          (when \code{type == "query"}). For \emph{Temporary}, the data are
+#'          written to a SQL temporary table and the associated
+#'          \code{dbi.table} is returned. For \emph{In Query}, the data are
+#'          written into a CTE as part of the query itself - useful when the
+#'          connection does not permit creating temporary tables.
 #'
 #' @section Note: The temporary tables created by this function are dropped
 #'                (by calling \code{\link[DBI]{dbRemoveTable}}) during garbage

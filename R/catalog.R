@@ -1,10 +1,10 @@
 #' Create a \code{dbi.catalog}
 #'
-#' A \code{dbi.catalog} is an \code{environment} with the class
-#' attribute set to \code{"dbi.catalog"}.
+#' A \code{dbi.catalog} represents a database catalog.
 #'
-#' @param conn a connection handle returned by \code{\link[DBI]{dbConnect}} or
-#'             a zero-argument function that returns a connection handle.
+#' @param conn
+#'   a connection handle returned by \code{\link[DBI]{dbConnect}} or a
+#'   zero-argument function that returns a connection handle.
 #'
 #' @return \code{dbi.catalog} returns a \code{dbi.catalog} (internally an
 #'         \code{\link[base]{environment}} with the class attribute set to

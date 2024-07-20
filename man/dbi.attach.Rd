@@ -14,29 +14,28 @@ dbi.attach(
 )
 }
 \arguments{
-\item{what}{a connection handle returned by \code{\link[DBI]{dbConnect}} or
-a zero-argument function that returns a connection handle.}
+\item{what}{a connection handle returned by \code{\link[DBI]{dbConnect}} or a
+zero-argument function that returns a connection handle.}
 
-\item{pos}{an integer specifying position in \code{\link[base]{search}}()
-where to attach.}
+\item{pos}{an integer specifying position in \code{\link[base]{search}}() where to
+attach.}
 
-\item{name}{a character string specifying the name to use for the attached
-database.}
+\item{name}{a character string specifying the name to use for the attached database.}
 
-\item{warn.conflicts}{a logical value. If \code{TRUE}, warnings are
-printed about \code{\link[base]{conflicts}} from
-attaching the database, unless that database contains
-an object \code{.conflicts.OK}. A conflict is a
-function masking a function, or a non-function
-masking a non-function.}
+\item{warn.conflicts}{a logical value. If \code{TRUE}, warnings are printed about
+\code{\link[base]{conflicts}} from attaching the database, unless that
+database contains an object \code{.conflicts.OK}. A conflict is a function
+masking a function, or a non-function masking a non-function.}
 
 \item{schema}{a character string specifying the name of the schema to attach.}
 
-\item{graphics}{a logical value; passed to \code{\link[utils]{menu}}.}
+\item{graphics}{a logical value; passed to \code{\link[utils]{menu}}. In interactive
+sessions, when \code{schema} is \code{NULL} and multiple schemas are
+found on \code{what}, a menu is display for the user to select a schema.}
 }
 \description{
-Create a \code{\link{dbi.table}} for each database object in
-             a schema and place them on the search path.
+Create a \code{\link{dbi.table}} for each database object in a schema and
+  place them on the search path.
 }
 \seealso{
 \code{\link[base]{attach}}

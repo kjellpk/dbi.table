@@ -57,9 +57,12 @@ paren <- function(x) {
 #'
 #' @description View a \code{\link{dbi.table}} as a SQL query.
 #'
-#' @param x a \code{\link{dbi.table}}.
+#' @param x
+#'   a \code{dbi.table}.
 #'
-#' @param n a single integer value.
+#' @param n
+#'   a single integer value. When nonnegative, limits the number of rows
+#'   returned by the query to \code{n}.
 #'
 #' @export
 csql <- function(x, n = session$max_fetch) {

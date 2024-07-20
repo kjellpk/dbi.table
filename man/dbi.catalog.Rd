@@ -7,8 +7,8 @@
 dbi.catalog(conn)
 }
 \arguments{
-\item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}} or
-a zero-argument function that returns a connection handle.}
+\item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}} or a
+zero-argument function that returns a connection handle.}
 }
 \value{
 \code{dbi.catalog} returns a \code{dbi.catalog} (internally an
@@ -16,8 +16,7 @@ a zero-argument function that returns a connection handle.}
         \code{"dbi.catalog"}).
 }
 \description{
-A \code{dbi.catalog} is an \code{environment} with the class
-attribute set to \code{"dbi.catalog"}.
+A \code{dbi.catalog} represents a database catalog.
 }
 \examples{
 # chinook.duckdb is a zero-argument function that returns a DBI handle

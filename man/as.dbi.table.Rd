@@ -2,18 +2,20 @@
 % Please edit documentation in R/dbi.table.R
 \name{as.dbi.table}
 \alias{as.dbi.table}
-\title{Coerce to a DBI Table}
+\alias{is.dbi.table}
+\title{Coerce to DBI Table}
 \usage{
+is.dbi.table(x)
+
 as.dbi.table(conn, x, type = c("auto", "query", "temporary"))
 }
 \arguments{
+\item{x}{any \R object.}
+
 \item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}}.
 Alternatively, \code{conn} may be a \code{\link{dbi.table}} or a
 \code{\link{dbi.catalog}}; in these cases, the connection handle
 is extracted from the provided object.}
-
-\item{x}{an \R object that can be coerced to a
-\code{\link[base]{data.frame}}.}
 
 \item{type}{a character string. Possible choices are \code{"auto"},
 \code{"query"}, and \code{"temporary"}. See Details. The default
@@ -22,17 +24,16 @@ or fewer rows or when creating a temporary table on the database
 fails.}
 }
 \description{
-Write a \code{\link[base]{data.frame}} to a temporary table on a
-             \code{DBI} connection and return a \code{\link{dbi.table}}.
+Test whether an object is a \code{dbi.table}, or coerce it if possible.
 }
 \details{
 Two types of tables are provided: \emph{Temporary} (when
          \code{type == "temporary"}) and \emph{In Query}
-         (when \code{type == "query"}). For Temporary, the data are written
-         to a SQL temporary table and a \code{\link{dbi.table}} is returned.
-         For In Query, the data are written into a CTE as part of the query
-         itself. Useful when the connection does not permit creating
-         temporary tables.
+         (when \code{type == "query"}). For \emph{Temporary}, the data are
+         written to a SQL temporary table and the associated
+         \code{dbi.table} is returned. For \emph{In Query}, the data are
+         written into a CTE as part of the query itself - useful when the
+         connection does not permit creating temporary tables.
 }
 \section{Note}{
  The temporary tables created by this function are dropped

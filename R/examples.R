@@ -1,9 +1,9 @@
-#' Example Databases
+#' @name example_databases
 #'
-#' @description These functions return connections to example databases
-#'              included in the \pkg{dbi.table} package.
+#' @title Example Databases
 #'
-#' @describeIn example_databases
+#' @description These zero-argument functions return connections to the example
+#'              databases included in the \pkg{dbi.table} package.
 #'
 #' @export
 chinook.sqlite <- function() {
@@ -31,7 +31,7 @@ chinook.sqlite <- function() {
 
 
 
-#' @describeIn example_databases
+#' @rdname example_databases
 #'
 #' @export
 chinook.duckdb <- function() {

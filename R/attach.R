@@ -1,27 +1,33 @@
 #' Attach a Database Schema to the Search Path
 #'
-#' @description Create a \code{\link{dbi.table}} for each database object in
-#'              a schema and place them on the search path.
+#' @description
+#'   Create a \code{\link{dbi.table}} for each database object in a schema and
+#'   place them on the search path.
 #'
-#' @param what a connection handle returned by \code{\link[DBI]{dbConnect}} or
-#'             a zero-argument function that returns a connection handle.
+#' @param what
+#'   a connection handle returned by \code{\link[DBI]{dbConnect}} or a
+#'   zero-argument function that returns a connection handle.
 #'
-#' @param pos an integer specifying position in \code{\link[base]{search}}()
-#'            where to attach.
+#' @param pos
+#'   an integer specifying position in \code{\link[base]{search}}() where to
+#'   attach.
 #'
-#' @param name a character string specifying the name to use for the attached
-#'             database.
+#' @param name
+#'   a character string specifying the name to use for the attached database.
 #'
-#' @param warn.conflicts a logical value. If \code{TRUE}, warnings are
-#'                       printed about \code{\link[base]{conflicts}} from
-#'                       attaching the database, unless that database contains
-#'                       an object \code{.conflicts.OK}. A conflict is a
-#'                       function masking a function, or a non-function
-#'                       masking a non-function.
+#' @param warn.conflicts
+#'   a logical value. If \code{TRUE}, warnings are printed about
+#'   \code{\link[base]{conflicts}} from attaching the database, unless that
+#'   database contains an object \code{.conflicts.OK}. A conflict is a function
+#'   masking a function, or a non-function masking a non-function.
 #'
-#' @param schema a character string specifying the name of the schema to attach.
+#' @param schema
+#'   a character string specifying the name of the schema to attach.
 #'
-#' @param graphics a logical value; passed to \code{\link[utils]{menu}}.
+#' @param graphics
+#'   a logical value; passed to \code{\link[utils]{menu}}. In interactive
+#'   sessions, when \code{schema} is \code{NULL} and multiple schemas are
+#'   found on \code{what}, a menu is display for the user to select a schema.
 #'
 #' @seealso \code{\link[base]{attach}}
 #'

@@ -7,9 +7,10 @@
 csql(x, n = session$max_fetch)
 }
 \arguments{
-\item{x}{a \code{\link{dbi.table}}.}
+\item{x}{a \code{dbi.table}.}
 
-\item{n}{a single integer value.}
+\item{n}{a single integer value. When nonnegative, limits the number of rows
+returned by the query to \code{n}.}
 }
 \description{
 View a \code{\link{dbi.table}} as a SQL query.
