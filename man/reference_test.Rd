@@ -2,7 +2,7 @@
 % Please edit documentation in R/reference_test.R
 \name{reference_test}
 \alias{reference_test}
-\title{\code{dbi.table} test vs. reference implementation}
+\title{Test \code{dbi.table} vs. Reference Implementation}
 \usage{
 reference_test(
   expr,
@@ -12,31 +12,45 @@ reference_test(
 )
 }
 \arguments{
-\item{expr}{an expression involving at least one \code{dbi.table}.}
+\item{expr}{an expression involving at least one \code{dbi.table} and whose result can
+be coerced into a \code{data.table}.}
 
 \item{envir}{an environment. Where to evaluate \code{expr}.}
 
-\item{ignore.row.order}{a logical value. This argument is passed to
-\code{\link{all.equal}}.}
+\item{ignore.row.order}{a logical value. This argument is passed to \code{\link{all.equal}}.}
 
-\item{verbose}{a logical value. When \code{TRUE}, the output from
-\code{all.equal} is displaued in a message when
-\code{all.equal} returns anything other than \code{TRUE}.}
+\item{verbose}{a logical value. When \code{TRUE}, the output from \code{all.equal} is
+displayed in a message when \code{all.equal} returns anything other than
+\code{TRUE}.}
 }
 \description{
-Evaluate an expression using \code{dbi.table}s and separately using
-\code{data.tables}s, then compare the results.
+Evaluate an expression including at least one \code{dbi.table} and compare
+the result with the \emph{Reference Implementation}. This function is
+primarily for testing and is potentially very slow for large tables.
 }
-\details{
-This function evaluates the input \code{x} in two different ways:
+\section{Reference Implementation}{
 
-  1. (the typical dbi.table workflow) the input is translated to sql,
-     evaluated by the connected database, and the results are downloaded as
-     a data.table.
+  Suppose that \code{id1} identifies a table in a SQL database and that
+  \code{[i, j, by]} describes a subset/select/summarize operation using
+  \code{data.table} syntax. The \emph{Reference Implementation} for this
+  operation is:
 
-  2. (reference) the entire database table is downloaded to as data.table
-     then the expression is evaluated locally.
+  \code{setDT(dbReadTable(conn, id1))[i, j, by]}
 
-The goal of the dbi.table package is to match the reference result. Matching
-up to row order is acceptable.
+  More generally, for an expression involving multiple SQL database objects
+  and using \code{data.table} syntax, the \emph{Reference Implementation}
+  would be to download each of these objects in their entirety, convert them
+  to \code{data.table}s, then evaluate the expression.
+
+  The goal of the \pkg{dbi.table} is to generate an SQL query that produces
+  the same results set as the Reference Implementation up to row ordering.
+}
+
+\examples{
+  duck <- dbi.catalog(chinook.duckdb)
+  Album <- duck$main$Album
+  Artist <- duck$main$Artist
+
+  reference_test(merge(Album, Artist, by = "ArtistId"))
+
 }
