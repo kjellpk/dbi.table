@@ -545,9 +545,12 @@ in_query_cte <- function(conn, data) {
   x <- new_dbi_table(conn, id, names(data))
 
   qnames <- DBI::dbQuoteIdentifier(dbi_conn, names(data))
-  data <- mapply(DBI::dbQuoteLiteral, data, MoreArgs = list(conn = dbi_conn))
-
-  for (j in seq_len(ncol(data))) {
+  data <- setDF(mapply(DBI::dbQuoteLiteral,
+                       data,
+                       MoreArgs = list(conn = dbi_conn),
+                       SIMPLIFY = FALSE))
+#browser()
+  for (j in seq_along(data)) {
     data[, j] <- paste(data[, j], "AS", qnames[[j]])
   }
 
