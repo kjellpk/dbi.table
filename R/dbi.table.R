@@ -549,7 +549,7 @@ in_query_cte <- function(conn, data) {
                        data,
                        MoreArgs = list(conn = dbi_conn),
                        SIMPLIFY = FALSE))
-#browser()
+
   for (j in seq_along(data)) {
     data[, j] <- paste(data[, j], "AS", qnames[[j]])
   }
