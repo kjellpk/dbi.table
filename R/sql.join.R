@@ -32,12 +32,12 @@
 #' Album <- chinook$main$Album
 #' Artist <- chinook$main$Artist
 #' 
-#' sql_join(Album, Artist, type = "inner",
+#' sql.join(Album, Artist, type = "inner",
 #'          on = Album.ArtistId == Artist.ArtistId,
 #'          prefixes = c("Album.", "Artist."))
 #'
 #' @export
-sql_join <- function(x, y, type = "inner", on = NULL,
+sql.join <- function(x, y, type = "inner", on = NULL,
                      prefixes = c("x.", "y.")) {
   parent_frame <- parent.frame()
 

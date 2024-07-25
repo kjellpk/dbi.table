@@ -28,21 +28,21 @@ test_that("dbi.table works on data.table help examples", {
     # DT[2]                          # 2nd row
     # DT[3:2]                        # 3rd and 2nd row
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[order(x)],
       ignore.row.order = FALSE,
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[order(x), ],
       ignore.row.order = FALSE,
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[y > 2],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[y > 2 & v > 5],
       verbose = FALSE))
 
@@ -52,25 +52,25 @@ test_that("dbi.table works on data.table help examples", {
     # select|compute columns data.table way
     # DT[, v]                        # v column (as vector)
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, list(v)],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, .(v)],
       verbose = FALSE))
 
     # DT[, sum(v)]                   # sum of column v, returned as vector
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, .(sum(v, na.rm = TRUE))],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, .(sv=sum(v, na.rm = TRUE))],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, .(v, v*2)],
       verbose = FALSE))
 
@@ -83,11 +83,11 @@ test_that("dbi.table works on data.table help examples", {
 
 
     # select columns the data.frame way
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, 2],
       verbose = FALSE))
 
-    expect_true(reference_test({
+    expect_true(reference.test({
       colNum <- 2
       DBIT[, ..colNum]},
       verbose = FALSE))
@@ -97,14 +97,14 @@ test_that("dbi.table works on data.table help examples", {
 
     # grouping operations - j and by
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, sum(v, na.rm = TRUE), by = x],
       verbose = FALSE))
 
   # DT[, sum(v), keyby = x]              # same, but order the result on by cols
   # DT[, sum(v), by = x, keyby = TRUE]   # same, but using sorting flag
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, sum(v, na.rm = TRUE), by = x][order(x)],
       ignore.row.order = FALSE,
       verbose = FALSE))
@@ -116,11 +116,11 @@ test_that("dbi.table works on data.table help examples", {
 
   # NOTE: not optimized in dbi.table but still useful as tests
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[x == "a"],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[x != "b" | y != 3],
       verbose = FALSE))
 
@@ -145,51 +145,51 @@ test_that("dbi.table works on data.table help examples", {
       X <- dbi.table(conn, "X")
     })
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = "x"],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       X[DBIT, on = "x"],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = "x", nomatch = NULL],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[!X, on = "x"],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = c(y = "v")],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = "y == v"],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = .(y <= foo)],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = "y <= foo"],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = c("y <= foo")],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = .(y >= foo)],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, on = .(x, y <= foo)],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[X, .(x, y, x.y, v), on = .(x, y >= foo)],
       verbose = FALSE))
 
@@ -249,7 +249,7 @@ test_that("dbi.table works on data.table help examples", {
     expect_no_error(DBIT[, .N]) # dbi.table returns dbi.table,
                                 # data.table returns numeric
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, .N, by = x],
       verbose = FALSE))
 
@@ -271,13 +271,13 @@ test_that("dbi.table works on data.table help examples", {
 
   # add/update/delete by reference (see ?assign)
 
-    expect_true(reference_test({
+    expect_true(reference.test({
       DBIT[, z := 42L]
       DBIT[]
       },
       verbose = FALSE))
 
-    expect_true(reference_test({
+    expect_true(reference.test({
       DBIT[, z := NULL]
       DBIT[]
       },
@@ -286,7 +286,7 @@ test_that("dbi.table works on data.table help examples", {
   # print(DT["a", v:=42L, on="x"])        # subassign to existing v column by reference
   # print(DT["b", v2:=84L, on="x"])       # subassign to new column by reference (NA padded)
 
-    expect_true(reference_test({
+    expect_true(reference.test({
       DBIT[, m := mean(v), by = x]
       DBIT[]
       },
@@ -307,11 +307,11 @@ test_that("dbi.table works on data.table help examples", {
       DBIT <- dbi.table(conn, "DT")
     })
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, sum(v, na.rm = TRUE), by = .(y %% 2)],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, sum(v, na.rm = TRUE), by = .(bool = y %% 2)],
       verbose = FALSE))
 
@@ -320,7 +320,7 @@ test_that("dbi.table works on data.table help examples", {
   # DT[, lapply(.SD, sum), by = x]          # sum of all (other) columns for each group
   # DT[, .SD[which.min(v)], by = x]         # nested query by group
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, list(MySum = sum(v, na.rm = TRUE),
                   MyMin = min(v, na.rm = TRUE),
                   MyMax = max(v, na.rm = TRUE)),
@@ -330,11 +330,11 @@ test_that("dbi.table works on data.table help examples", {
   # DT[, .(a = .(a), b = .(b)), by=x]     # list columns
   # DT[, .(seq = min(a):max(b)), by=x]    # j is not limited to just aggregations
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, sum(v, na.rm = TRUE), by = x][V1 < 20],
       verbose = FALSE))
 
-    expect_true(reference_test(
+    expect_true(reference.test(
       DBIT[, sum(v, na.rm = TRUE), by = x][order(-V1)],
       verbose = FALSE))
 

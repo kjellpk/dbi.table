@@ -5,7 +5,7 @@ for (conn in conns) {
   test_that("inner merge works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       merge(Album, Genre, by.x = "AlbumId", by.y = "GenreId"),
       verbose = FALSE
     ))
@@ -16,7 +16,7 @@ for (conn in conns) {
   test_that("left merge works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       merge(Album, Genre, by.x = "AlbumId", by.y = "GenreId",
             all.x = TRUE)[is.na(Name)],
       verbose = FALSE
@@ -28,7 +28,7 @@ for (conn in conns) {
   test_that("right merge works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       merge(Genre, Album, by.x = "GenreId", by.y = "AlbumId",
             all.y = TRUE)[is.na(Name)],
       verbose = FALSE
@@ -40,7 +40,7 @@ for (conn in conns) {
   test_that("outer merge works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       merge(Album, Genre, by.x = "AlbumId", by.y = "GenreId",
             all = TRUE)[is.na(Name) | is.na(Title)],
       verbose = FALSE
@@ -52,7 +52,7 @@ for (conn in conns) {
   test_that("by works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       merge(Album, Artist, by = "ArtistId"),
       verbose = FALSE
     ))
@@ -77,7 +77,7 @@ for (conn in conns) {
 
   test_that("self merge works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       merge(Album, Album, by = c("AlbumId", "ArtistId")),
       verbose = FALSE
     ))
@@ -87,11 +87,11 @@ for (conn in conns) {
 
   test_that("self merge works with no.dups = FALSE", {
     Album <- dbi.table(conn, DBI::Id("Album"))
-    expect_warning(reference_test(
+    expect_warning(reference.test(
       merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE),
       verbose = FALSE
     ))
-    expect_true(reference_test(
+    expect_true(reference.test(
       suppressWarnings(
         merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId",
               no.dups = FALSE)
@@ -105,7 +105,7 @@ for (conn in conns) {
   test_that("bracket merge works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Album[Artist, on = "ArtistId"],
       verbose = FALSE
     ))
@@ -116,7 +116,7 @@ for (conn in conns) {
   test_that("bracket merge foreign key join", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Track[Customer, on = c(TrackId = "CustomerId", AlbumId = "SupportRepId")],
       verbose = FALSE
     ))
@@ -127,7 +127,7 @@ for (conn in conns) {
   test_that("bracket merge w/ foreign key joins using the binary operator ==", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Track[Customer,
             on = c("TrackId == CustomerId",
                    "AlbumId == SupportRepId")],
@@ -140,7 +140,7 @@ for (conn in conns) {
   test_that("bracket merge w/ syntax as X[Y, on=.(a, b)]", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Album[Artist, on = .(AlbumId == ArtistId, ArtistId == ArtistId)],
       verbose = FALSE
     ))
@@ -151,7 +151,7 @@ for (conn in conns) {
   test_that("bracket merge w/ (non-equi) joins using binary operators >=, <=", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Track[Customer,
             on = c("TrackId >= CustomerId",
                    "AlbumId <= SupportRepId")],
@@ -164,7 +164,7 @@ for (conn in conns) {
   test_that("bracket merge w/ (non-equi) joins using binary operators >, <", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Track[Customer, on = c("TrackId > CustomerId", "AlbumId < SupportRepId")],
       verbose = FALSE
     ))
@@ -174,7 +174,7 @@ for (conn in conns) {
 
   test_that("bracket self-merge withs w/ half-named character", {
     Album <- dbi.table(conn, DBI::Id("Album"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Album[Album, on = c("AlbumId", ArtistId = "ArtistId")],
       verbose = FALSE
     ))
@@ -185,7 +185,7 @@ for (conn in conns) {
   test_that("bracket anti-join works w/ character", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Artist[!Album, on = "ArtistId"],
       verbose = FALSE
     ))
@@ -196,7 +196,7 @@ for (conn in conns) {
   test_that("bracket anti-join works w/ character non-equi join", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Artist[!Album, on = "ArtistId > ArtistId"],
       verbose = FALSE
     ))
@@ -207,7 +207,7 @@ for (conn in conns) {
   test_that("bracket anti-join works w/ call non-equi join", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Artist[!Album, on = .(ArtistId > ArtistId)],
       verbose = FALSE
     ))
@@ -219,7 +219,7 @@ for (conn in conns) {
   test_that("bracket anti-join works w/ char-call non-equi join", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
-    expect_true(reference_test(
+    expect_true(reference.test(
       Artist[!Album, on = c("ArtistId > ArtistId")],
       verbose = FALSE
     ))
@@ -231,7 +231,7 @@ for (conn in conns) {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
 
-    expect_true(reference_test({
+    expect_true(reference.test({
       Artist <- Artist[ArtistId > 5 & ArtistId < 10]
       Album <- Album[nchar(Title) > 15]
       merge(Album, Artist, by = "ArtistId")},
@@ -241,7 +241,7 @@ for (conn in conns) {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
 
-    expect_true(reference_test({
+    expect_true(reference.test({
       Artist <- Artist[order(Name)]
       Album <- Album[order(-Title)]
       merge(Album, Artist, by = "ArtistId")},

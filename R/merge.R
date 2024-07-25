@@ -75,7 +75,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     type <- "inner"
   }
 
-  xy <- sql_join(x, y, type, on)
+  xy <- sql.join(x, y, type, on)
 
   x_length <- length(x)
   by_x_jdx <- chmatch(by.x, names_x)
@@ -164,7 +164,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
   on <- handy_andy(on)
 
   if (not_i) {
-    xi <- sql_join(x, i, type = "left", on = on, prefixes = c("x.", "i."))
+    xi <- sql.join(x, i, type = "left", on = on, prefixes = c("x.", "i."))
 
     w <- lapply(paste0("i.", on_i), function(u) call("is.na", as.name(u)))
     w <- handy_andy(w)
@@ -178,7 +178,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
 
     xi <- handle_j(xi, j, by = NULL)
   } else {
-    xi <- sql_join(x, i, type = join_type, on = on)
+    xi <- sql.join(x, i, type = join_type, on = on)
 
     j_map <- names_list(xi)
     i_map <- names_list(names(i), i_names)

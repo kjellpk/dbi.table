@@ -40,10 +40,10 @@
 #'   Album <- duck$main$Album
 #'   Artist <- duck$main$Artist
 #'
-#'   reference_test(merge(Album, Artist, by = "ArtistId"))
+#'   reference.test(merge(Album, Artist, by = "ArtistId"))
 #'
 #' @export
-reference_test <- function(expr, envir = parent.frame(),
+reference.test <- function(expr, envir = parent.frame(),
                            ignore.row.order = TRUE, verbose = TRUE) {
   expr <- substitute(expr)
 
