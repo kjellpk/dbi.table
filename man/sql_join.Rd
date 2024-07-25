@@ -21,8 +21,8 @@ prefixes as necessary.}
 \item{prefixes}{a 2-element character vector of distinct values. When \code{x} and \code{y}
 both have a column with the same name (e.g., \code{common_name}) then, when
 specifing the join predicate in \code{on}, use 
-\code{prefixes[1].common_name} to refer to the \code{common_name} column in
-\code{x} and \code{prefixes[2].common_name} to refer to the
+\code{`prefixes[1]`common_name} to refer to the \code{common_name} column
+in \code{x} and \code{`prefixes[2]`common_name} to refer to the
 \code{common_name} column in \code{y}. \code{prefixes} are also used to
 disambiguate the output column names.}
 }
@@ -32,12 +32,12 @@ same underlying \code{\link[DBI]{DBI}} connection. All columns of both
 \code{\link{dbi.table}}s are returned.
 }
 \examples{
-  chinook <- dbi.catalog(chinook.duckdb)
-  Album <- chinook$main$Album
-  Artist <- chinook$main$Artist
+chinook <- dbi.catalog(chinook.duckdb)
+Album <- chinook$main$Album
+Artist <- chinook$main$Artist
 
-  sql_join(Album, Artist, type = "inner", on = x.ArtistId == y.ArtistId)
-
-  \dontshow{rm(chinook)}
+sql_join(Album, Artist, type = "inner",
+         on = Album.ArtistId == Artist.ArtistId,
+         prefixes = c("Album.", "Artist."))
 
 }
