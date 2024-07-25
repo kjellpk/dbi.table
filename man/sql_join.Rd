@@ -2,28 +2,42 @@
 % Please edit documentation in R/sql_join.R
 \name{sql_join}
 \alias{sql_join}
-\title{Join dbi.tables}
+\title{Join \code{dbi.table}s}
 \usage{
 sql_join(x, y, type = "inner", on = NULL, prefixes = c("x.", "y."))
 }
 \arguments{
-\item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must
-reference objects on the same \code{\link[DBI]{DBI}} connection.}
+\item{x, y}{\code{\link{dbi.table}}s to join. \code{x} and \code{y} must share the same
+\code{\link[DBI]{DBI}} connection.}
 
-\item{type}{a character string. Valid choices are \code{"inner"},
-\code{"left"}, \code{"right"}, \code{"outer"},
-and \code{"cross"}.}
+\item{type}{a character string specifying the join type. Valid choices are
+\code{"inner"}, \code{"left"}, \code{"right"}, \code{"outer"}, and
+\code{"cross"}.}
 
-\item{on}{a \code{\link[base]{call}} to translate to the \code{SQL} \code{ON}
-clause.}
+\item{on}{a \code{call} specifying the join predicate. The symbols in \code{on}
+should be column names of \code{x} or column names of \code{y}, use
+prefixes as necessary.}
 
-\item{prefixes}{a 2-element character vector. When \code{x} and \code{y}
-both have a column with the same name, prefixes are used to
-eliminate the ambiguity.}
+\item{prefixes}{a 2-element character vector of distinct values. When \code{x} and \code{y}
+both have a column with the same name (e.g., \code{common_name}) then, when
+specifing the join predicate in \code{on}, use 
+\code{prefixes[1].common_name} to refer to the \code{common_name} column in
+\code{x} and \code{prefixes[2].common_name} to refer to the
+\code{common_name} column in \code{y}. \code{prefixes} are also used to
+disambiguate the output column names.}
 }
 \description{
-Perform a \code{SQL}-like join on two \code{\link{dbi.table}}s
-             that share the same underlying \code{\link[DBI]{DBI}}
-             connection. All columns of both \code{\link{dbi.table}}s are
-             returned.
+A \code{SQL}-like join of two \code{\link{dbi.table}}s that share the
+same underlying \code{\link[DBI]{DBI}} connection. All columns of both
+\code{\link{dbi.table}}s are returned.
+}
+\examples{
+  chinook <- dbi.catalog(chinook.duckdb)
+  Album <- chinook$main$Album
+  Artist <- chinook$main$Artist
+
+  sql_join(Album, Artist, type = "inner", on = x.ArtistId == y.ArtistId)
+
+  \dontshow{rm(chinook)}
+
 }
