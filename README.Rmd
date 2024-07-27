@@ -20,48 +20,54 @@ devtools::install_github("kjellpk/dbi.table")
 
 First, load the package.
 
-```{r, message = FALSE}
+```{r, library, message = FALSE}
 library(dbi.table)
 ```
 
-Open a `DBI` connection to the Chinook database included in the package.
+Then open up a `DBIConnection` to the [CTU Prague Relational Learning
+Repository](https://relational-data.org/).
 
-```{r}
-db_path <- file.path(system.file(package = "dbi.table"),
-                     "example_files",
-                     "chinook_sqlite.sqlite")
-chinook <- DBI::dbConnect(RSQLite::SQLite(), db_path)
+```{r, connection}
+rdp_conn <- DBI::dbConnect(RMariaDB::MariaDB(),
+                           host = "relational.fel.cvut.cz",
+                           port = 3306,
+                           user = "guest",
+                           password = "ctu-relational")
 ```
 
-Create a `dbi.table` using the `Album` table in the Chinook database.
+Make an `Id` for the `Album` table in the `Chinook` schema.
 
-```{r}
-(Album <- dbi.table(chinook, DBI::Id(table = "Album")))
+```{r, id}
+album_table_id <- DBI::Id(table_schema = "Chinook", table_name = "Album")
 ```
 
-The local object `Album` is a `dbi.table`, a data structure that generates and
-executes queries on the remote (SQLite) table `Album`. `dbi.table`s use the same
-syntax as `data.tables`. For example, the following command selects the
-`AlbumId` and `Title` fields from the remote table `Album` where `AlbumId` is
-less than 100 and equal to `ArtistId`.
+Finally, create the `dbi.table`.
 
-```{r}
-(x <- Album[AlbumId < 100 & AlbumId == ArtistId, .(AlbumId, Title)])
+```{r, dbi.table}
+(Album <- dbi.table(rdp_conn, album_table_id))
 ```
 
-By default, the preview is the first 5 rows returned by the dbms (in this case
-SQLite). There are only 3 records that satify the query so all results were
-returned.
+The `print` method fetches the first 5 records from the database and displays
+them as a `data.table` (with the row numbers omitted). The underlying SQL query
+can be viewed using the `csql` function.
 
-The local object `x` is not the data, rather it is another `dbi.table`
-corresponding to the specific query. Use empty square brackets (`[]`) or the
-`as.data.table` function to fetch the results set as a `data.table`.
-
-```{r}
-x[]
+```{r csql}
+csql(Album)
 ```
 
+The `dbi.table` can be manipulated using `data.table` syntax.
 
-```{r, include = FALSE, results = "hide"}
-DBI::dbDisconnect(chinook)
+```{r syntax}
+(x <- Album[nchar(Title) > 20 & AlbumId > ArtistId,
+            .(Title, Title_Length = paste(nchar(Title), "characters"))])
+```
+
+Again, the underlying SQL query can be viewed with `csql`.
+
+```{r csqlx}
+csql(x)
+```
+
+```{r cleanup, echo = FALSE, results = "hide"}
+DBI::dbDisconnect(rdp_conn)
 ```

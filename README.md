@@ -14,18 +14,24 @@ First, load the package.
 
     library(dbi.table)
 
-Open a `DBI` connection to the Chinook database included in the package.
+Then open up a `DBIConnection` to the [CTU Prague Relational Learning
+Repository](https://relational-data.org/).
 
-    db_path <- file.path(system.file(package = "dbi.table"),
-                         "example_files",
-                         "chinook_sqlite.sqlite")
-    chinook <- DBI::dbConnect(RSQLite::SQLite(), db_path)
+    rdp_conn <- DBI::dbConnect(RMariaDB::MariaDB(),
+                               host = "relational.fel.cvut.cz",
+                               port = 3306,
+                               user = "guest",
+                               password = "ctu-relational")
 
-Create a `dbi.table` using the `Album` table in the Chinook database.
+Make an `Id` for the `Album` table in the `Chinook` schema.
 
-    (Album <- dbi.table(chinook, DBI::Id(table = "Album")))
+    album_table_id <- DBI::Id(table_schema = "Chinook", table_name = "Album")
 
-    ## <chinook_sqlite> Album 
+Finally, create the `dbi.table`.
+
+    (Album <- dbi.table(rdp_conn, album_table_id))
+
+    ## <relational.fel.cvut.cz> Album 
     ##  AlbumId                                 Title ArtistId
     ##    <int>                                <char>    <int>
     ##        1 For Those About To Rock We Salute You        1
@@ -33,36 +39,48 @@ Create a `dbi.table` using the `Album` table in the Chinook database.
     ##        3                     Restless and Wild        2
     ##        4                     Let There Be Rock        1
     ##        5                              Big Ones        3
-    ## ---
+    ##  ---
 
-The local object `Album` is a `dbi.table`, a data structure that
-generates and executes queries on the remote (SQLite) table `Album`.
-`dbi.table`s use the same syntax as `data.tables`. For example, the
-following command selects the `AlbumId` and `Title` fields from the
-remote table `Album` where `AlbumId` is less than 100 and equal to
-`ArtistId`.
+The `print` method fetches the first 5 records from the database and
+displays them as a `data.table` (with the row numbers omitted). The
+underlying SQL query can be viewed using the `csql` function.
 
-    (x <- Album[AlbumId < 100 & AlbumId == ArtistId, .(AlbumId, Title)])
+    csql(Album)
 
-    ## <chinook_sqlite> Album 
-    ##  AlbumId                                 Title
-    ##    <int>                                <char>
-    ##        1 For Those About To Rock We Salute You
-    ##        2                     Balls to the Wall
-    ##       58                   Come Taste The Band
+    ## 
+    ## SELECT `Album`.`AlbumId` AS `AlbumId`,
+    ##        `Album`.`Title` AS `Title`,
+    ##        `Album`.`ArtistId` AS `ArtistId`
+    ## 
+    ##   FROM `Chinook`.`Album` AS `Album`
+    ## 
+    ##  LIMIT 10000
 
-By default, the preview is the first 5 rows returned by the dbms (in
-this case SQLite). There are only 3 records that satify the query so all
-results were returned.
+The `dbi.table` can be manipulated using `data.table` syntax.
 
-The local object `x` is not the data, rather it is another `dbi.table`
-corresponding to the specific query. Use empty square brackets (`[]`) or
-the `as.data.table` function to fetch the results set as a `data.table`.
+    (x <- Album[nchar(Title) > 20 & AlbumId > ArtistId,
+                .(Title, Title_Length = paste(nchar(Title), "characters"))])
 
-    x[]
+    ## <relational.fel.cvut.cz> Album 
+    ##                                     Title  Title_Length
+    ##                                    <char>        <char>
+    ##            Plays Metallica By Four Cellos 30 characters
+    ##                  The Best Of Billy Cobham 24 characters
+    ##  Alcohol Fueled Brewtality Live! [Disc 1] 40 characters
+    ##  Alcohol Fueled Brewtality Live! [Disc 2] 40 characters
+    ##           Black Sabbath Vol. 4 (Remaster) 31 characters
+    ##  ---
 
-    ##    AlbumId                                 Title
-    ##      <int>                                <char>
-    ## 1:       1 For Those About To Rock We Salute You
-    ## 2:       2                     Balls to the Wall
-    ## 3:      58                   Come Taste The Band
+Again, the underlying SQL query can be viewed with `csql`.
+
+    csql(x)
+
+    ## 
+    ## SELECT `Album`.`Title` AS `Title`,
+    ##        CONCAT_WS(' ', LENGTH(`Album`.`Title`), 'characters') AS `Title_Length`
+    ## 
+    ##   FROM `Chinook`.`Album` AS `Album`
+    ## 
+    ##  WHERE LENGTH(`Album`.`Title`) > 20 AND `Album`.`AlbumId` > `Album`.`ArtistId`
+    ## 
+    ##  LIMIT 10000
