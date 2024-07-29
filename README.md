@@ -1,35 +1,34 @@
 # `dbi.table`
 
 Query database objects (e.g., tables and views) accessible over a `DBI`
-connection using `data.table`-like syntax. Access individual objects
-using `dbi.table` or attach an entire schema using `dbi.attach`.
+connection using `data.table`’s `[i, j, by]` syntax. Under the hood, a
+`dbi.table` is a just an SQL query - its methods are designed to give it
+`data.table` look and feel.
 
 ## Installation
 
     devtools::install_github("kjellpk/dbi.table")
 
-## Usage
+## Quick Start
 
 First, load the package.
 
     library(dbi.table)
 
-Then open up a `DBIConnection` to the [CTU Prague Relational Learning
-Repository](https://relational-data.org/).
+Next, open a DBI connection (big thank you to the [CTU Prague Relational
+Learning Repository](https://relational-data.org/) for providing this
+example).
 
-    rdp_conn <- DBI::dbConnect(RMariaDB::MariaDB(),
+    ctu_conn <- DBI::dbConnect(RMariaDB::MariaDB(),
                                host = "relational.fel.cvut.cz",
                                port = 3306,
                                user = "guest",
                                password = "ctu-relational")
 
-Make an `Id` for the `Album` table in the `Chinook` schema.
+Then make a `dbi.table` based on the `Album` table in the `Chinook`
+schema.
 
-    album_table_id <- DBI::Id(table_schema = "Chinook", table_name = "Album")
-
-Finally, create the `dbi.table`.
-
-    (Album <- dbi.table(rdp_conn, album_table_id))
+    (Album <- dbi.table(ctu_conn, DBI::Id("Chinook", "Album")))
 
     ## <relational.fel.cvut.cz> Album 
     ##  AlbumId                                 Title ArtistId
@@ -41,22 +40,10 @@ Finally, create the `dbi.table`.
     ##        5                              Big Ones        3
     ##  ---
 
-The `print` method fetches the first 5 records from the database and
-displays them as a `data.table` (with the row numbers omitted). The
-underlying SQL query can be viewed using the `csql` function.
-
-    csql(Album)
-
-    ## 
-    ## SELECT `Album`.`AlbumId` AS `AlbumId`,
-    ##        `Album`.`Title` AS `Title`,
-    ##        `Album`.`ArtistId` AS `ArtistId`
-    ## 
-    ##   FROM `Chinook`.`Album` AS `Album`
-    ## 
-    ##  LIMIT 10000
-
-The `dbi.table` can be manipulated using `data.table` syntax.
+A `dbi.table` looks like a `data.table` (but with the row numbers
+omitted). Under the hood, a `dbi.table` is a SQL query - the printed
+output here is a 5 row preview. This query can be maniulated using
+`data.table`’s `[i, j, by]` syntax.
 
     (x <- Album[nchar(Title) > 20 & AlbumId > ArtistId,
                 .(Title, Title_Length = paste(nchar(Title), "characters"))])
@@ -71,7 +58,8 @@ The `dbi.table` can be manipulated using `data.table` syntax.
     ##           Black Sabbath Vol. 4 (Remaster) 31 characters
     ##  ---
 
-Again, the underlying SQL query can be viewed with `csql`.
+Some data wrangling can be done on-database. The `csql` utility displays
+the underlying SQL query (SQL generation uses `dbplyr::translate_sql_`).
 
     csql(x)
 
@@ -84,3 +72,7 @@ Again, the underlying SQL query can be viewed with `csql`.
     ##  WHERE LENGTH(`Album`.`Title`) > 20 AND `Album`.`AlbumId` > `Album`.`ArtistId`
     ## 
     ##  LIMIT 10000
+
+Finally, close the DBI connection.
+
+    DBI::dbDisconnect(ctu_conn)
