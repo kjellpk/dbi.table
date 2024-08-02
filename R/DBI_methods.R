@@ -5,7 +5,8 @@ dbExecute_dbi_table_pkg <- function(conn, statement, ...) {
 
 
 dbSendStatement_dbi_table_pkg <- function(conn, statement, ...,
-                                          n = session$max_fetch) {
+                                          n = getOption("dbi_table_max_fetch",
+                                                        10000L)) {
   DBI::dbSendStatement(dbi_connection(conn), write_select_query(conn, n))
 }
 

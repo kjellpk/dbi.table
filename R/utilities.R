@@ -65,7 +65,7 @@ paren <- function(x) {
 #'   returned by the query to \code{n}.
 #'
 #' @export
-csql <- function(x, n = session$max_fetch) {
+csql <- function(x, n = getOption("dbi_table_max_fetch", 10000L)) {
   cat(paste0("\n", write_select_query(x, n), "\n\n"))
 }
 

@@ -225,7 +225,8 @@ print.dbi.table <- function(x, ...) {
 
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
-                                    n = session$max_fetch) {
+                                    n = getOption("dbi_table_max_fetch",
+                                                  10000L)) {
   res <- try(DBI::dbSendStatement(dbi_connection(x),
                                   write_select_query(x, n)),
              silent = TRUE)
@@ -354,7 +355,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
     i <- sub_lang(substitute(i), x, enclos = parent)
 
     if (is.data.frame(i)) {
-      if (nrow(i) > session$max_in_query) {
+      if (nrow(i) > getOption("dbi_table_max_in_query", 500L)) {
         i <- as.dbi.table(x, i, type = "temporary")
       } else {
         i <- as.dbi.table(x, i, type = "query")
@@ -475,7 +476,7 @@ as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
     return(in_query_cte(conn, x))
   }
 
-  if (n > session$max_in_query) {
+  if (n > getOption("dbi_table_max_in_query", 500L)) {
     if (is_dbi_catalog(conn) && isTRUE(conn[[".temporary_table_denied"]])) {
       warning("writing ", n, " row data.frame into query statement since ",
               "permission to create temporary table was denied - processing ",
