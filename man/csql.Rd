@@ -4,7 +4,7 @@
 \alias{csql}
 \title{See SQL}
 \usage{
-csql(x, n = session$max_fetch)
+csql(x, n = getOption("dbi_table_max_fetch", 10000L))
 }
 \arguments{
 \item{x}{a \code{dbi.table}.}

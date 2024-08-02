@@ -14,7 +14,12 @@
 
 \S4method{dbExecute}{dbi.table,SQL}(conn, statement, ...)
 
-\S4method{dbSendStatement}{dbi.table,missing}(conn, statement, ..., n = session$max_fetch)
+\S4method{dbSendStatement}{dbi.table,missing}(
+  conn,
+  statement,
+  ...,
+  n = getOption("dbi_table_max_fetch", 10000L)
+)
 }
 \arguments{
 \item{conn}{a \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.}
