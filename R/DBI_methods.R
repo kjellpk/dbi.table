@@ -4,6 +4,12 @@ dbExecute_dbi_table_pkg <- function(conn, statement, ...) {
 
 
 
+dbGetInfo_dbi_table_pkg <- function(dbObj, ...) {
+  DBI::dbGetInfo(dbi_connection(dbObj), ...)
+}
+
+
+
 dbSendStatement_dbi_table_pkg <- function(conn, statement, ...,
                                           n = getOption("dbi_table_max_fetch",
                                                         10000L)) {
@@ -38,6 +44,9 @@ setOldClass("dbi.table")
 #' @param conn
 #'   a \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.
 #'
+#' @param dbObj
+#'   a \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.
+#'
 #' @param statement
 #'   a \code{\link[DBI]{SQL}} object.
 #'
@@ -49,7 +58,8 @@ setOldClass("dbi.table")
 #'   by the query. A negative value omits the LIMIT (or TOP) clause entirely.
 #'
 #' @seealso
-#'   \code{\link[DBI]{dbExecute}}, \code{\link[DBI]{dbSendStatement}}
+#'   \code{\link[DBI]{dbExecute}}, \code{\link[DBI]{dbGetInfo}},
+#'   \code{\link[DBI]{dbSendStatement}}
 #'
 #' @examples
 #' duck <- dbi.catalog(chinook.duckdb)
@@ -98,3 +108,36 @@ setMethod(f = dbExecute,
 setMethod(f = dbSendStatement,
           signature = c("dbi.table", "missing"),
           definition = dbSendStatement_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetInfo,dbi.table
+#' @importFrom DBI dbGetInfo
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetInfo,
+          signature = "dbi.catalog",
+          definition = dbGetInfo_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetInfo,dbi.table
+#' @importFrom DBI dbGetInfo
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetInfo,
+          signature = "dbi.schema",
+          definition = dbGetInfo_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetInfo,dbi.table
+#' @importFrom DBI dbGetInfo
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetInfo,
+          signature = "dbi.table",
+          definition = dbGetInfo_dbi_table_pkg)

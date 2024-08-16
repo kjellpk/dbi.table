@@ -6,6 +6,10 @@
 \alias{dbExecute,dbi.schema,SQL-method}
 \alias{dbExecute,dbi.table,SQL-method}
 \alias{dbSendStatement,dbi.table,missing-method}
+\alias{dbGetInfo,dbi.catalog-method}
+\alias{dbGetInfo,dbi.table}
+\alias{dbGetInfo,dbi.schema-method}
+\alias{dbGetInfo,dbi.table-method}
 \title{DBI Methods for \code{dbi.table}s}
 \usage{
 \S4method{dbExecute}{dbi.catalog,SQL}(conn, statement, ...)
@@ -20,6 +24,12 @@
   ...,
   n = getOption("dbi_table_max_fetch", 10000L)
 )
+
+\S4method{dbGetInfo}{dbi.catalog}(dbObj, ...)
+
+\S4method{dbGetInfo}{dbi.schema}(dbObj, ...)
+
+\S4method{dbGetInfo}{dbi.table}(dbObj, ...)
 }
 \arguments{
 \item{conn}{a \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.}
@@ -30,6 +40,8 @@
 
 \item{n}{an integer value. A nonnegative value limits the number of records returned
 by the query. A negative value omits the LIMIT (or TOP) clause entirely.}
+
+\item{dbObj}{a \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.}
 }
 \description{
 Call DBI methods using the underlying DBI connection.
@@ -41,5 +53,6 @@ dbExecute(duck, DBI::SQL("LOAD httpfs;"))
 
 }
 \seealso{
-\code{\link[DBI]{dbExecute}}, \code{\link[DBI]{dbSendStatement}}
+\code{\link[DBI]{dbExecute}}, \code{\link[DBI]{dbGetInfo}},
+  \code{\link[DBI]{dbSendStatement}}
 }
