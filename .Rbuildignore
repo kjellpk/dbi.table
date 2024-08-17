@@ -6,4 +6,5 @@
 ^dbi\.table\.code-workspace$
 ^scratch\.R$
 ^\.github$
+^notes$
 ^vignettes/flights14\.sqlite$
