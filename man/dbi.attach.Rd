@@ -31,7 +31,7 @@ masking a function, or a non-function masking a non-function.}
 
 \item{graphics}{a logical value; passed to \code{\link[utils]{menu}}. In interactive
 sessions, when \code{schema} is \code{NULL} and multiple schemas are
-found on \code{what}, a menu is display for the user to select a schema.}
+found on \code{what}, a menu is displayed to select a schema.}
 }
 \description{
 Create a \code{\link{dbi.table}} for each database object in a schema and
