@@ -540,19 +540,27 @@ finalize_temp_dbi_table <- function(e) {
 
 in_query_cte <- function(conn, data) {
   dbi_conn <- dbi_connection(conn)
+  data <- as.data.frame(data)
+
+  for(j in which(vapply(data, is.factor, FALSE))) {
+    data[[j]] <- as.character(data[[j]])
+  }
 
   cte_name <- unique_table_name("IN_QUERY_CTE")
   id <- DBI::Id(cte_name)
   x <- new_dbi_table(conn, id, names(data))
 
   qnames <- DBI::dbQuoteIdentifier(dbi_conn, names(data))
-  data <- setDF(mapply(DBI::dbQuoteLiteral,
-                       data,
-                       MoreArgs = list(conn = dbi_conn),
-                       SIMPLIFY = FALSE))
+  col_modes <- vapply(data, storage.mode, "")
 
   for (j in seq_along(data)) {
-    data[, j] <- paste(data[, j], "AS", qnames[[j]])
+    tmp <- mapply("call",
+                  name = paste("as", col_modes[[j]], sep = "."),
+                  data[[j]],
+                  SIMPLIFY = FALSE,
+                  USE.NAMES = FALSE)
+    tmp <- translate_sql_(tmp, dbi_conn)
+    data[[j]] <- DBI::SQL(paste(tmp, "AS", qnames[[j]]))
   }
 
   data <- apply(data, 1L, paste, collapse = ", ")

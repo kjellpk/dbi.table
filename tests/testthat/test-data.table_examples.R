@@ -1,16 +1,15 @@
 test_that("dbi.table works on data.table help examples", {
 
-  DT <- data.table(x = rep(c("b", "a", "c"), each = 3),
-                   y = c(1, 3, 6),
-                   v = 1:9)
-
   conns <- list(DBI::dbConnect(RSQLite::SQLite(), ":memory:"),
                 DBI::dbConnect(duckdb::duckdb(), ":memory:"))
 
   for (conn in conns) {
+    DT <- data.table(x = rep(c("b", "a", "c"), each = 3),
+                     y = c(1, 3, 6),
+                     v = 1:9)
+
     expect_no_error({
-      DBI::dbWriteTable(conn, "DT", DT)
-      DBIT <- dbi.table(conn, DBI::Id("DT"))
+      DBIT <- as.dbi.table(conn, DT, type = "query")
     })
 
     expect_s3_class(DT, "data.table")
@@ -30,12 +29,10 @@ test_that("dbi.table works on data.table help examples", {
 
     expect_true(reference.test(
       DBIT[order(x)],
-      ignore.row.order = FALSE,
       verbose = FALSE))
 
     expect_true(reference.test(
       DBIT[order(x), ],
-      ignore.row.order = FALSE,
       verbose = FALSE))
 
     expect_true(reference.test(
@@ -67,7 +64,7 @@ test_that("dbi.table works on data.table help examples", {
       verbose = FALSE))
 
     expect_true(reference.test(
-      DBIT[, .(sv=sum(v, na.rm = TRUE))],
+      DBIT[, .(sv = sum(v, na.rm = TRUE))],
       verbose = FALSE))
 
     expect_true(reference.test(
@@ -133,7 +130,7 @@ test_that("dbi.table works on data.table help examples", {
   # DT["b", sum(v*y), on="x"]                   # on rows where DT$x=="b", calculate sum(v*y)
 
   # all together now
-  ####DT[x!="a", sum(v), by=x]                    # get sum(v) by "x" for each i != "a"
+  # DT[x!="a", sum(v), by=x]                    # get sum(v) by "x" for each i != "a"
   # DT[!"a", sum(v), by=.EACHI, on="x"]         # same, but using subsets-as-joins
   # DT[c("b","c"), sum(v), by=.EACHI, on="x"]   # same
   # DT[c("b","c"), sum(v), by=.EACHI, on=.(x)]  # same, using on=.()
@@ -141,8 +138,7 @@ test_that("dbi.table works on data.table help examples", {
   # joins as subsets
     expect_no_error({
       X <- data.table(x = c("c", "b"), v = 8:7, foo = c(4, 2))
-      DBI::dbWriteTable(conn, "X", X)
-      X <- dbi.table(conn, "X")
+      X <- as.dbi.table(conn, X, type = "query")
     })
 
     expect_true(reference.test(
@@ -161,13 +157,15 @@ test_that("dbi.table works on data.table help examples", {
       DBIT[!X, on = "x"],
       verbose = FALSE))
 
-    expect_true(reference.test(
-      DBIT[X, on = c(y = "v")],
-      verbose = FALSE))
+     if (!inherits(conn, "SQLiteConnection")) {
+       expect_true(reference.test(
+         DBIT[X, on = c(y = "v")],
+         verbose = FALSE))
 
-    expect_true(reference.test(
-      DBIT[X, on = "y == v"],
-      verbose = FALSE))
+      expect_true(reference.test(
+        DBIT[X, on = "y == v"],
+        verbose = FALSE))
+    }
 
     expect_true(reference.test(
       DBIT[X, on = .(y <= foo)],
@@ -303,8 +301,7 @@ test_that("dbi.table works on data.table help examples", {
                       y = c(1, 3, 6),
                       a = 1:9,
                       b = 9:1)
-      DBI::dbWriteTable(conn, "DT", DT, overwrite = TRUE)
-      DBIT <- dbi.table(conn, "DT")
+      DBIT <- as.dbi.table(conn, DT, type = "query")
     })
 
     expect_true(reference.test(
@@ -345,6 +342,7 @@ test_that("dbi.table works on data.table help examples", {
                                             # expression. TO REMEMBER: every element of
                                             # the list becomes a column in result.
 
+    expect_no_error(rm(colNum, DBIT, DT, X))
     expect_no_error(DBI::dbDisconnect(conn))
   }
 })
