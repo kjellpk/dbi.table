@@ -1,0 +1,258 @@
+---
+title: "Introduction to dbi.table"
+output:
+  rmarkdown::html_vignette:
+    number_sections: true
+
+vignette: >
+  %\VignetteIndexEntry{Introduction to dbi.table}
+  %\VignetteEngine{knitr::rmarkdown}x
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set()
+options(width = 90)
+```
+
+The `dbi.table` package lets you query database tables and views over a DBI
+connection using `data.table`'s `[i, j, by]` syntax.
+
+This vignette assumes that you are already fluent with `data.table`'s syntax and
+that you know how to open a database connection using the `DBI` package.
+
+# Installation
+
+The `dbi.table` package is hosted on GitHub. Use the following command to
+install the package.
+
+```{r install, eval = FALSE}
+#install.packages("devtools")
+devtools::install_github("kjellpk/dbi.table")
+```
+
+Note: if the `install_github` function is not found, you will need to first
+install the `devtools` package using `install.packages`.
+
+
+# Getting Started
+
+This section uses the sample
+[Chinook Database](https://github.com/lerocha/chinook-database)
+(included in the package) to demonstrate how to
+
+  1. create a single `dbi.table` using the `dbi.table` function,
+  2. maniuplate a `dbi.table` using `data.table`'s `[i, j, by]` syntax,
+  3. attach a schema to the search path using the `dbi.attach` function, and
+  4. load a database catalog using the `dbi.catalog` function.
+
+The function `chinook.duckdb` that returns an open `duckdb` (DBI) connection to
+the sample Chinook Database.  This connection is a typical DBI connection as
+returned by `DBI::dbConnect` that can be used as the `conn` argument in DBI
+package functions. Let's get started by loading the package and opening the
+connection.
+
+```{r library, message = FALSE}
+library(dbi.table)
+chinook <- chinook.duckdb()
+```
+
+
+## Create a Single `dbi.table`
+
+The `dbi.table` function takes 2 arguments: a DBI connection, and an Id
+indentifying a database table (or view, etc.). 
+
+```{r single_table}
+my_album <- dbi.table(chinook, DBI::Id("Album"))
+```
+
+A `dbi.table` is a data structure that represents a SQL query. The `csql`
+utility displays the query.
+
+```{r my_album_csql}
+csql(my_album)
+```
+
+Initally, the `dbi.table` is a query that selects all the columns from the
+database table.
+
+The `print` method displays a preview of the query. 
+
+```{r my_album_print}
+#print(my_album)
+my_album
+```
+
+The output is similar to `data.table` with one key difference: the row numbers
+are omitted. SQL queries do not necessarily return the results in a reliable
+order (even on subsequent evaluations of the same query), and `dbi.table`
+does not make any extra effort to order the rows by default. The design
+goal of `dbi.table` is to return the same result set as `data.table` up to row
+order. Omitting the row numbers is intended to be a constant reminder of this
+behavior.
+
+The function `as.data.table` executes the `dbi.table`'s underlying SQL query and
+retrieves the result set as a `data.table`. Since `as.data.table` is a lot to
+type, calling the brackets method (`[]`) with no arguments is provided as a
+shortcut.
+
+```{r fetch_data_table}
+my_album[]
+```
+
+The presence of the row numbers indicates that this is a `data.table`.
+
+Note: by default, the brackets shortcut works for up to 10,000 rows. To override
+this limit, either set the option `dbi_table_max_fetch` or call `as.data.table`
+and provide the `n` argument (e.g., `n = -1` to fetch the entire result set). 
+
+## Manipulate a `dbi.table` using `data.table` Syntax
+
+This table from `data.table`'s *Introduction to data.table* vignette pretty much
+sums up what `dbi.table` does.
+
+```{r xref, eval = FALSE}
+DT[i, j, by]
+
+##   R:                 i                 j        by
+## SQL:  where | order by   select | update  group by
+```
+
+In general, `dbi.table` should be able to handle basic `data.table` syntax. SQL
+translation is done by `dbplyr::translate_sql_` which works with a wide variety
+of R functions. However, complicated expressions (e.g., custom functions in `j`,
+nested aggregation functions, most special symbols) do not work. Errors are
+either reported by `dbplyr::translate_sql_` or the underlying database engine -
+not by `dbi.table`. It can sometimes be difficult to figure out exacly what
+didn't work.
+
+Best practice is to subset and wrangle on the database, then fine tune
+locally with `data.table`.
+
+The remainder of this section shows -- by example -- how `i`, `j`, and `by`
+manipulate a `dbi.table`'s underlying SQL query.
+
+When `i` is a logical expression of the variables in the `dbi.table` then it
+becomes the *WHERE* clause in the `dbi.table`'s SQL query.
+
+```{r i_where}
+csql(my_album[AlbumId == ArtistId + 1])
+```
+
+When `i` is a call to `order` (or `forder`), it becomes the *ORDER BY* clause in
+the `dbi.table`'s SQL query.
+
+```{r i_order}
+csql(my_album[order(nchar(Title), -AlbumId)])
+```
+
+When `j` is a list of expressions of the variables in the `dbi.table`, then `j`
+becomes the *SELECT* clause in the `dbi.table`'s SQL query.
+
+```{r j_list}
+csql(my_album[, .(AlbumId, Title)])
+```
+
+When `by` is a list of expressions of the variables in the `dbi.table`, then
+`by` becomes the *GROUP BY* clause in the `dbi.table`'s SQL query.
+
+```{r by_list}
+csql(my_album[, .("# of Albums" = .N), .(ArtistId)])
+```
+
+
+## Attach a Schema to the Search Path
+
+The `dbi.attach` function *attaches* a DBI connection to the search path. That
+is, `dbi.attach` creates a `dbi.table` for each table (or view, etc.) in the
+schema associated with the DBI connection and assigns them to an environment on
+the search path.
+
+```{r dbi.attach}
+dbi.attach(chinook)
+```
+
+A quick look at the search path shows the database attached in position 2.
+
+```{r search_path}
+head(search(), 3)
+```
+
+For each SQL table in the schema, there is a `dbi.table` in the attached
+environment `r search()[[2L]]`.
+
+```{r ls_chinook}
+ls("duckdb:chinook_duckdb")
+```
+
+Attaching a DBI connection is intended for an interactive exploratory analysis
+of a database (schema). For programatic use cases, see the *Load a Database
+Catalog* section.
+
+Merging two `dbi.table`s results is a SQL join that describes the same result
+set as the associated `data.table` merge.
+
+```{r merge_dt_like}
+csql(merge(Album, Artist, by = "ArtistId"))
+```
+
+When a DBI connection is attached to the search path, `dbi.attach` attempts to
+load the schema's relational meta data (whether this works depends on how the
+underlying database implments an *information schema*). Foreign key
+constraints provide the default `by` argument for `dbi.table`'s merge. In the
+previous example, the `ArtistId` column is a foreign key referencing the `Album`
+table. If `by` argument is omitted, `dbi.table` will still merge *by*
+`ArtistId`.
+
+```{r merge_no_by}
+csql(merge(Album, Artist))
+```
+
+When `merge`'s `y` argument is omitted, `merge.dbi.table` merges all the tables
+that have a foreign key constraint involving `x`.
+
+```{r merge_no_y}
+csql(merge(Track))
+```
+
+When the optional `recursive` argument is `TRUE`, `merge.dbi.table` recursively
+merge on each of the just-merged tables.
+
+```{r merge_no_y_rec}
+csql(merge(Track, recursive = TRUE))
+```
+
+
+## Load a Database Catalog
+
+As a best practice for programatic use, it is better to load the catalog in
+order to avoid modifying the search path.
+
+```{r dbi_catalog}
+catalog <- dbi.catalog(chinook)
+```
+
+Printing the catalog lists its schemas.
+
+```{r print_dbi_catalog}
+catalog
+```
+
+Individual tables can be accessed using `catalog$schema$table` syntax.
+
+```{r dbi_catalog_table}
+catalog$main$Album
+```
+
+When a catalog is loaded, all of its tables have access to the relational data
+in the information schema.
+
+```{r dbi_catalog_merge}
+merge(catalog$main$Album)
+```
+
+```{r clean_up, echo = FALSE, results = "hide"}
+DBI::dbDisconnect(chinook)
+detach("duckdb:chinook_duckdb")
+```
