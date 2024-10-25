@@ -544,6 +544,8 @@ in_query_cte <- function(conn, data) {
   dbi_conn <- dbi_connection(conn)
   data <- as.data.frame(data)
 
+  empty <- nrow(data) < 1L
+
   for(j in which(vapply(data, is.factor, FALSE))) {
     data[[j]] <- as.character(data[[j]])
   }
@@ -554,6 +556,11 @@ in_query_cte <- function(conn, data) {
 
   qnames <- DBI::dbQuoteIdentifier(dbi_conn, names(data))
   col_modes <- vapply(data, storage.mode, "")
+
+  if (empty) {
+    data <- lapply(col_modes, function(u) call(u, length = 1L))
+    data <- as.data.frame(lapply(data, eval, envir = NULL))
+  }
 
   for (j in seq_along(data)) {
     tmp <- mapply("call",
@@ -574,5 +581,10 @@ in_query_cte <- function(conn, data) {
   ctes[[cte_name]] <- data
 
   attr(x, "ctes") <- ctes
+
+  if (empty) {
+    x <- x[1L == 0L]
+  }
+
   x
 }
