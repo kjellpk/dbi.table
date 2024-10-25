@@ -242,10 +242,12 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
       simple_query_works <- try(DBI::dbGetQuery(conn, "SELECT 1;"),
                                 silent = TRUE)
       is_valid <- !inherits(simple_query_works, "try-error")
+    } else {
+      stop(attr(res, "condition"))
     }
 
     if (is_valid) {
-      stop(res, call. = FALSE)
+      stop(attr(res, "condition"))
     }
 
     if (is.environment(e <- get_connection(x))) {
@@ -253,7 +255,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
       if (!is.null(recon <- attr(conn, "recon", exact = TRUE))) {
         e$.dbi_connection <- init_connection(recon)
       } else {
-        stop(res, call. = FALSE)
+        stop(attr(res, "condition"))
       }
     }
 
@@ -262,7 +264,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
     if (inherits(res, "DBIResult")) {
       on.exit(DBI::dbClearResult(res))
     } else {
-      stop(res, call. = FALSE)
+      stop(attr(res, "condition"))
     }
   }
 
