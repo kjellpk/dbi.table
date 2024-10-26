@@ -36,12 +36,10 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
     }
 
     if (!any(all.vars(e) %chin% names(envir))) {
-
-      if (is.dbi.table(e <- eval(e, NULL, enclos))) {
-        return(e)
+      ## Maybe handle data.tables here too
+      if (is.dbi.table(ee <- eval(e, NULL, enclos))) {
+        return(ee)
       }
-
-      return(if_scalar(e))
     }
 
     e[-1] <- lapply(e[-1L], sub_lang, envir = envir,
