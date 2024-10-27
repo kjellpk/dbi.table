@@ -53,8 +53,9 @@ dbi_table_is_simple <- function(x) {
                      function(u) !is.null(attr(u, "over", exact = TRUE)),
                      FALSE)
   group_by <- get_group_by(x)
+  distinct <- attr(x, "distinct", exact = TRUE)
 
-  (length(group_by) == 0L) && !any(has_over)
+  (length(group_by) == 0L) && !any(has_over) && !distinct
 }
 
 
