@@ -145,5 +145,41 @@ for (conn in conns) {
     expect_true(Album[ArtistId == local(ArtistId), .N][]$N == 1L)
   })
 
+
+
+  test_that("i a dbi.table, data.table, or data.frame works", {
+    expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
+    expect_no_error(id2 <- unique(Album[ArtistId == 2, .(ArtistId)]))
+
+    expect_true(reference.test(
+      Album[id2, on = "ArtistId"],
+      verbose = FALSE
+    ))
+
+    expect_true(reference.test(
+      Album[data.table(ArtistId = 2), on = "ArtistId"],
+      verbose = FALSE
+    ))
+
+    expect_true(reference.test(
+      Album[data.frame(ArtistId = 2), on = "ArtistId"],
+      verbose = FALSE
+    ))
+  })
+
+
+
+  test_that("empty temporary tables work", {
+    expect_true(
+      nrow(as.dbi.table(conn, datasets::iris[0, ], type = "query")[]) == 0L
+    )
+
+    expect_true(
+      nrow(as.dbi.table(conn, datasets::iris[0, ], type = "temporary")[]) == 0L
+    )
+  })
+
+
+
   DBI::dbDisconnect(conn)
 }
