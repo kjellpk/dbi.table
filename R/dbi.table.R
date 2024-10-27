@@ -357,11 +357,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
     i <- sub_lang(substitute(i), x, enclos = parent)
 
     if (is.data.frame(i)) {
-      if (nrow(i) > getOption("dbi_table_max_in_query", 500L)) {
-        i <- as.dbi.table(x, i, type = "temporary")
-      } else {
-        i <- as.dbi.table(x, i, type = "query")
-      }
+      i <- as.dbi.table(x, i)
     }
 
     if (is_call_to(i) == "!" && is.dbi.table(i[[2L]])) {
