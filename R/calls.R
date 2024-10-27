@@ -36,8 +36,9 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
     }
 
     if (!any(all.vars(e) %chin% names(envir))) {
-      ## Maybe handle data.tables here too
-      if (is.dbi.table(ee <- eval(e, NULL, enclos))) {
+      ee <- eval(e, NULL, enclos)
+
+      if (is.data.frame(ee) || is.dbi.table(ee)) {
         return(ee)
       }
     }
