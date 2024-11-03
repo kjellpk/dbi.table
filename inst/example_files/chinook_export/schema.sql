@@ -2,7 +2,7 @@
 
 
 CREATE TABLE Artist(ArtistId INTEGER, "Name" VARCHAR, PRIMARY KEY(ArtistId));
-CREATE TABLE Employee(EmployeeId INTEGER, LastName VARCHAR NOT NULL, FirstName VARCHAR NOT NULL, Title VARCHAR, ReportsTo INTEGER, BirthDate TIMESTAMP, HireDate TIMESTAMP, Address VARCHAR, City VARCHAR, State VARCHAR, Country VARCHAR, PostalCode VARCHAR, Phone VARCHAR, Fax VARCHAR, Email VARCHAR, PRIMARY KEY(EmployeeId), );
+CREATE TABLE Employee(EmployeeId INTEGER, LastName VARCHAR NOT NULL, FirstName VARCHAR NOT NULL, Title VARCHAR, ReportsTo INTEGER, BirthDate TIMESTAMP, HireDate TIMESTAMP, Address VARCHAR, City VARCHAR, State VARCHAR, Country VARCHAR, PostalCode VARCHAR, Phone VARCHAR, Fax VARCHAR, Email VARCHAR, PRIMARY KEY(EmployeeId));
 CREATE TABLE Genre(GenreId INTEGER, "Name" VARCHAR, PRIMARY KEY(GenreId));
 CREATE TABLE MediaType(MediaTypeId INTEGER, "Name" VARCHAR, PRIMARY KEY(MediaTypeId));
 CREATE TABLE Playlist(PlaylistId INTEGER, "Name" VARCHAR, PRIMARY KEY(PlaylistId));
@@ -15,24 +15,14 @@ CREATE TABLE PlaylistTrack(PlaylistId INTEGER, TrackId INTEGER, PRIMARY KEY(Play
 
 
 CREATE INDEX IFK_AlbumArtistId ON Album(ArtistId);
-
 CREATE INDEX IFK_CustomerSupportRepId ON Customer(SupportRepId);
-
 CREATE INDEX IFK_EmployeeReportsTo ON Employee(ReportsTo);
-
 CREATE INDEX IFK_InvoiceCustomerId ON Invoice(CustomerId);
-
 CREATE INDEX IFK_InvoiceLineInvoiceId ON InvoiceLine(InvoiceId);
-
 CREATE INDEX IFK_InvoiceLineTrackId ON InvoiceLine(TrackId);
-
 CREATE INDEX IFK_PlaylistTrackTrackId ON PlaylistTrack(TrackId);
-
 CREATE INDEX IFK_TrackAlbumId ON Track(AlbumId);
-
 CREATE INDEX IFK_TrackGenreId ON Track(GenreId);
-
 CREATE INDEX IFK_TrackMediaTypeId ON Track(MediaTypeId);
-
 
 
