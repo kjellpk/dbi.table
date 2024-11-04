@@ -119,8 +119,8 @@ A \code{dbi.table} is an SQL query that can be manipulated using
 }
 \seealso{
 \itemize{
-    \item \code{\link{as.data.table}} to retrieve the \emph{results set} as
-          a \code{data.table},
+    \item \code{\link[data.table]{as.data.table}} to retrieve the
+          \emph{results set} as a \code{data.table},
     \item \code{\link{csql}} to see the underlying SQL query.
   }
 }
