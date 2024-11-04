@@ -99,7 +99,7 @@ match_fields <- function(x, fields) {
 
 
 relational_merge <- function(x, recursive = FALSE) {
-  if (nrow(rt <- related_tables(x)) == 0L) {
+  if (is.null(rt <- related_tables(x)) || nrow(rt) == 0L) {
     return(x)
   }
 
