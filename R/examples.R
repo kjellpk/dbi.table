@@ -12,6 +12,11 @@ chinook.sqlite <- function() {
          call. = FALSE)
   }
 
+  if (!requireNamespace("R.utils", quietly = TRUE)) {
+    stop("the \"R.utils\" package must be installed to use 'chinook.sqlite'",
+         call. = FALSE)
+  }
+
   conn <- DBI::dbConnect(RSQLite::SQLite(),
                          temp_db_path("chinook_sqlite.sqlite"))
 
@@ -26,6 +31,11 @@ chinook.sqlite <- function() {
 chinook.duckdb <- function() {
   if (!requireNamespace("duckdb", quietly = TRUE)) {
     stop("the \"duckdb\" package must be installed to use 'chinook.duckdb'",
+         call. = FALSE)
+  }
+
+  if (!requireNamespace("R.utils", quietly = TRUE)) {
+    stop("the \"R.utils\" package must be installed to use 'chinook.duckdb'",
          call. = FALSE)
   }
 
