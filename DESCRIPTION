@@ -15,7 +15,7 @@ Imports:
     stringi,
     utils
 Suggests:
-    RMariaDB (>= 1.3.2),
+    R.utils,
     RSQLite,
     duckdb,
     testthat (>= 3.0.0),
