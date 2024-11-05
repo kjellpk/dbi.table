@@ -24,12 +24,15 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
-    rt <- related_tables(x, y)
-    by.x <- match_fields(x, rt$field_x)
-    by.y <- match_fields(y, rt$field_y)
-    use <- !is.na(by.x) & !is.na(by.y)
-    by.x <- by.x[use]
-    by.y <- by.y[use]
+    if (is.null(rt <- related_tables(x, y)) || nrow(rt) < 1L) {
+      by.x <- by.y <- intersect(names_x, names_y)
+    } else {
+      by.x <- match_fields(x, rt$field_x)
+      by.y <- match_fields(y, rt$field_y)
+      use <- !is.na(by.x) & !is.na(by.y)
+      by.x <- by.x[use]
+      by.y <- by.y[use]
+    }
   }
 
   if ((!is.null(by.x) || !is.null(by.y)) && length(by.x) != length(by.y))
