@@ -223,6 +223,54 @@ print.dbi.table <- function(x, ...) {
 
 
 
+#' @name as.data.table
+#'
+#' @aliases as.data.table.dbi.table
+#'
+#' @title Coerce to \code{data.table}
+#'
+#' @description
+#'   Execute a \code{\link{dbi.table}}'s underlying SQL query and return the
+#'   result set as a \code{\link[data.table]{data.table}}. By default, the
+#'   result set is limited to 10,000 rows. See Details.
+#'
+#' @param x
+#'   a \code{\link{dbi.table}}.
+#'
+#' @param keep.rownames
+#'   a logical value. This argument is not used.
+#'
+#' @param \dots
+#'   additional arguments are ignored.
+#'
+#' @param n
+#'   an integer value. When nonnegative, the underlying query includes a
+#'   'LIMIT \code{n}' clause and \code{n} is also passed to
+#'   \code{\link[DBI]{dbFetch}}. When negative, the underlying SQL query does
+#'   not include a LIMIT clause and all rows in the result set are returned.
+#'
+#' @details
+#'   By default, \code{as.data.table} returns up to 10,000 rows (see the
+#'   \code{n} argument). To override this limit, either call
+#'   \code{as.data.table} and provide the \code{n} argument (e.g., \code{n = -1}
+#'   to return the entire result set), or set the option
+#'   \code{dbi_table_max_fetch} to the desired default value of \code{n}.
+#'
+#' @seealso
+#'   \code{\link[data.table]{as.data.table}} (the generic method in the
+#'   \pkg{data.table} package).
+#'
+#' @examples
+#'   duck <- chinook.duckdb()
+#'   Artist <- dbi.table(duck, DBI::Id("Artist"))
+#'
+#'   as.data.table(Artist, n = 7)[]
+#'
+#'   \dontshow{DBI::dbDisconnect(duck)}
+#'
+#' @rdname
+#'   as.data.table
+#'
 #' @export
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
                                     n = getOption("dbi_table_max_fetch",
