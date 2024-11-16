@@ -1,3 +1,96 @@
+#' @name merge
+#'
+#' @aliases merge.dbi.table
+#'
+#' @title Merge two dbi.tables
+#'
+#' @description
+#'   Merge two \code{\link{dbi.table}}s. The \code{dbi.table} method is similar
+#'   to the \code{\link[data.table]{data.table}} method except that the result
+#'   set is only determined up to row order and is not sorted by default.
+#'
+#'   Default merge columns: if \code{x} has a foreign key constraint that
+#'   references \code{y} then the columns comprising this key are used; see
+#'   details. When a foreign key cannot be found, then the common columns
+#'   between the two \code{dbi.tables}s are used.
+#'
+#'   Use the \code{by}, \code{by.x}, and \code{by.y} arguments explicitly to
+#'   override this default.
+#'
+#' @param x,y
+#'   \code{\link{dbi.table}}s sharing the same DBI connection.
+#'
+#' @param by
+#'   A vector of shared column names in \code{x} and \code{y} to merge on.
+#'
+#' @param by.x,by.y
+#'   character vectors of column names in \code{x} and \code{y} to merge on.
+#'
+#' @param all
+#'   a logical value. \code{all = TRUE} is shorthand to save setting both
+#'   \code{all.x = TRUE} and \code{all.y = TRUE}.
+#'
+#' @param all.x
+#'   a logical value. When \code{TRUE}, rows from \code{x} that do not have a
+#'   matching row in \code{y} are included. These rows will have \code{NA}s in
+#'   the columns that are filled with values from \code{y}. The default is
+#'   \code{FALSE} so that only rows with data from both \code{x} and \code{y}
+#'   are included in the output.
+#'
+#' @param all.y
+#'   a logical value. Analogous to \code{all.x} above.
+#'
+#' @param sort
+#'   a logical value. Currently ignored.
+#'
+#' @param suffixes
+#'   a length-2 character vector. The suffixes to be used for making
+#'   non-\code{by} column names unique. The suffix behavior works in a similar
+#'   fashion to the \code{\link[base]{merge.data.frame}} method.
+#'
+#' @param no.dups
+#'  a logical value. When \code{TRUE}, suffixes are also appended to
+#'  non-\code{by.y} column names in \code{y} when they have the same column
+#'  name as any \code{by.x}.
+#'
+#' @param recursive
+#'   a logical value. Only used when \code{y} is missing. When \code{TRUE},
+#'   \code{merge} is called recursively on each of the just-merged
+#'   \code{dbi.table}s. See examples.
+#'
+#' @param \dots
+#'   additional arguments are ignored.
+#'
+#' @return
+#'   a \code{\link{dbi.table}}.
+#'
+#' @details
+#'   Foreign key constraints. Foreign keys can only be queried when (1) the
+#'   \code{dbi.table}'s schema is loaded, and (2) \code{dbi.table} understands
+#'   the underlying database's information schema. The merge is done at the SQL
+#'   level and can merge on columns that are not in the \code{dbi.table}s.
+#'
+#'   This function uses \code{\link{sql.join}} to join \code{x} and \code{y}
+#'   then formats the result set to match the typical \code{merge} result.
+#'
+#' @examples
+#'   dbi.attach(chinook.duckdb, name = "merge-example")
+#'
+#'   #The Album table has a foreign key constriant that references Artist
+#'   merge(Album, Artist)
+#'
+#'   #When y is omitted, x's foreign key realtionship is used to determin y
+#'   merge(Album)
+#'
+#'   #Multiple foreign keys are supported
+#'   csql(merge(Track))
+#'
+#'   #Track reference Album but not Artist, Album does reference Artist
+#'   #This dbi.table includes Artist.Name as well
+#'   csql(merge(Track, recursive = TRUE))
+#'
+#'   \dontshow{detach("duckdb:merge-example")}
+#'
 #' @export
 merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
                             all = FALSE, all.x = all, all.y = all,
@@ -13,6 +106,16 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
   if (!is.dbi.table(y)) {
     stop("'y' is not a 'dbi.table'")
+  }
+
+  dots <- list(...)
+
+  if (!is.null(dots$allow.cartesian)) {
+    warning("the value of 'allow.cartesian' was ignored")
+  }
+
+  if (!is.null(dots$incomparables)) {
+    warning("non-NULL value of 'incomparables' was ignored")
   }
 
   names_x <- names(x)
