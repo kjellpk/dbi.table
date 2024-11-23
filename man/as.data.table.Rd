@@ -19,7 +19,7 @@
 
 \item{\dots}{additional arguments are ignored.}
 
-\item{n}{an integer value. When nonnegative, the underlying query includes a
+\item{n}{an integer value. When nonnegative, the underlying SQL query includes a
 'LIMIT \code{n}' clause and \code{n} is also passed to
 \code{\link[DBI]{dbFetch}}. When negative, the underlying SQL query does
 not include a LIMIT clause and all rows in the result set are returned.}

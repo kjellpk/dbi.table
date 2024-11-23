@@ -13,5 +13,5 @@ csql(x, n = getOption("dbi_table_max_fetch", 10000L))
 returned by the query to \code{n}.}
 }
 \description{
-View a \code{\link{dbi.table}} as a SQL query.
+View a \code{\link{dbi.table}}'s underlying SQL query.
 }

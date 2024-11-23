@@ -1,28 +1,27 @@
-#' Create and Manipulate \code{dbi.table} Objects
+#' @name dbi.table-package
+#' @aliases dbi.table
+#'
+#' @title DBI Table
 #'
 #' @description
-#'   A \code{dbi.table} is an SQL query that can be manipulated using
-#'   \code{\link[data.table]{data.table}}-like syntax. The constructor function
-#'   \code{dbi.table} creates a query that selects all rows and and all columns
-#'   from a database object (i.e., \code{SELECT * FROM id}), and the brackets
-#'   method creates subsets, summaries, etc.
+#'   A dbi.table is a data structure that describes a SQL query (called the
+#'   dbi.table's \emph{underlying SQL query}). This query can be manipulated
+#'   using \code{\link[data.table]{data.table}}'s \code{[i, j, by]} syntax.
 #'
 #' @param conn
-#'   A connection handle returned by \code{\link[DBI]{dbConnect}}.
-#'   Alternatively, a \code{\link{dbi.catalog}} or another
-#'   \code{dbi.table}, in which case the new \code{dbi.table} will share the
-#'   same connection.
+#'   A \code{\linkS4class{DBIConnection}} object, as returned by
+#'   \code{\link[DBI]{dbConnect}}. Alternatively, a \code{\link{dbi.catalog}}
+#'   or a \code{dbi.table}, in which case the new \code{dbi.table} will use the
+#'   connection embedded in the provided object.
 #'
 #' @param id
 #'   An \code{Id}, a character string (which will be converted to
 #'   an \code{Id} by \code{\link[DBI]{Id}}), or a \code{\link[DBI]{SQL}} object
-#'   (advanced) identifying a database object that exists on \code{conn}.
+#'   (advanced) identifying a database object (e.g., table or view) on
+#'   \code{conn}.
 #'
 #' @return
-#'   A \code{dbi.table} (an S3 object). A \code{dbi.table} is a list of
-#'   \emph{expressions} representing the \code{SELECT} clause of an SQL query as
-#'   well as a set of attributes containing metadata needed for the rest of the
-#'   SQL query.
+#'   A \code{dbi.table}.
 #'
 #' @seealso
 #'   \itemize{
@@ -32,19 +31,18 @@
 #'   }
 #'
 #' @examples
+#'   # open a connection to the Chinook example database using duckdb
 #'   duck <- chinook.duckdb()
 #'
+#'   # create a dbi.table corresponding to the Album table on duck
 #'   Album <- dbi.table(duck, DBI::Id(table_name = "Album"))
 #'
-#'   # use same connection as 'Album'; 'id' is a length-2 character interpreted
-#'   # as a table_schema and table_name
-#'   Artist <- dbi.table(Album, c("main", "Artist"))
-#'
-#'   # 'id' can also be 'SQL'
-#'   Genre <- dbi.table(Album, DBI::SQL("chinook_duckdb.main.Genre"))
-#'
 #'   # the print method displays a 5 row preview
+#'   # print(Album)
 #'   Album
+#'
+#'   # 'id' can also be 'SQL'; use the same DBI connection as Album
+#'   Genre <- dbi.table(Album, DBI::SQL("chinook_duckdb.main.Genre"))
 #'
 #'   # use the brackets method to subset the dbi.table
 #'   Album[AlbumId < 5, .(Title, nchar = paste(nchar(Title), "characters"))]
@@ -244,7 +242,7 @@ print.dbi.table <- function(x, ...) {
 #'   additional arguments are ignored.
 #'
 #' @param n
-#'   an integer value. When nonnegative, the underlying query includes a
+#'   an integer value. When nonnegative, the underlying SQL query includes a
 #'   'LIMIT \code{n}' clause and \code{n} is also passed to
 #'   \code{\link[DBI]{dbFetch}}. When negative, the underlying SQL query does
 #'   not include a LIMIT clause and all rows in the result set are returned.
@@ -321,7 +319,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
 
 
 
-#' @rdname dbi.table
+#' @rdname dbi.table-package
 #'
 #' @param x
 #'   A \code{dbi.table}.
@@ -338,7 +336,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
 #'   scope, then the value of \code{foo} will be substituted into the expression
 #'   if \code{foo} is a scalar, or if \code{foo} is a vector and is the
 #'   right-hand-side argument to \code{\%in\%} or \code{\%chin\%} (substitution
-#'   occurs when the \code{[} method is evaluated).
+#'   occurs when the extract (\code{[}) method is evaluated).
 #'
 #'   When \code{i} inherits from \code{data.frame}, it is coerced to a
 #'   \code{dbi.table}.

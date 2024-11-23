@@ -55,7 +55,7 @@ paren <- function(x) {
 
 #' See SQL
 #'
-#' @description View a \code{\link{dbi.table}} as a SQL query.
+#' @description View a \code{\link{dbi.table}}'s underlying SQL query.
 #'
 #' @param x
 #'   a \code{dbi.table}.
