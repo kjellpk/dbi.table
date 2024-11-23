@@ -52,7 +52,7 @@ setOldClass("dbi.table")
 #'
 #' @param ...
 #'   other parameters passed on to methods.
-#' 
+#'
 #' @param n
 #'   an integer value. A nonnegative value limits the number of records returned
 #'   by the query. A negative value omits the LIMIT (or TOP) clause entirely.
@@ -60,11 +60,6 @@ setOldClass("dbi.table")
 #' @seealso
 #'   \code{\link[DBI]{dbExecute}}, \code{\link[DBI]{dbGetInfo}},
 #'   \code{\link[DBI]{dbSendStatement}}
-#'
-#' @examples
-#' duck <- dbi.catalog(chinook.duckdb)
-#' dbExecute(duck, DBI::SQL("INSTALL httpfs;"))
-#' dbExecute(duck, DBI::SQL("LOAD httpfs;"))
 #'
 #' @docType methods
 #' @rdname DBI-methods
