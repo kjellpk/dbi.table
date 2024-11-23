@@ -9,10 +9,10 @@
 #'   using \code{\link[data.table]{data.table}}'s \code{[i, j, by]} syntax.
 #'
 #' @param conn
-#'   A \code{\linkS4class{DBIConnection}} object, as returned by
-#'   \code{\link[DBI]{dbConnect}}. Alternatively, a \code{\link{dbi.catalog}}
-#'   or a \code{dbi.table}, in which case the new \code{dbi.table} will use the
-#'   connection embedded in the provided object.
+#'   A \code{\link[DBI:DBIConnection-class]{DBIConnection}} object, as
+#'   returned by \code{\link[DBI]{dbConnect}}. Alternatively, a
+#'   \code{\link{dbi.catalog}} or a \code{dbi.table}, in which case the new
+#'   \code{dbi.table} will use the connection embedded in the provided object.
 #'
 #' @param id
 #'   An \code{Id}, a character string (which will be converted to
