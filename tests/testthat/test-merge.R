@@ -102,7 +102,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket merge works", {
+  test_that("extract merge works", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_true(reference.test(
@@ -113,7 +113,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket merge foreign key join", {
+  test_that("extract merge foreign key join", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -124,7 +124,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket merge w/ foreign key joins using the binary operator ==", {
+  test_that("extract merge w/ foreign key joins using the binary operator ==", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -137,7 +137,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket merge w/ syntax as X[Y, on=.(a, b)]", {
+  test_that("extract merge w/ syntax as X[Y, on=.(a, b)]", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_true(reference.test(
@@ -148,7 +148,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket merge w/ (non-equi) joins using binary operators >=, <=", {
+  test_that("extract merge w/ (non-equi) joins using binary operators >=, <=", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -161,7 +161,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket merge w/ (non-equi) joins using binary operators >, <", {
+  test_that("extract merge w/ (non-equi) joins using binary operators >, <", {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -172,7 +172,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket self-merge withs w/ half-named character", {
+  test_that("extract self-merge withs w/ half-named character", {
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
       Album[Album, on = c("AlbumId", ArtistId = "ArtistId")],
@@ -182,7 +182,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket anti-join works w/ character", {
+  test_that("extract anti-join works w/ character", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
@@ -193,7 +193,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket anti-join works w/ character non-equi join", {
+  test_that("extract anti-join works w/ character non-equi join", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
@@ -204,7 +204,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket anti-join works w/ call non-equi join", {
+  test_that("extract anti-join works w/ call non-equi join", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
@@ -216,7 +216,7 @@ for (conn in conns) {
 
 
 
-  test_that("bracket anti-join works w/ char-call non-equi join", {
+  test_that("extract anti-join works w/ char-call non-equi join", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(

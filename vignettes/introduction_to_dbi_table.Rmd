@@ -90,7 +90,7 @@ The preview has a format similar to a `data.table` with two notable exceptions.
    last. The rows displayed are the first 5 returned by the RDBMS.
 
 The function `as.data.table` executes the `dbi.table`'s underlying SQL query and
-retrieves the result set as a `data.table`. Pro tip: calling the brackets method
+retrieves the result set as a `data.table`. Pro tip: calling the extracts method
 (`[]`) with no arguments is a shortcut for `as.data.table`.
 
 ```{r fetch_data_table}
@@ -101,7 +101,7 @@ my_album[]
 Since the result set is instantiated locally as a `data.table`, the row numbers
 and the last 5 rows are displayed.
 
-Note: by default, `as.data.table` (and the empty brackets shortcut) fetch a
+Note: by default, `as.data.table` (and the empty extracts shortcut) fetch a
 maximum of 10,000 rows. To override this limit, either set the option
 `dbi_table_max_fetch` or call `as.data.table` and provide the `n` argument
 (e.g., `n = -1` to fetch the entire result set). 

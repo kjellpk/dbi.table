@@ -44,7 +44,7 @@
 #'   # 'id' can also be 'SQL'; use the same DBI connection as Album
 #'   Genre <- dbi.table(Album, DBI::SQL("chinook_duckdb.main.Genre"))
 #'
-#'   # use the brackets method to subset the dbi.table
+#'   # use the extract (\code{[}) method to subset the dbi.table
 #'   Album[AlbumId < 5, .(Title, nchar = paste(nchar(Title), "characters"))]
 #'
 #'   # use csql to see the underlying SQL query

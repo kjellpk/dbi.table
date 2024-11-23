@@ -259,7 +259,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
     on <- as.list(on[-1])
   }
 
-  on <- lapply(on, bracket_on_validator, x_names = x_names, i_names = i_names)
+  on <- lapply(on, extract_on_validator, x_names = x_names, i_names = i_names)
 
   on_x <- as.character(lapply(on, `[[`, 2L))
   on_i <- as.character(lapply(on, `[[`, 3L))
@@ -314,7 +314,7 @@ DT_SUPPORTED_JOIN_OPERATORS <- c("==", "<=", "<", ">=", ">")
 
 
 
-bracket_on_validator <- function(expr, x_names, i_names) {
+extract_on_validator <- function(expr, x_names, i_names) {
   if (is.name(expr)) {
     cexpr <- as.character(expr)
     if (cexpr %chin% x_names && cexpr %chin% i_names) {
