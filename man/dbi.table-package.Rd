@@ -11,10 +11,10 @@ dbi.table(conn, id)
 \method{[}{dbi.table}(x, i, j, by, nomatch = NA, on = NULL)
 }
 \arguments{
-\item{conn}{A \code{\linkS4class{DBIConnection}} object, as returned by
-\code{\link[DBI]{dbConnect}}. Alternatively, a \code{\link{dbi.catalog}}
-or a \code{dbi.table}, in which case the new \code{dbi.table} will use the
-connection embedded in the provided object.}
+\item{conn}{A \code{\link[DBI:DBIConnection-class]{DBIConnection}} object, as
+returned by \code{\link[DBI]{dbConnect}}. Alternatively, a
+\code{\link{dbi.catalog}} or a \code{dbi.table}, in which case the new
+\code{dbi.table} will use the connection embedded in the provided object.}
 
 \item{id}{An \code{Id}, a character string (which will be converted to
 an \code{Id} by \code{\link[DBI]{Id}}), or a \code{\link[DBI]{SQL}} object

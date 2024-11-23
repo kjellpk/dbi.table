@@ -46,12 +46,6 @@ by the query. A negative value omits the LIMIT (or TOP) clause entirely.}
 \description{
 Call DBI methods using the underlying DBI connection.
 }
-\examples{
-duck <- dbi.catalog(chinook.duckdb)
-dbExecute(duck, DBI::SQL("INSTALL httpfs;"))
-dbExecute(duck, DBI::SQL("LOAD httpfs;"))
-
-}
 \seealso{
 \code{\link[DBI]{dbExecute}}, \code{\link[DBI]{dbGetInfo}},
   \code{\link[DBI]{dbSendStatement}}
