@@ -17,7 +17,7 @@
 #'   a \code{call} specifying the join predicate. The symbols in \code{on}
 #'   should be column names of \code{x} or column names of \code{y}, use
 #'   prefixes as necessary.
-#'   
+#'
 #' @param prefixes
 #'   a 2-element character vector of distinct values. When \code{x} and \code{y}
 #'   both have a column with the same name (e.g., \code{common_name}) then, when
@@ -26,12 +26,15 @@
 #'   in \code{x} and \code{`prefixes[2]`common_name} to refer to the
 #'   \code{common_name} column in \code{y}. \code{prefixes} are also used to
 #'   disambiguate the output column names.
-#' 
+#'
+#' @return
+#'   a \code{dbi.table}.
+#'
 #' @examples
 #' chinook <- dbi.catalog(chinook.duckdb)
 #' Album <- chinook$main$Album
 #' Artist <- chinook$main$Artist
-#' 
+#'
 #' sql.join(Album, Artist, type = "inner",
 #'          on = Album.ArtistId == Artist.ArtistId,
 #'          prefixes = c("Album.", "Artist."))

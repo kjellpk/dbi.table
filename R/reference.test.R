@@ -35,6 +35,9 @@
 #'   displayed in a message when \code{all.equal} returns anything other than
 #'   \code{TRUE}.
 #'
+#' @return
+#'   a logical value.
+#'
 #' @examples
 #'   duck <- dbi.catalog(chinook.duckdb)
 #'   Album <- duck$main$Album

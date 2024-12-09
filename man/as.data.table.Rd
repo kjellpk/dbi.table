@@ -24,6 +24,9 @@
 \code{\link[DBI]{dbFetch}}. When negative, the underlying SQL query does
 not include a LIMIT clause and all rows in the result set are returned.}
 }
+\value{
+a \code{dbi.table}.
+}
 \description{
 Execute a \code{\link{dbi.table}}'s underlying SQL query and return the
   result set as a \code{\link[data.table]{data.table}}. By default, the

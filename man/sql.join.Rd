@@ -26,6 +26,9 @@ in \code{x} and \code{`prefixes[2]`common_name} to refer to the
 \code{common_name} column in \code{y}. \code{prefixes} are also used to
 disambiguate the output column names.}
 }
+\value{
+a \code{dbi.table}.
+}
 \description{
 A \code{SQL}-like join of two \code{\link{dbi.table}}s that share the
 same underlying \code{\link[DBI]{DBI}} connection. All columns of both

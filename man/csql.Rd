@@ -12,6 +12,9 @@ csql(x, n = getOption("dbi_table_max_fetch", 10000L))
 \item{n}{a single integer value. When nonnegative, limits the number of rows
 returned by the query to \code{n}.}
 }
+\value{
+none (invisible \code{NULL}).
+}
 \description{
 View a \code{\link{dbi.table}}'s underlying SQL query.
 }

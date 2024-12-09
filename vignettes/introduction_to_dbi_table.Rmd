@@ -10,9 +10,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set()
-options(width = 90)
+```{r, set_options, include = FALSE}
+old_opts <- options(width = 90)
 ```
 
 Query database tables and views over a DBI connection using `data.table`'s
@@ -368,4 +367,6 @@ detach("duckdb:chinook_duckdb")
 Further, when `dbi.table` owns the connection, it is able to reconnect in the
 event that the connection unexpectedly drops.
 
-
+```{r, restore_options, include = FALSE}
+options(old_opts)
+```

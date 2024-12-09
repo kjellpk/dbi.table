@@ -20,9 +20,9 @@ Suggests:
   knitr,
   rmarkdown
 Description:
-  Query database tables over a DBI connection using `data.table` syntax. Attach
-  database schemas to the search path. Automatically merge using foreign key
-  constraints.
+  Query database tables over a 'DBI' connection using 'data.table' syntax.
+  Attach database schemas to the search path. Automatically merge using foreign
+  key constraints.
 License: MPL-2.0
 URL: https://github.com/kjellpk/dbi.table
 BugReports: https://github.com/kjellpk/dbi.table/issues

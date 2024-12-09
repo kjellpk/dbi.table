@@ -258,6 +258,9 @@ print.dbi.table <- function(x, ...) {
 #'   \code{\link[data.table]{as.data.table}} (the generic method in the
 #'   \pkg{data.table} package).
 #'
+#' @return
+#'   a \code{dbi.table}.
+#'
 #' @examples
 #'   duck <- chinook.duckdb()
 #'   Artist <- dbi.table(duck, DBI::Id("Artist"))
@@ -500,6 +503,9 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #' @section Note: The temporary tables created by this function are dropped
 #'                (by calling \code{\link[DBI]{dbRemoveTable}}) during garbage
 #'                collection when they are no longer referenced.
+#'
+#' @return
+#'   a \code{dbi.table}.
 #'
 #' @examples
 #' duck <- dbi.catalog(chinook.duckdb)

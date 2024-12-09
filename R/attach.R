@@ -31,6 +31,9 @@
 #'
 #' @seealso \code{\link[base]{attach}}
 #'
+#' @return
+#'   an \code{\link{environment}}, the attached schema is invisibly returned.
+#'
 #' @export
 dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
                        schema = NULL, graphics = TRUE) {

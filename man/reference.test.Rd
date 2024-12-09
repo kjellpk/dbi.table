@@ -23,6 +23,9 @@ be coerced into a \code{data.table}.}
 displayed in a message when \code{all.equal} returns anything other than
 \code{TRUE}.}
 }
+\value{
+a logical value.
+}
 \description{
 Evaluate an expression including at least one \code{dbi.table} and compare
 the result with the \emph{Reference Implementation}. This function is

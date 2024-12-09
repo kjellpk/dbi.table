@@ -33,6 +33,9 @@ masking a function, or a non-function masking a non-function.}
 sessions, when \code{schema} is \code{NULL} and multiple schemas are
 found on \code{what}, a menu is displayed to select a schema.}
 }
+\value{
+an \code{\link{environment}}, the attached schema is invisibly returned.
+}
 \description{
 Create a \code{\link{dbi.table}} for each database object in a schema and
   place them on the search path.

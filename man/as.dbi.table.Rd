@@ -23,6 +23,9 @@ is extracted from the provided object.}
 or fewer rows or when creating a temporary table on the database
 fails.}
 }
+\value{
+a \code{dbi.table}.
+}
 \description{
 Test whether an object is a \code{dbi.table}, or coerce it if possible.
 }

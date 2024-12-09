@@ -64,6 +64,9 @@ paren <- function(x) {
 #'   a single integer value. When nonnegative, limits the number of rows
 #'   returned by the query to \code{n}.
 #'
+#' @return
+#'   none (invisible \code{NULL}).
+#'
 #' @export
 csql <- function(x, n = getOption("dbi_table_max_fetch", 10000L)) {
   cat(paste0(write_select_query(x, n), "\n"))

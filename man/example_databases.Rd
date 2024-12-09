@@ -10,6 +10,10 @@ chinook.sqlite()
 
 chinook.duckdb()
 }
+\value{
+a \code{\link[DBI:DBIConnection-class]{DBIConnection}} object, as
+  returned by \code{\link[DBI]{dbConnect}}.
+}
 \description{
 These zero-argument functions return connections to the example
              databases included in the \pkg{dbi.table} package.
