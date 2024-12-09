@@ -5,3 +5,4 @@
 ^scratch\.R$
 ^\.github$
 ^notes$
+^cran-comments\.md$

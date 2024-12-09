@@ -1,5 +1,3 @@
-# Comments to CRAN Maintainer
-
 This resubmission of the `dbi.table` package includes the changes requested by
 K. Lauseker from my first submission attempt. The requested changes and my
 actions are in section 1.0.1.
