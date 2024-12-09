@@ -1,6 +1,6 @@
 Package: dbi.table
 Type: Package
-Title: Database Queries Using `data.table` Syntax
+Title: Database Queries Using 'data.table' Syntax
 Version: 1.0.1
 Depends:
   data.table
