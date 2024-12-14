@@ -89,7 +89,6 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   #                path unless that is their purpose."
   #
   # The intended purpose of dbi.attach is to add data on the search path.
-  # Mask the attach funcation as 'fun' to avoid R CMD check error.
 
   e <- get("attach", "package:base")(NULL, pos = pos, name = name,
            warn.conflicts = warn.conflicts)
@@ -98,10 +97,12 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
 
   for (tab in ls(db[[schema]])) {
     e[[tab]] <- db[[schema]][[tab]]
+    lockBinding(tab, e)
   }
 
   rm(list = schema, pos = db)
   db[[schema]] <- e
+  lockBinding(schema, db)
 
   invisible(e)
 }

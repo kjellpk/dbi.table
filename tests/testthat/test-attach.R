@@ -8,7 +8,7 @@ test_that("dbi.attach works", {
     expect_s3_class(e[["../catalog"]], "dbi.catalog")
     expect_vector(s <- ls(e), ptype = character())
     expect_true(all(unlist(eapply(e, is.dbi.table))))
-    expect_error(eval(quote(Album[, z := 42]), envir = e))
+    expect_warning(eval(quote(Album[, z := 42]), envir = e))
     expect_silent(detach(2L))
   }
 })

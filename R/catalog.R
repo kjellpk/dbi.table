@@ -62,8 +62,10 @@ dbi.catalog <- function(conn) {
     column_names <- obj$column_names[[1L]]
 
     db[[table_schema]][[table_name]] <- new_dbi_table(db, id, column_names)
+    lockBinding(table_name, db[[table_schema]])
   }
 
+  lapply(ls(db), lockBinding, env = db)
   db
 }
 
