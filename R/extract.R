@@ -303,21 +303,16 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
   a$names <- names(x)
   attributes(x) <- a
 
-  if (is.name(x_sub)) {
+  if (is.symbol(x_sub)) {
     x_name <- as.character(x_sub)
+    x_env <- find_environment(x_name, class = "dbi.table", envir = env)
 
-    if (!is.null(env[[x_name]]) || identical(env, .GlobalEnv)) {
-      if (is_dbi_catalog(env[["../catalog"]])) {
-        stop("'dbi.table's in 'dbi.catalog's cannot be modified by reference",
-             call. = FALSE)
-      } else {
-        assign(x_name, x, envir = env)
+    if (!is.null(x_env)) {
+      res <- try(assign(x_name, x, pos = x_env), silent = TRUE)
+      if (inherits(res, "try-error")) {
+        warning(attr(res, "condition")$message, call. = FALSE)
       }
-    } else {
-      warning("'", x_name, "' could not be modified in place")
     }
-  } else {
-    warning("dbi.table could not be modified in place")
   }
 
   #invisible doesn't work - use data.table's workaround
