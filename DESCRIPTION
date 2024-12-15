@@ -32,6 +32,11 @@ Authors@R: c(
   person(given = c("Kjell", "P."),
          family = "Konis",
          role = c("aut", "cre"),
-         email = "kjellk@gmail.com"))
+         email = "kjellk@gmail.com"),
+  person(given  = "Luis",
+         family = "Rocha",
+         role = "ctb",
+         comment = "Chinook Database -  see example_files/LICENSE")
+  )
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2
