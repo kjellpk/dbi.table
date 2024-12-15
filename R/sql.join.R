@@ -1,12 +1,12 @@
 #' Join \code{dbi.table}s
 #'
 #' A \code{SQL}-like join of two \code{\link{dbi.table}}s that share the
-#' same underlying \code{\link[DBI]{DBI}} connection. All columns of both
-#' \code{\link{dbi.table}}s are returned.
+#' same \code{\link[DBI:DBIConnection-class]{DBI connection}}. All columns from
+#' both \code{\link{dbi.table}}s are returned.
 #'
 #' @param x,y
 #'   \code{\link{dbi.table}}s to join. \code{x} and \code{y} must share the same
-#'   \code{\link[DBI]{DBI}} connection.
+#'   \code{\link[DBI:DBIConnection-class]{DBI connection}}.
 #'
 #' @param type
 #'   a character string specifying the join type. Valid choices are
@@ -21,7 +21,7 @@
 #' @param prefixes
 #'   a 2-element character vector of distinct values. When \code{x} and \code{y}
 #'   both have a column with the same name (e.g., \code{common_name}) then, when
-#'   specifing the join predicate in \code{on}, use 
+#'   specifing the join predicate in \code{on}, use
 #'   \code{`prefixes[1]`common_name} to refer to the \code{common_name} column
 #'   in \code{x} and \code{`prefixes[2]`common_name} to refer to the
 #'   \code{common_name} column in \code{y}. \code{prefixes} are also used to
