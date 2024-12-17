@@ -25,7 +25,8 @@ dbi.catalog <- function(conn) {
   conn <- get_connection(init_connection(conn))
   db <- new.env(parent = emptyenv())
 
-  db$.dbi_connection <- conn
+  #db$.dbi_connection <- conn
+  assign("./dbi_connection", conn, pos = db)
   class(db) <- "dbi.catalog"
 
   if (!is.null(attr(conn, "recon", exact = TRUE))) {
@@ -72,8 +73,8 @@ dbi.catalog <- function(conn) {
 
 
 dbi.catalog_disconnect <- function(e) {
-  on.exit(rm(list = ".dbi_connection", envir = e))
-  try(DBI::dbDisconnect(e[[".dbi_connection"]]), silent = TRUE)
+  on.exit(rm(list = "./dbi_connection", envir = e))
+  try(DBI::dbDisconnect(dbi_connection(e)), silent = TRUE)
 }
 
 
