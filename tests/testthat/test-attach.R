@@ -13,7 +13,7 @@ test_that("dbi.attach works", {
   }
 
   skip_on_cran()
-  skip_if_offline()
+  #skip_if_offline() #Borks in github Actions, adding curl package didn't help
 
   rna <- function() {
     DBI::dbConnect(RPostgres::Postgres(),
