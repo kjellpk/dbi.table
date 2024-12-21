@@ -39,10 +39,15 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
                        schema = NULL, graphics = TRUE) {
   what_name <- deparse1(substitute(what))
   what <- init_connection(what)
+  on.exit(DBI::dbDisconnect(what))
 
-  db <- dbi.catalog(what)
+  columns <- get_init_columns(what)
 
-  schemas <- setdiff(ls(db), c("information_schema", "pg_catalog"))
+  if (is.null(columns)) {
+    schemas <- "main"
+  } else {
+    schemas <- setdiff(unique(columns$table_schema), session$ignore_schemas)
+  }
 
   if (is.null(schema)) {
     if (length(schemas) == 1L) {
@@ -93,16 +98,11 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   e <- get("attach", "package:base")(NULL, pos = pos, name = name,
            warn.conflicts = warn.conflicts)
 
-  e <- init_schema(e, schema, db)
+  el <- list(e)
+  names(el) <- schema
+  catalog <- new_dbi_catalog(what, schemas = el, columns)
+  init_schema(e, schema, catalog)
 
-  for (tab in ls(db[[schema]])) {
-    e[[tab]] <- db[[schema]][[tab]]
-    lockBinding(tab, e)
-  }
-
-  rm(list = schema, pos = db)
-  db[[schema]] <- e
-  lockBinding(schema, db)
-
+  on.exit() #don't dbDisconnect
   invisible(e)
 }
