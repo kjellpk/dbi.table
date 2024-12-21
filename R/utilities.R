@@ -115,3 +115,11 @@ find_environment <- function(x, mode = "any", class = NULL,
 
   find_environment(x, mode, class, parent.env(envir))
 }
+
+
+
+assign_and_lock <- function(x, value, pos) {
+  assign(x, value, pos)
+  lockBinding(x, pos)
+  return(TRUE)
+}

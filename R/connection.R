@@ -56,7 +56,7 @@ get_connection.default <- function(x) {
 
 dbi_connection <- function(x) {
   if (is_dbi_catalog(conn <- get_connection(x))) {
-    conn <- conn[[".dbi_connection"]]
+    conn <- get("./dbi_connection", pos = conn, inherits = FALSE)
   }
   conn
 }
