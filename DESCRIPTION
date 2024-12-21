@@ -14,6 +14,8 @@ Imports:
   utils
 Suggests:
   R.utils,
+  RMariaDB,
+  RPostgres,
   RSQLite,
   duckdb,
   testthat (>= 3.0.0),

@@ -6,6 +6,11 @@
 #'   a connection handle returned by \code{\link[DBI]{dbConnect}} or a
 #'   zero-argument function that returns a connection handle.
 #'
+#' @param schemas
+#'   a character vector of distinct schema names. These schemas will be loaded
+#'   into the returned \code{dbi.catalog}. The default \code{schemas = NULL}
+#'   loads all schemas in the catalog.
+#'s
 #' @return \code{dbi.catalog} returns a \code{dbi.catalog} (internally an
 #'         \code{\link[base]{environment}} with the class attribute set to
 #'         \code{"dbi.catalog"}).
@@ -49,7 +54,7 @@ new_dbi_catalog <- function(conn, schemas, columns) {
   if (is.null(columns$table_schema)) {
     schema_names <- "main"
   } else {
-    schema_names <- setdiff(unique(columns$table_schema), "information.schema")
+    schema_names <- setdiff(unique(columns$table_schema), "information_schema")
   }
 
   if (is.null(schemas)) {
@@ -73,15 +78,26 @@ new_dbi_catalog <- function(conn, schemas, columns) {
 
 
 
-install_from_columns <- function(columns, schemas, catalog) {
+install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
   schema_names <- names(schemas)
   by_cols <- intersect(c("table_catalog", "table_schema", "table_name"),
                        names(columns))
 
-  tables <- columns[, .(dbi_table = list(new_dbi_table(catalog,
-                                                       DBI::Id(unlist(.BY)),
-                                                       column_name))),
+  tables <- columns[, list(dbi_table = list(new_dbi_table(catalog,
+                                                          DBI::Id(unlist(.BY)),
+                                                          column_name))),
                     by = by_cols]
+
+  if (to_lower) {
+    tables[, "table_catalog" := tolower(table_catalog)]
+    tables[, "table_schema" := tolower(table_schema)]
+    tables[, "table_name" := tolower(table_name)]
+    tables[, "dbi_table" := lapply(dbi_table, function(u) {
+      names(u) <- tolower(names(u))
+      u
+    })]
+  }
+
   if (is.null(tables$table_schema)) {
     tables[, table_schema := schema_names[[1L]]]
   } else {
@@ -89,12 +105,11 @@ install_from_columns <- function(columns, schemas, catalog) {
   }
 
   tables[, schema := schemas[table_schema]]
-  dev_null <- mapply(assign_and_lock,
-                     x = tables$table_name,
-                     value = tables$dbi_table,
-                     pos = tables$schema,
-                     SIMPLIFY = FALSE,
-                     USE.NAMES = FALSE)
+
+  dev_null <- tables[, assign_and_lock(table_name,
+                                       dbi_table[[1L]],
+                                       schema[[1L]]),
+                     by = seq_len(nrow(tables))]
 
   invisible()
 }
@@ -167,15 +182,9 @@ new_schema <- function(schema_name, catalog) {
 
 
 init_schema <- function(schema, schema_name, catalog) {
-  assign(schema_name, schema, catalog)
-  lockBinding(schema_name, catalog)
-
-  assign("./schema_name", schema_name, schema)
-  lockBinding("./schema_name", schema)
-
-  assign("../catalog", catalog, schema)
-  lockBinding("../catalog", schema)
-
+  assign_and_lock(schema_name, schema, catalog)
+  assign_and_lock("./schema_name", schema_name, schema)
+  assign_and_lock("../catalog", catalog, schema)
   class(schema) <- "dbi.schema"
   schema
 }

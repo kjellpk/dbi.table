@@ -1,27 +1,16 @@
 information_schema <- function(catalog, columns) {
   info <- new_schema(schema_name = "information_schema", catalog = catalog)
+  info_columns <- columns[tolower(table_schema) == "information_schema"]
 
-  if (nrow(ss <- columns[tolower(table_schema) == "information_schema"])) {
-    for (tab in unique(ss$table_name)) {
-      tmp <- ss[table_name == tab][order(ordinal_position)]
-      id <- tmp[1L, list(table_catalog, table_schema, table_name)]
-      id <- DBI::Id(unlist(id))
-      assign(tolower(tab),
-             new_dbi_table(catalog, id, tolower(tmp$column_name)),
-             info)
-    }
+  if (nrow(info_columns)) {
+    install_from_columns(info_columns, list(information_schema = info),
+                         catalog, to_lower = TRUE)
   } else {
-    info_tables <- c("columns",
-                     "key_column_usage",
-                     "referential_constraints",
-                     "tables")
-    for (info_table in info_tables) {
-      id <- DBI::SQL(paste0("information_schema.", info_table))
-      tab <- try(new_dbi_table(catalog, id), silent = TRUE)
-      if (is.dbi.table(tab)) {
-        assign(info_table, tab, info)
-      }
-    }
+    dev_null <- lapply(session$default_information_schema_tables, function(u) {
+      id <- DBI::SQL(paste0("information_schema.", u))
+      info_table <- try(new_dbi_table(catalog, id), silent = TRUE)
+      if (is.dbi.table(info_table)) assign_and_lock(u, info_table, info)
+    })
   }
 
   info
@@ -43,7 +32,7 @@ bare_bones_information_schema <- function(catalog) {
                     MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
   columns <- lapply(columns, function(u) data.table(column_name = u))
   columns <- rbindlist(columns, idcol = "table_name")
-  columns[, ordinal_position := seq_len(.N), by = .(table_name)]
+  columns[, ordinal_position := seq_len(.N), by = "table_name"]
   setcolorder(columns, c("table_name",
                          "column_name",
                          "ordinal_position"))
@@ -87,7 +76,7 @@ get_init_columns <- function(catalog) {
 
 
 # Define globally for R CMD check
-. <- NULL
+dbi_table <- NULL
 table_catalog <- NULL
 table_schema <- NULL
 table_name <- NULL

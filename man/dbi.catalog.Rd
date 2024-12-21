@@ -9,6 +9,11 @@ dbi.catalog(conn, schemas = NULL)
 \arguments{
 \item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}} or a
 zero-argument function that returns a connection handle.}
+
+\item{schemas}{a character vector of distinct schema names. These schemas will be loaded
+  into the returned \code{dbi.catalog}. The default \code{schemas = NULL}
+  loads all schemas in the catalog.
+s}
 }
 \value{
 \code{dbi.catalog} returns a \code{dbi.catalog} (internally an
