@@ -9,7 +9,12 @@ information_schema <- function(catalog, columns) {
     dev_null <- lapply(session$default_information_schema_tables, function(u) {
       id <- DBI::SQL(paste0("information_schema.", u))
       info_table <- try(new_dbi_table(catalog, id), silent = TRUE)
-      if (is.dbi.table(info_table)) assign_and_lock(u, info_table, info)
+      if (is.dbi.table(info_table)) {
+        names(info_table) <- tolower(names(info_table))
+        assign_and_lock(u, info_table, info)
+      } else {
+        FALSE
+      }
     })
   }
 
