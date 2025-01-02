@@ -75,7 +75,7 @@ reference.test <- function(expr, envir = parent.frame(),
                   ignore.row.order = ignore.row.order)
 
   if (verbose && !isTRUE(eq)) {
-    message(eq)
+    message(paste(eq, collapse = "\n"))
   }
 
   isTRUE(eq)
