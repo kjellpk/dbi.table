@@ -149,17 +149,17 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
       stop("non-empty character vectors of column names are required for ",
            "'by.x' and 'by.y'")
 
-    if (!all(by.x %chin% names_x))
+    if (!all(by.x %in% names_x))
       stop("Elements listed in 'by.x' must be valid column names in 'x'")
 
-    if (!all(by.y %chin% names_y))
+    if (!all(by.y %in% names_y))
       stop("Elements listed in 'by.y' must be valid column names in 'y'")
   } else {
     if (!length(by)) {
       stop("a non-empty character vector of column names is required for 'by'")
     }
 
-    if (!all(by %chin% intersect(names_x, names_y)))
+    if (!all(by %in% intersect(names_x, names_y)))
       stop("Elements listed in 'by' must be valid column names in 'x' and 'y'")
 
     by <- unname(by)
@@ -192,7 +192,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   non_by <- names(xy)[c(x_non_by_jdx, x_length + y_non_by_jdx)]
   non_by <- unname(sapply(non_by, as.name, simplify = FALSE))
 
-  if (type %chin% c("inner", "left")) {
+  if (type %in% c("inner", "left")) {
     by <- names_list(xy)[by_x_jdx]
   } else if (type == "right") {
     by <- names_list(xy)[x_length + by_y_jdx]
@@ -297,7 +297,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
     if (is.null(j)) {
       i_names <- setdiff(i_names, on_i)
       dups <- intersect(i_names, x_names)
-      i_names[i_names %chin% dups] <- paste0("i.", i_names[i_names %chin% dups])
+      i_names[i_names %in% dups] <- paste0("i.", i_names[i_names %in% dups])
       j <- names_list(c(x_names, i_names))
     }
 
@@ -317,7 +317,7 @@ DT_SUPPORTED_JOIN_OPERATORS <- c("==", "<=", "<", ">=", ">")
 extract_on_validator <- function(expr, x_names, i_names) {
   if (is.name(expr)) {
     cexpr <- as.character(expr)
-    if (cexpr %chin% x_names && cexpr %chin% i_names) {
+    if (cexpr %in% x_names && cexpr %in% i_names) {
       return(call("==", expr, expr))
     } else {
       stop("argument specifying columns received non-existing column: '",
@@ -325,12 +325,12 @@ extract_on_validator <- function(expr, x_names, i_names) {
     }
   }
 
-  if ((op <- is_call_to(expr)) %chin% DT_SUPPORTED_JOIN_OPERATORS) {
-    if (!(lhs <- as.character(expr[[2L]])) %chin% x_names) {
+  if ((op <- is_call_to(expr)) %in% DT_SUPPORTED_JOIN_OPERATORS) {
+    if (!(lhs <- as.character(expr[[2L]])) %in% x_names) {
       stop("argument specifying columns received non-existing column: '",
            lhs, "'")
     }
-    if (!(rhs <- as.character(expr[[3L]])) %chin% i_names) {
+    if (!(rhs <- as.character(expr[[3L]])) %in% i_names) {
       stop("argument specifying columns received non-existing column: '",
            rhs, "'")
     }

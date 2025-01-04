@@ -35,7 +35,7 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
       return(eval(e[[1L]], specials, NULL)(e, envir, specials, enclos))
     }
 
-    if (!any(all.vars(e) %chin% names(envir))) {
+    if (!any(all.vars(e) %in% names(envir))) {
       ee <- eval(e, NULL, enclos)
 
       if (is.data.frame(ee) || is.dbi.table(ee)) {
@@ -76,7 +76,7 @@ names_list <- function(x, names.out = NULL) {
 
 
 use_integer <- function(x) {
-  if (is.numeric(x) && !any(class(x) %chin% c("POSIXct", "Date"))) {
+  if (is.numeric(x) && !any(class(x) %in% c("POSIXct", "Date"))) {
     if (max(abs(x - (rx <- round(x, digits = 0L)))) < .Machine$double.eps) {
       if (max(abs(rx)) > .Machine$integer.max) {
         x <- bit64::as.integer64(rx)
@@ -94,7 +94,7 @@ use_integer <- function(x) {
 SQL_MODES <- c("numeric", "character", "logical")
 
 if_allowed_mode <- function(x) {
-  if (!is.atomic(x) || !(mode(x) %chin% SQL_MODES)) {
+  if (!is.atomic(x) || !(mode(x) %in% SQL_MODES)) {
     stop("'x' is not atomic", call. = FALSE)
   }
   use_integer(x)
@@ -178,7 +178,7 @@ call_can_aggregate <- function(e) {
   }
 
   if (is.call(e)) {
-    if (as.character(e[[1]]) %chin% AGGREGATE_FUNCTIONS) {
+    if (as.character(e[[1]]) %in% AGGREGATE_FUNCTIONS) {
       return(TRUE)
     } else {
       return(all(vapply(as.list(e)[-1], call_can_aggregate, FALSE)))

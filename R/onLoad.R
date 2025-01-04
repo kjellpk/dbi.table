@@ -24,7 +24,7 @@ session$default_information_schema_tables <- c("columns",
   #add_special(".", special_list)
   #add_special("list", special_list)
   add_special("%in%", special_in)
-  add_special("%chin%", special_in)
+  add_special("%in%", special_in)
   add_special("local", special_local)
   add_special("!", special_not)
   add_special("%like%", special_like)

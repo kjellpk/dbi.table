@@ -191,7 +191,7 @@ print.dbi.table <- function(x, ...) {
       (length(scs) >= 3L && is.symbol(this <- scs[[length(scs) - 2L]][[1L]]) &&
       as.character(this) == "source") ||
       (length(scs) > 3L && is.symbol(this <- scs[[length(scs) - 3L]][[1L]]) &&
-      as.character(this) %chin% mimics_auto_print)) {
+      as.character(this) %in% mimics_auto_print)) {
       return(invisible(x))
     }
   }

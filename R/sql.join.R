@@ -89,7 +89,7 @@ sql.join <- function(x, y, type = "inner", on = NULL,
 
   on_vars <- all.vars(on)
 
-  if (any(i <- !(on_vars %chin% names(xref)))) {
+  if (any(i <- !(on_vars %in% names(xref)))) {
     stop("ambiguous use of '", v <- on_vars[i][1], "' in 'on'; use '",
          paste0(prefixes[[1L]], v), "' to refer to the '", v, "' in 'x' ",
          "and '", paste0(prefixes[[2L]], v), "' to refer to the '", v,
@@ -162,9 +162,9 @@ sql.join <- function(x, y, type = "inner", on = NULL,
   # 7. Set output names
 
   dups <- intersect(x_names, y_names)
-  idx <- x_names %chin% dups
+  idx <- x_names %in% dups
   x_names[idx] <- paste0(prefixes[[1L]], x_names[idx])
-  idx <- y_names %chin% dups
+  idx <- y_names %in% dups
   y_names[idx] <- paste0(prefixes[[2L]], y_names[idx])
 
   names(xy) <- c(x_names, y_names)

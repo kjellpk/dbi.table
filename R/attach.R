@@ -65,13 +65,13 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
       stop("error setting up database")
     }
   } else {
-    if (!(schema %chin% schemas)) {
+    if (!(schema %in% schemas)) {
       stop("schema '", schema, "' not found")
     }
   }
 
   if (is.null(name)) {
-    if (schema %chin% c("main", "dbo")) {
+    if (schema %in% c("main", "dbo")) {
       name <- db_short_name(what)
     } else {
       name <- schema

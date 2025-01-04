@@ -152,7 +152,7 @@ relational_merge <- function(x, recursive = FALSE) {
 
     n <- nrow(fields)
     new_id_name <- pk$table[[1L]]
-    if (new_id_name %chin% fields$id_name) {
+    if (new_id_name %in% fields$id_name) {
       new_id_name <- unique_table_name()
     }
 

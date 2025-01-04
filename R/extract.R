@@ -58,7 +58,7 @@ preprocess_by <- function(e, dbi_table, enclos, single.ok = FALSE) {
 
 
 preprocess_common <- function(e, dbi_table, enclos, single.ok) {
-  if (is_call_to(e) %chin% c(".", "list")) {
+  if (is_call_to(e) %in% c(".", "list")) {
     e <- as.list(e)[-1]
   }
 
@@ -108,7 +108,7 @@ preprocess_common <- function(e, dbi_table, enclos, single.ok) {
       return(sapply(names(dbi_table), as.name, simplify = FALSE)[e])
     }
 
-    if (e_char %chin% names(dbi_table)) {
+    if (e_char %in% names(dbi_table)) {
       if (single.ok) {
         return(sapply(e_char, as.name, simplify = FALSE))
       } else {
@@ -262,14 +262,14 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
       lhs <- as.character(lhs)
     } else if (!length(all.vars(lhs))) {
       lhs <- as.character(eval(lhs, envir = env))
-    } else if (is_call_to(lhs) %chin% c(".", "list")) {
+    } else if (is_call_to(lhs) %in% c(".", "list")) {
       lhs <- vapply(as.list(lhs)[-1], deparse1, "")
     } else {
       stop("the left-hand-side of ':=' should be a character vector ",
            "or a list of names", call. = FALSE)
     }
 
-    if (is_call_to(j[[3L]]) %chin% c(".", "list")) {
+    if (is_call_to(j[[3L]]) %in% c(".", "list")) {
       j <- as.list(j[[3L]])[-1]
     } else {
       j <- list(j[[3L]])
