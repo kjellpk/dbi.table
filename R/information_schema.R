@@ -12,7 +12,7 @@ information_schema <- function(catalog, columns) {
     install_from_columns(info_columns, list(information_schema = info),
                          catalog, to_lower = TRUE)
   } else {
-    dev_null <- lapply(session$default_information_schema_tables, function(u) {
+    lapply(session$default_information_schema_tables, function(u) {
       id <- DBI::SQL(paste0("information_schema.", u))
       info_table <- try(new_dbi_table(catalog, id), silent = TRUE)
       if (is.dbi.table(info_table)) {
@@ -37,13 +37,14 @@ bare_bones_information_schema <- function(catalog) {
                        table_type = "BASE TABLE")
 
   columns <- mapply(function(conn, name) {
-                      tmp <- DBI::dbListFields(conn, name)
-                      data.frame(table_name = name,
-                                 column_name = tmp,
-                                 ordinal_position = seq_along(tmp))
-                    },
-                    name = tables$table_name,
-                    MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
+    fields <- DBI::dbListFields(conn, name)
+    data.frame(table_name = name,
+               column_name = fields,
+               ordinal_position = seq_along(fields))
+  },
+  name = tables$table_name,
+  MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
+
   columns <- do.call(rbind, columns)
 
   tables <- as.dbi.table(catalog, tables, type = "query")
