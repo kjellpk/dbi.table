@@ -1,6 +1,12 @@
 information_schema <- function(catalog, columns) {
   info <- new_schema(schema_name = "information_schema", catalog = catalog)
-  info_columns <- columns[tolower(table_schema) == "information_schema"]
+  info_columns <- subset(columns,
+                         subset = tolower(table_schema) == "information_schema",
+                         select = c("table_catalog",
+                                    "table_schema",
+                                    "table_name",
+                                    "column_name",
+                                    "ordinal_position"))
 
   if (nrow(info_columns)) {
     install_from_columns(info_columns, list(information_schema = info),
@@ -27,23 +33,23 @@ bare_bones_information_schema <- function(catalog) {
   conn <- dbi_connection(catalog)
   info <- new_schema("information_schema", catalog)
 
-  tables <- data.table(table_name = DBI::dbListTables(conn),
+  tables <- data.frame(table_name = DBI::dbListTables(conn),
                        table_type = "BASE TABLE")
 
-  assign("tables", tables, info)
-  lockBinding("tables", info)
-
-  columns <- mapply(DBI::dbListFields, name = tables$table_name,
+  columns <- mapply(function(conn, name) {
+                      tmp <- DBI::dbListFields(conn, name)
+                      data.frame(table_name = name,
+                                 column_name = tmp,
+                                 ordinal_position = seq_along(tmp))
+                    },
+                    name = tables$table_name,
                     MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
-  columns <- lapply(columns, function(u) data.table(column_name = u))
-  columns <- rbindlist(columns, idcol = "table_name")
-  columns[, ordinal_position := seq_len(.N), by = "table_name"]
-  setcolorder(columns, c("table_name",
-                         "column_name",
-                         "ordinal_position"))
+  columns <- do.call(rbind, columns)
 
-  assign("columns", columns, info)
-  lockBinding("columns", info)
+  tables <- as.dbi.table(catalog, tables, type = "query")
+  assign_and_lock("tables", tables, info)
+  columns <- as.dbi.table(catalog, columns, type = "query")
+  assign_and_lock("columns", columns, info)
 
   info
 }
@@ -66,12 +72,7 @@ get_init_columns <- function(catalog) {
                  silent = TRUE)
 
   if (is.data.frame(columns)) {
-    setDT(columns)
-    setnames(columns, tolower(names(columns)))
-    setkeyv(columns, c("table_catalog",
-                       "table_schema",
-                       "table_name",
-                       "ordinal_position"))
+    names(columns) <- tolower(names(columns))
     return(columns)
   }
 

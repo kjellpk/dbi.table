@@ -196,14 +196,18 @@ print.dbi.table <- function(x, ...) {
     }
   }
 
-  ans <- as.data.table(x, n = 6)
+  ans <- as.data.frame(x, n = 6)
+
+  if (requireNamespace("data.table")) {
+    data.table::setDT(ans)
+  }
 
   cat(paste0("<", db_short_name(dbi_connection(x)), ">"),
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
 
   if (nrow(ans) > 5L) {
-    print(ans[1:5], row.names = FALSE)
+    print(ans[1:5, ], row.names = FALSE)
     cat(" ---\n")
   } else if (nrow(ans) > 0L) {
     print(ans, row.names = FALSE)
@@ -276,6 +280,18 @@ print.dbi.table <- function(x, ...) {
 as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
                                     n = getOption("dbi_table_max_fetch",
                                                   10000L)) {
+  if (!requireNamespace("data.table")) {
+    stop("package 'data.table' not installed")
+  }
+
+  data.table::setDT(as.data.frame(x, n = n))
+}
+
+
+#' @export
+as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
+                                    n = getOption("dbi_table_max_fetch",
+                                                  10000L)) {
   res <- try(DBI::dbSendStatement(dbi_connection(x),
                                   write_select_query(x, n)),
              silent = TRUE)
@@ -317,7 +333,7 @@ as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
     }
   }
 
-  setDT(DBI::dbFetch(res, n = n))
+  DBI::dbFetch(res, n = n)
 }
 
 

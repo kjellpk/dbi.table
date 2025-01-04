@@ -45,14 +45,13 @@ new_dbi_catalog <- function(conn, schemas, columns) {
 
   if (is.null(columns <- get_init_columns(catalog))) {
     info <- bare_bones_information_schema(catalog)
-    columns <- copy(info$columns)
-    setkeyv(columns, c("table_name", "ordinal_position"))
+    columns <- as.data.frame(info$columns)
   } else {
     info <- information_schema(catalog, columns)
   }
 
   if (is.null(columns$table_schema)) {
-    schema_names <- "main"
+    schema_names <- columns$table_schema <- "main"
   } else {
     schema_names <- setdiff(unique(columns$table_schema), "information_schema")
   }
@@ -80,36 +79,36 @@ new_dbi_catalog <- function(conn, schemas, columns) {
 
 install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
   schema_names <- names(schemas)
-  by_cols <- intersect(c("table_catalog", "table_schema", "table_name"),
+  id_cols <- intersect(c("table_catalog", "table_schema", "table_name"),
                        names(columns))
 
-  tables <- columns[, list(dbi_table = list(new_dbi_table(catalog,
-                                                          DBI::Id(unlist(.BY)),
-                                                          column_name))),
-                    by = by_cols]
+  columns <- subset(columns,
+                    subset = table_schema %in% schema_names,
+                    select = c(id_cols, c("column_name", "ordinal_position")))
 
-  if (to_lower) {
-    tables[, "table_catalog" := tolower(table_catalog)]
-    tables[, "table_schema" := tolower(table_schema)]
-    tables[, "table_name" := tolower(table_name)]
-    tables[, "dbi_table" := lapply(dbi_table, function(u) {
-      names(u) <- tolower(names(u))
-      u
-    })]
-  }
+  tables <- split(columns, columns[, id_cols], drop = TRUE)
 
-  if (is.null(tables$table_schema)) {
-    tables[, table_schema := schema_names[[1L]]]
-  } else {
-    tables <- tables[table_schema %chin% schema_names]
-  }
+  tables <- lapply(tables, function(u) {
+    id <- DBI::Id(unlist(u[1L, id_cols]))
+    fields <- u$column_name[order(u$ordinal_position)]
 
-  tables[, schema := schemas[table_schema]]
+    if (to_lower) {
+      table_schema <- tolower(u$table_schema[[1L]])
+      table_name <- tolower(u$table_name[[1L]])
+      column_names <- tolower(fields)
+    } else {
+      table_schema <- u$table_schema[[1L]]
+      table_name <- u$table_name[[1L]]
+      column_names <- fields
+    }
 
-  dev_null <- tables[, assign_and_lock(table_name,
-                                       dbi_table[[1L]],
-                                       schema[[1L]]),
-                     by = seq_len(nrow(tables))]
+    schema <- schemas[[table_schema]]
+
+    x <- new_dbi_table(catalog, id, fields)
+    names(x) <- column_names
+
+    assign_and_lock(table_name, x, schema)
+  })
 
   invisible()
 }
@@ -152,25 +151,6 @@ print.dbi.catalog <- function(x, ...) {
 
 is_dbi_catalog <- function(x) {
   inherits(x, "dbi.catalog")
-}
-
-
-
-list_database_objects <- function(conn, info) {
-  if (is.null(columns <- info$.init_cols)) {
-    columns <- info$columns
-  } else {
-    rm(".init_cols", pos = info)
-  }
-
-  columns <- as.data.table(columns)
-
-  id_columns <- c("table_catalog", "table_schema", "table_name")
-  id_columns <- id_columns[id_columns %chin% names(columns)]
-
-  columns[, list(table_id = list(DBI::Id(unlist(.BY))),
-                 column_names = list(column_name)),
-          by = id_columns]
 }
 
 
