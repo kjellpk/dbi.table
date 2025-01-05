@@ -175,8 +175,8 @@ is.dbi.table <- function(x) {
 
 
 should_print <- function(x) {
-  ret <- (identical(session$print, "") || !identical(x, session$print))
-  session$print <- ""
+  ret <- (is.null(session$print) || !identical(x, session$print))
+  session$print <- NULL
   ret
 }
 

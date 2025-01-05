@@ -2,7 +2,7 @@
 
 session <- new.env(parent = emptyenv())
 session$table_name_counter <- 0L
-session$print <- character(1L)
+session$print <- NULL
 session$special_symbols <- new.env(parent = emptyenv())
 session$key_base <- "._.xcwrl_"
 session$tmp_base <- "DBI_TABLE_PACKAGE_TEMPORARY_TABLE_"
