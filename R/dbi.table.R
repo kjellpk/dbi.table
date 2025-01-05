@@ -175,7 +175,7 @@ is.dbi.table <- function(x) {
 
 
 should_print <- function(x) {
-  ret <- (session$print == "" || address(x) != session$print)
+  ret <- (identical(session$print, "") || !identical(x, session$print))
   session$print <- ""
   ret
 }

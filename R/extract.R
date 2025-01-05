@@ -316,6 +316,6 @@ handle_colon_equal <- function(x, i, j, by, env, x_sub) {
   }
 
   #invisible doesn't work - use data.table's workaround
-  session$print <- address(x)
+  session$print <- x
   x
 }
