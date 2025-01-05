@@ -174,43 +174,28 @@ is.dbi.table <- function(x) {
 
 
 
-should_print <- function(x) {
-  ret <- (is.null(session$print) || !identical(x, session$print))
-  session$print <- NULL
-  ret
-}
-
-
-
 #' @export
 print.dbi.table <- function(x, ...) {
-  mimics_auto_print <- "knit_print.default"
-  if (!should_print(x)) {
-    scs <- sys.calls()
-    if (length(scs) <= 2L ||
-      (length(scs) >= 3L && is.symbol(this <- scs[[length(scs) - 2L]][[1L]]) &&
-      as.character(this) == "source") ||
-      (length(scs) > 3L && is.symbol(this <- scs[[length(scs) - 3L]][[1L]]) &&
-      as.character(this) %in% mimics_auto_print)) {
-      return(invisible(x))
-    }
+  if (shouldnt_print(x)) {
+    return(invisible(x))
   }
 
   ans <- as.data.frame(x, n = 6)
+  classes <- display_class(ans)
 
-  if (requireNamespace("data.table")) {
-    data.table::setDT(ans)
-  }
+  m <- as.matrix(format(ans))
+  m <- rbind(classes, m)
+  dimnames(m)[[1L]] <- rep.int("", nrow(m))
 
   cat(paste0("<", db_short_name(dbi_connection(x)), ">"),
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
 
-  if (nrow(ans) > 5L) {
-    print(ans[1:5, ], row.names = FALSE)
+  if (nrow(m) > 6L) {
+    print(m[1:6, ], quote = FALSE, right = TRUE)
     cat(" ---\n")
-  } else if (nrow(ans) > 0L) {
-    print(ans, row.names = FALSE)
+  } else if (nrow(m) > 1L) {
+    print(m, quote = FALSE, right = TRUE)
   } else {
     m <- paste("Empty dbi.table (0 rows and", length(ans), "cols):",
                paste(names(ans), collapse = ","))

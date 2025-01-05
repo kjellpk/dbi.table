@@ -123,3 +123,24 @@ assign_and_lock <- function(x, value, pos) {
   lockBinding(x, pos)
   return(TRUE)
 }
+
+
+
+short_class_names <- c(integer = "int", numeric = "num",
+                       character = "char", POSIXct = "POSc",
+                       logical = "lgcl", integer64 = "i64")
+
+display_class <- function(l) {
+  classes <- vapply(l, function(u) class(u)[[1L]], character(1L))
+  idx <- classes %in% names(short_class_names)
+  classes[idx] <- short_class_names[classes[idx]]
+  paste0("<", classes, ">")
+}
+
+
+
+shouldnt_print <- function(x) {
+  ret <- identical(x, session$print)
+  session$print <- NULL
+  ret
+}
