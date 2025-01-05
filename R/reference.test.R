@@ -48,6 +48,10 @@
 #' @export
 reference.test <- function(expr, envir = parent.frame(),
                            ignore.row.order = TRUE, verbose = TRUE) {
+  if (!require("data.table")) {
+    stop("package 'data.table' is not installed")
+  }
+
   expr <- substitute(expr)
 
   dbits <- sapply(all.vars(expr), get0, envir = envir, simplify = FALSE)

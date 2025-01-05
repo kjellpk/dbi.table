@@ -439,7 +439,10 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
   }
 
   if (is.null(i) && is.null(j)) {
-    return(as.data.table(x))
+    if (requireNamespace("data.table")) {
+      return(as.data.table(x))
+    }
+    stop("package 'data.table' is not installed")
   }
 
   if (is_call_to(j) == ":=") {
