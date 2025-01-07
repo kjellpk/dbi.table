@@ -45,45 +45,37 @@ related_tables <- function(x, y = NULL) {
                 field_y = column_name)]
 
   xids <- unique(get_data_source(x)$id)
-  xids <- as.data.table(t(sapply(xids, function(u) u@name)))
+  xids <- as.data.frame(t(sapply(xids, function(u) u@name)))
+  xids <- as.dbi.table(info, xids, type = "query")
+  names(xids) <- c("catalog_x", "schema_x", "table_x")
 
-  setnames(xids, c("catalog_x", "schema_x", "table_x"))
+  rx <- r[xids, nomatch = NULL, on = names(xids)]
 
-  rx <- as.data.table(r[catalog_x %in% xids$catalog_x &
-                          schema_x %in% xids$schema_x &
-                          table_x %in% xids$table_x])
-
-  rx <- rx[xids, nomatch = NULL, on = names(xids)]
-
-  setnames(xids, c("catalog_y", "schema_y", "table_y"))
-  rx <- rx[!xids, on = names(xids)]
+  names(xids) <- c("catalog_y", "schema_y", "table_y")
+  rx <- rx[!xids, nomatch = NULL, on = names(xids)]
 
   if (!is.null(y)) {
     yids <- unique(get_data_source(y)$id)
-    yids <- as.data.table(t(sapply(yids, function(u) u@name)))
-    setnames(yids, c("catalog_y", "schema_y", "table_y"))
+    yids <- as.data.frame(t(sapply(yids, function(u) u@name)))
+    yids <- as.dbi.table(info, yids, type = "query")
+    names(yids) <- c("catalog_y", "schema_y", "table_y")
 
     rx <- rx[yids, nomatch = NULL, on = names(yids)]
 
-    setnames(yids, c("catalog_x", "schema_x", "table_x"))
-
-    ry <- as.data.table(r[catalog_x %in% yids$catalog_x &
-                            schema_x %in% yids$schema_x &
-                            table_x %in% yids$table_x])
-
-    ry <- ry[yids, nomatch = NULL, on = names(yids)]
+    names(yids) <- c("catalog_x", "schema_x", "table_x")
+    ry <- r[yids, nomatch = NULL, on = names(yids)]
     ry <- ry[xids, nomatch = NULL, on = names(xids)]
 
-    setnames(ry,
-             c("catalog_x", "schema_x", "table_x", "field_x",
-               "catalog_y", "schema_y", "table_y", "field_y"),
-             c("catalog_y", "schema_y", "table_y", "field_y",
-               "catalog_x", "schema_x", "table_x", "field_x"))
-    setcolorder(ry, names(rx))
-    rx <- rbind(rx, ry)
-  }
+    names(ry) <- c("constraint",
+                   "catalog_y", "schema_y", "table_y", "field_y",
+                   "catalog_x", "schema_x", "table_x", "field_x")
 
-  rx
+    rx <- as.data.frame(rx)
+    ry <- as.data.frame(ry)[, names(rx)]
+    rbind(rx, ry)
+  } else {
+    as.data.frame(rx)
+  }
 }
 
 
@@ -109,85 +101,78 @@ relational_merge <- function(x, recursive = FALSE) {
                               "table_name",
                               "column_name",
                               "ordinal_position")]
-  names(columns) <- c("catalog", "schema", "table", "field", "position")
 
-  columns <- as.data.table(columns[catalog %in% rt$catalog_y &
-                                     schema %in% rt$schema_y &
-                                     table %in% rt$table_y])
+  uni_rt <- unique(rt[, c("catalog_y", "schema_y", "table_y")])
+  names(uni_rt) <- c("table_catalog", "table_schema", "table_name")
 
-  columns <- columns[unique(rt[, list(catalog = catalog_y,
-                                      schema = schema_y,
-                                      table = table_y)]),
-                     on = c("catalog", "schema", "table")]
+  columns <- columns[uni_rt, c("table_catalog",
+                               "table_schema",
+                               "table_name",
+                               "column_name",
+                               "ordinal_position"),
+                     nomatch = NULL,
+                     on = c("table_catalog", "table_schema", "table_name")]
+  columns <- as.data.frame(columns)
+
+  data_source <- get_data_source(x)
+  merge_source <- data_source[!duplicated(data_source$id), c("id_name", "id")]
+  merge_source <- cbind(merge_source,
+                        t(sapply(merge_source$id, function(u) u@name)))
+
+  fields <- get_fields(x)
+  merge_fields <- merge(fields, merge_source, by = "id_name")
 
   a <- attributes(x)
-  data_source <- as.data.table(a$data_source)
-  data_source[, catalog := vapply(id, function(u) u@name[["table_catalog"]], "")]
-  data_source[, schema := vapply(id, function(u) u@name[["table_schema"]], "")]
-  data_source[, table := vapply(id, function(u) u@name[["table_name"]], "")]
-#table_catalog table_schema table_name
-
-  fields <- as.data.table(a$fields)
-  fields <- fields[data_source,
-                   list(internal_name,
-                        id_name,
-                        catalog,
-                        schema,
-                        table,
-                        field),
-                   on = "id_name"]
-
   x <- c(x)
 
   for (cnstr in unique(rt$constraint)) {
-    tmp <- rt[constraint == cnstr]
+    tmp <- rt[rt$constraint == cnstr, ]
 
-    fk <- tmp[, list(id_name = table_x, field = field_x)]
-    fk <- fields[fk, on = names(fk)]
+    fk <- tmp[, c("catalog_x", "schema_x", "table_x", "field_x")]
+    names(fk) <- c("table_catalog", "table_schema", "table_name", "field")
 
-    pk <- tmp[, list(catalog = catalog_y,
-                     schema = schema_y,
-                     table = table_y,
-                     field = field_y)]
+    fk <- merge(merge_fields, fk, by = names(fk))
 
-    n <- nrow(fields)
-    new_id_name <- pk$table[[1L]]
+    pk <- tmp[, c("catalog_y", "schema_y", "table_y", "field_y")]
+    names(pk) <- c("table_catalog", "table_schema", "table_name", "field")
+
+    new_id_name <- pk$table_name[[1L]]
     if (new_id_name %in% fields$id_name) {
       new_id_name <- unique_table_name()
     }
 
-    new_id <- DBI::Id(unlist(pk[1L, list(table_catalog = catalog,
-                                         table_schema = schema,
-                                         table_name = table)]))
+    new_id <- pk[1L, c("table_catalog", "table_schema", "table_name")]
+    new_id <- DBI::Id(unlist(new_id))
 
-    new_fields <- columns[pk[, c("catalog", "schema", "table")],
-                          on = c("catalog", "schema", "table")]
-    new_fields <- new_fields[order(position)]
-    new_fields[, position := NULL]
+    new_fields <- merge(columns,
+                        pk[, c("table_catalog", "table_schema", "table_name")],
+                        by = c("table_catalog",
+                               "table_schema",
+                               "table_name"))
+
+    names(new_fields)[names(new_fields) == "column_name"] <- "field"
+    new_fields <- new_fields[order(new_fields$ordinal_position), ]
 
     n <- nrow(fields)
-    new_fields[, internal_name := paste0(session$key_base, .I + n)]
-    new_fields[, id_name := new_id_name]
-    setcolorder(new_fields, names(fields))
+    new_fields$internal_name <- paste0(session$key_base,
+                                       seq_len(nrow(new_fields)) + n)
+    new_fields$id_name <- new_id_name
 
-    pk <- new_fields[pk, on = names(pk)]
+    pk <- merge(new_fields, pk, by = names(pk))
 
     on <- paste(pk$internal_name, fk$internal_name, sep = " == ")
     on <- handy_andy(as.list(parse(text = on)))
 
-    new_ds <- pk[1, list(clause = "LEFT OUTER JOIN",
-                          id = I(list(new_id)),
-                          id_name = new_id_name,
-                          on = I(list(on)),
-                          catalog,
-                          schema,
-                          table)]
+    new_ds <- data.frame(clause = "LEFT OUTER JOIN",
+                         id = I(list(new_id)),
+                         id_name = new_id_name,
+                         on = I(list(on)))
 
     new_x <- names_list(new_fields$internal_name)
     names(new_x) <- paste(new_id_name, new_fields$field, sep = ".")
 
     data_source <- rbind(data_source, new_ds)
-    fields <- rbind(fields, new_fields)
+    fields <- rbind(fields, new_fields[, names(fields)])
 
     which_fk <- match(fk$internal_name, x)
     has_fk <- !is.na(which_fk)
@@ -203,8 +188,8 @@ relational_merge <- function(x, recursive = FALSE) {
     x <- c(x, new_x)
   }
 
-  a$data_source <- setDF(data_source[, c("clause", "id", "id_name", "on")])
-  a$fields <- setDF(fields[, c("internal_name", "id_name", "field")])
+  a$data_source <- data_source
+  a$fields <- fields
   a$names <- names(x)
 
   x <- unname(x)
@@ -219,24 +204,12 @@ relational_merge <- function(x, recursive = FALSE) {
 
 
 
-catalog <- NULL
-catalog_x <- NULL
-catalog_y <- NULL
-constraint <- NULL
-field <- NULL
-field_x <- NULL
-field_y <- NULL
-fk_column_name <- NULL
 fk_constraint_name <- NULL
 fk_table_catalog <- NULL
-fk_table_name <- NULL
 fk_table_schema <- NULL
-id <- NULL
-id_name <- NULL
-internal_name <- NULL
-position <- NULL
-schema <- NULL
-schema_x <- NULL
-schema_y <- NULL
-table_x <- NULL
-table_y <- NULL
+fk_table_name <- NULL
+fk_column_name <- NULL
+table_catalog <- NULL
+table_schema <- NULL
+table_name <- NULL
+column_name <- NULL
