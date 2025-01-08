@@ -30,7 +30,8 @@ check_id <- function(id) {
     stop("'id' has more than 3 components", call. = FALSE)
   }
 
-  valid_names <- last(c("table_catalog", "table_schema", "table_name"), n)
+  valid_names <- c("table_name", "table_schema", "table_catalog")[seq_len(n)]
+  valid_names <- rev(valid_names)
 
   if (is.null(id_names <- names(id@name))) {
     names(id@name) <- valid_names

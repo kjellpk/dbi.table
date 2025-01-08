@@ -115,8 +115,8 @@ A dbi.table is a data structure that describes a SQL query (called the
 }
 \seealso{
 \itemize{
-    \item \code{\link[data.table]{as.data.table}} to retrieve the
-          \emph{results set} as a \code{data.table},
+    \item \code{\link{as.data.frame}} to retrieve the
+          \emph{results set} as a \code{data.frame},
     \item \code{\link{csql}} to see the underlying SQL query.
   }
 }

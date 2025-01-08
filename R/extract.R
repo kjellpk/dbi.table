@@ -73,12 +73,12 @@ preprocess_common <- function(e, dbi_table, enclos, single.ok) {
   if (is_call_to(e) == ":") {
     dbit_names <- names(dbi_table)
     if (is.name(lhs <- e[[2]])) {
-      if (is.na(lhs <- chmatch(as.character(lhs), dbit_names))) {
+      if (is.na(lhs <- match(as.character(lhs), dbit_names))) {
         stop("'", e[[2]], "' - subscript out of bounds", call. = FALSE)
       }
     }
     if (is.name(rhs <- e[[3]])) {
-      if (is.na(rhs <- chmatch(as.character(rhs), dbit_names))) {
+      if (is.na(rhs <- match(as.character(rhs), dbit_names))) {
         stop("'", e[[3]], "' - subscript out of bounds", call. = FALSE)
       }
     }

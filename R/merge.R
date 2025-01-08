@@ -184,9 +184,9 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   xy <- sql.join(x, y, type, on)
 
   x_length <- length(x)
-  by_x_jdx <- chmatch(by.x, names_x)
+  by_x_jdx <- match(by.x, names_x)
   x_non_by_jdx <- setdiff(seq_along(x), by_x_jdx)
-  by_y_jdx <- chmatch(by.y, names_y)
+  by_y_jdx <- match(by.y, names_y)
   y_non_by_jdx <- setdiff(seq_along(y), by_y_jdx)
 
   non_by <- names(xy)[c(x_non_by_jdx, x_length + y_non_by_jdx)]
@@ -211,12 +211,12 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   end <- setdiff(names_y, by.y)
   dupnames <- intersect(start, end)
   if (length(dupnames)) {
-    start[chmatch(dupnames, start, 0L)] <- paste0(dupnames, suffixes[1L])
-    end[chmatch(dupnames, end, 0L)] <- paste0(dupnames, suffixes[2L])
+    start[match(dupnames, start, 0L)] <- paste0(dupnames, suffixes[1L])
+    end[match(dupnames, end, 0L)] <- paste0(dupnames, suffixes[2L])
   }
   dupkeyx <- intersect(by.x, end)
   if (no.dups && length(dupkeyx)) {
-    end[chmatch(dupkeyx, end, 0L)] <- paste0(dupkeyx, suffixes[2L])
+    end[match(dupkeyx, end, 0L)] <- paste0(dupkeyx, suffixes[2L])
   }
 
   names(j) <- c(by.x, start, end)

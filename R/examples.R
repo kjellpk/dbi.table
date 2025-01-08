@@ -83,7 +83,8 @@ load_chinook_database <- function(conn) {
                       "PlaylistTrack")
 
   for (tab in chinook_tables) {
-    x <- fread(file.path(chinook_dir, paste0(tolower(tab), ".csv.bz2")))
+    table_path <- file.path(chinook_dir, paste0(tolower(tab), ".csv.bz2"))
+    x <- data.table::fread(table_path)
     DBI::dbAppendTable(conn, tab, x)
   }
 

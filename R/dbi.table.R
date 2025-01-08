@@ -25,8 +25,8 @@
 #'
 #' @seealso
 #'   \itemize{
-#'     \item \code{\link[data.table]{as.data.table}} to retrieve the
-#'           \emph{results set} as a \code{data.table},
+#'     \item \code{\link{as.data.frame}} to retrieve the
+#'           \emph{results set} as a \code{data.frame},
 #'     \item \code{\link{csql}} to see the underlying SQL query.
 #'   }
 #'
@@ -77,10 +77,10 @@ dbi.table <- function(conn, id) {
 
 new_dbi_table <- function(conn, id, fields = NULL) {
   if (inherits(id, "Id")) {
-    id_name <- last(id@name)
+    id_name <- id@name[[length(id@name)]]
   } else {
     id_name <- DBI::dbUnquoteIdentifier(dbi_connection(conn), id)[[1L]]@name
-    id_name <- last(id_name)
+    id_name <- id_name[[length(id_name)]]
   }
 
   if (substring(id_name, 1L, 1L) == "#") {
@@ -103,7 +103,7 @@ new_dbi_table <- function(conn, id, fields = NULL) {
                        field = fields)
 
   x <- lapply(fields$internal_name, as.name)
-  names(x) <- copy(fields$field)
+  names(x) <- fields$field
 
   dbi_table_object(x, conn, data_source, fields)
 }
@@ -431,7 +431,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
 
   if (is.null(i) && is.null(j)) {
     if (requireNamespace("data.table")) {
-      return(as.data.table(x))
+      return(data.table::as.data.table(x))
     }
     stop("package 'data.table' is not installed")
   }

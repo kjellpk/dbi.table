@@ -1,5 +1,3 @@
-#' @import data.table
-
 session <- new.env(parent = emptyenv())
 session$table_name_counter <- 0L
 session$print <- NULL
