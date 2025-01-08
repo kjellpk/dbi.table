@@ -19,26 +19,25 @@ session$default_information_schema_tables <- c("columns",
   add_special(".NGRP")
   add_special(".EACHI")
 
-  #add_special(".", special_list)
-  #add_special("list", special_list)
   add_special("%in%", special_in)
-  add_special("%in%", special_in)
+  add_special("%chin%", special_in)
   add_special("local", special_local)
   add_special("!", special_not)
   add_special("%like%", special_like)
   add_special("%LIKE%", special_LIKE)
 
-  if (isNamespaceLoaded("data.table")) {
-    .S3method("as.data.table", "dbi.table", as_data_table)
-  } else {
-    setHook(packageEvent("data.table", "onLoad"), function(pkgname, pkgpath) {
-      cl <- call(".S3method",
-                 generic = "as.data.table",
-                 class = "dbi.table",
-                 method = as_data_table)
-      eval(cl, envir = asNamespace(pkgname))
-    })
-  }
+  # Case suggests data.table:
+  # if (isNamespaceLoaded("data.table")) {
+  #   .S3method("as.data.table", "dbi.table", as_data_table)
+  # } else {
+  #   setHook(packageEvent("data.table", "onLoad"), function(pkgname, pkgpath) {
+  #     cl <- call(".S3method",
+  #                generic = "as.data.table",
+  #                class = "dbi.table",
+  #                method = as_data_table)
+  #     eval(cl, envir = asNamespace(pkgname))
+  #   })
+  # }
 
   NULL
 }
