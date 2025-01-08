@@ -1,4 +1,5 @@
 test_that("dbi.attach works", {
+
   dbs <- list(SQLite = chinook.sqlite,
               duckdb = chinook.duckdb)
 
@@ -27,15 +28,15 @@ test_that("dbi.attach works", {
   expect_no_error(e <- dbi.attach(rna)) #works b/c only 1 schema
   expect_true(identical(as.environment(2L), e))
   expect_equal(length(ls(e[["../catalog"]])), 2L)
-  expect_true("information_schema" %chin% ls(e[["../catalog"]]))
-  expect_true("rnacen" %chin% ls(e[["../catalog"]]))
+  expect_true("information_schema" %in% ls(e[["../catalog"]]))
+  expect_true("rnacen" %in% ls(e[["../catalog"]]))
   expect_silent(detach(2L))
 
   expect_no_error(e <- dbi.attach(rna, schema = "rnacen")) #works b/c only 1 schema
   expect_true(identical(as.environment(2L), e))
   expect_equal(length(ls(e[["../catalog"]])), 2L)
-  expect_true("information_schema" %chin% ls(e[["../catalog"]]))
-  expect_true("rnacen" %chin% ls(e[["../catalog"]]))
+  expect_true("information_schema" %in% ls(e[["../catalog"]]))
+  expect_true("rnacen" %in% ls(e[["../catalog"]]))
   expect_silent(detach(2L))
 
   rdo <- function() {
@@ -50,7 +51,7 @@ test_that("dbi.attach works", {
   expect_no_error(e <- dbi.attach(rdo, schema = "Chinook"))
   expect_true(identical(as.environment(2L), e))
   expect_equal(length(ls(e[["../catalog"]])), 2L)
-  expect_true("information_schema" %chin% ls(e[["../catalog"]]))
-  expect_true("Chinook" %chin% ls(e[["../catalog"]]))
+  expect_true("information_schema" %in% ls(e[["../catalog"]]))
+  expect_true("Chinook" %in% ls(e[["../catalog"]]))
   expect_silent(detach(2L))
 })
