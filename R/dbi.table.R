@@ -210,21 +210,24 @@ print.dbi.table <- function(x, ...) {
 
 
 
-#' @name as.data.table
+#' @name as.data.frame
 #'
-#' @aliases as.data.table.dbi.table
+#' @aliases as.data.frame.dbi.table
 #'
-#' @title Coerce to \code{data.table}
+#' @title Coerce to a Data Frame
 #'
 #' @description
 #'   Execute a \code{\link{dbi.table}}'s underlying SQL query and return the
-#'   result set as a \code{\link[data.table]{data.table}}. By default, the
+#'   result set as a \code{\link[base]{data.frame}}. By default, the
 #'   result set is limited to 10,000 rows. See Details.
 #'
 #' @param x
 #'   a \code{\link{dbi.table}}.
 #'
-#' @param keep.rownames
+#' @param row.names
+#'   a logical value. This argument is not used.
+#'
+#' @param optional
 #'   a logical value. This argument is not used.
 #'
 #' @param \dots
@@ -237,42 +240,30 @@ print.dbi.table <- function(x, ...) {
 #'   not include a LIMIT clause and all rows in the result set are returned.
 #'
 #' @details
-#'   By default, \code{as.data.table} returns up to 10,000 rows (see the
+#'   By default, \code{as.data.frame} returns up to 10,000 rows (see the
 #'   \code{n} argument). To override this limit, either call
-#'   \code{as.data.table} and provide the \code{n} argument (e.g., \code{n = -1}
+#'   \code{as.data.frame} and provide the \code{n} argument (e.g., \code{n = -1}
 #'   to return the entire result set), or set the option
 #'   \code{dbi_table_max_fetch} to the desired default value of \code{n}.
 #'
 #' @seealso
-#'   \code{\link[data.table]{as.data.table}} (the generic method in the
-#'   \pkg{data.table} package).
+#'   \code{\link[base]{as.data.frame}} (the generic method in the
+#'   \pkg{base} package).
 #'
 #' @return
-#'   a \code{dbi.table}.
+#'   a \code{data.frame}.
 #'
 #' @examples
 #'   duck <- chinook.duckdb()
 #'   Artist <- dbi.table(duck, DBI::Id("Artist"))
 #'
-#'   as.data.table(Artist, n = 7)[]
+#'   as.data.frame(Artist, n = 7)[]
 #'
 #'   \dontshow{DBI::dbDisconnect(duck)}
 #'
 #' @rdname
-#'   as.data.table
+#'   as.data.frame
 #'
-#' @export
-as.data.table.dbi.table <- function(x, keep.rownames = FALSE, ...,
-                                    n = getOption("dbi_table_max_fetch",
-                                                  10000L)) {
-  if (!requireNamespace("data.table")) {
-    stop("package 'data.table' not installed")
-  }
-
-  data.table::setDT(as.data.frame(x, n = n))
-}
-
-
 #' @export
 as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
                                     n = getOption("dbi_table_max_fetch",
