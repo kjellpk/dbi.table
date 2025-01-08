@@ -39,6 +39,7 @@
 #'   a logical value.
 #'
 #' @examples
+#'   library(data.table)
 #'   duck <- dbi.catalog(chinook.duckdb)
 #'   Album <- duck$main$Album
 #'   Artist <- duck$main$Artist
@@ -48,8 +49,8 @@
 #' @export
 reference.test <- function(expr, envir = parent.frame(),
                            ignore.row.order = TRUE, verbose = TRUE) {
-  if (!require("data.table")) {
-    stop("package 'data.table' is not installed")
+  if (!("package:data.table" %in% search())) {
+    stop("package 'data.table' is not attached")
   }
 
   expr <- substitute(expr)

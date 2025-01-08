@@ -50,6 +50,7 @@ primarily for testing and is potentially very slow for large tables.
 }
 
 \examples{
+  library(data.table)
   duck <- dbi.catalog(chinook.duckdb)
   Album <- duck$main$Album
   Artist <- duck$main$Artist
