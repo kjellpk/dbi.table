@@ -28,5 +28,17 @@ session$default_information_schema_tables <- c("columns",
   add_special("%like%", special_like)
   add_special("%LIKE%", special_LIKE)
 
+  if (isNamespaceLoaded("data.table")) {
+    .S3method("as.data.table", "dbi.table", as_data_table)
+  } else {
+    setHook(packageEvent("data.table", "onLoad"), function(pkgname, pkgpath) {
+      cl <- call(".S3method",
+                 generic = "as.data.table",
+                 class = "dbi.table",
+                 method = as_data_table)
+      eval(cl, envir = asNamespace(pkgname))
+    })
+  }
+
   NULL
 }
