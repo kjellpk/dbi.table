@@ -16,11 +16,6 @@ chinook.sqlite <- function() {
          call. = FALSE)
   }
 
-  if (!requireNamespace("R.utils", quietly = TRUE)) {
-    stop("the \"R.utils\" package must be installed to use 'chinook.sqlite'",
-         call. = FALSE)
-  }
-
   conn <- DBI::dbConnect(RSQLite::SQLite(),
                          temp_db_path("chinook_sqlite.sqlite"))
 
@@ -35,11 +30,6 @@ chinook.sqlite <- function() {
 chinook.duckdb <- function() {
   if (!requireNamespace("duckdb", quietly = TRUE)) {
     stop("the \"duckdb\" package must be installed to use 'chinook.duckdb'",
-         call. = FALSE)
-  }
-
-  if (!requireNamespace("R.utils", quietly = TRUE)) {
-    stop("the \"R.utils\" package must be installed to use 'chinook.duckdb'",
          call. = FALSE)
   }
 
@@ -83,8 +73,7 @@ load_chinook_database <- function(conn) {
                       "PlaylistTrack")
 
   for (tab in chinook_tables) {
-    table_path <- file.path(chinook_dir, paste0(tolower(tab), ".csv.bz2"))
-    x <- data.table::fread(table_path)
+    x <- utils::read.csv(file.path(chinook_dir, paste0(tolower(tab), ".csv")))
     DBI::dbAppendTable(conn, tab, x)
   }
 
