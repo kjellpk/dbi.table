@@ -431,7 +431,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
 
   if (is.null(i) && is.null(j)) {
     if (requireNamespace("data.table")) {
-      return(data.table::as.data.table(x))
+      return(as_data_table(x))
     }
     stop("package 'data.table' is not installed")
   }

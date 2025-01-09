@@ -149,5 +149,5 @@ shouldnt_print <- function(x) {
 
 
 as_data_table <- function(x, ...) {
-  data.table::setDT(as.data.frame(x))[]
+  data.table::setDT(as.data.frame(x, ...))[]
 }
