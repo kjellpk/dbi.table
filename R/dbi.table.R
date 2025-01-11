@@ -192,7 +192,7 @@ print.dbi.table <- function(x, ...) {
       "\n")
 
   if (nrow(m) > 6L) {
-    print(m[1:6, ], quote = FALSE, right = TRUE)
+    print(m[1:6, , drop = FALSE], quote = FALSE, right = TRUE)
     cat(" ---\n")
   } else if (nrow(m) > 1L) {
     print(m, quote = FALSE, right = TRUE)
