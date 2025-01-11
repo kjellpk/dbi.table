@@ -2,7 +2,7 @@
 
 S3method("[",dbi.table)
 S3method(as.data.frame,dbi.table)
-S3method(data.table::as.data.table,dbi.table)
+S3method(data.table::as.data.table,dbi.table,as_data_table)
 S3method(dim,dbi.table)
 S3method(get_connection,DBIConnection)
 S3method(get_connection,dbi.catalog)
