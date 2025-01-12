@@ -6,6 +6,7 @@
 \alias{dbExecute,dbi.schema,SQL-method}
 \alias{dbExecute,dbi.table,SQL-method}
 \alias{dbSendStatement,dbi.table,missing-method}
+\alias{dbGetQuery,dbi.table,missing-method}
 \alias{dbGetInfo,dbi.catalog-method}
 \alias{dbGetInfo,dbi.table}
 \alias{dbGetInfo,dbi.schema-method}
@@ -24,6 +25,8 @@
   ...,
   n = getOption("dbi_table_max_fetch", 10000L)
 )
+
+\S4method{dbGetQuery}{dbi.table,missing}(conn, statement, ..., n = getOption("dbi_table_max_fetch", 10000L))
 
 \S4method{dbGetInfo}{dbi.catalog}(dbObj, ...)
 

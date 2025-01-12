@@ -18,6 +18,14 @@ dbSendStatement_dbi_table_pkg <- function(conn, statement, ...,
 
 
 
+dbGetQuery_dbi_table_pkg <- function(conn, statement, ...,
+                                     n = getOption("dbi_table_max_fetch",
+                                                   10000L)) {
+  DBI::dbGetQuery(dbi_connection(conn), write_select_query(conn, n), n = n)
+}
+
+
+
 #' @importFrom methods setOldClass
 #' @export
 setOldClass("dbi.catalog")
@@ -103,6 +111,17 @@ setMethod(f = dbExecute,
 setMethod(f = dbSendStatement,
           signature = c("dbi.table", "missing"),
           definition = dbSendStatement_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetQuery,dbi.table,missing-method
+#' @importFrom DBI dbGetQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetQuery,
+          signature = c("dbi.table", "missing"),
+          definition = dbGetQuery_dbi_table_pkg)
 
 
 
