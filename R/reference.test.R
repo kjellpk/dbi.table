@@ -49,8 +49,8 @@
 #' @export
 reference.test <- function(expr, envir = parent.frame(),
                            ignore.row.order = TRUE, verbose = TRUE) {
-  if (!("package:data.table" %in% search())) {
-    stop("package 'data.table' is not attached")
+  if (!requireNamespace("data.table", quietly = TRUE)) {
+    stop("package 'data.table' is not installed")
   }
 
   expr <- substitute(expr)
@@ -85,3 +85,8 @@ reference.test <- function(expr, envir = parent.frame(),
 
   isTRUE(eq)
 }
+
+
+# Need to tell data.table that dbi.table is data.table aware b/c nothing
+# imported from data.table.
+.datatable.aware <- TRUE
