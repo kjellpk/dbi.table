@@ -3,8 +3,7 @@ Type: Package
 Title: Database Queries Using 'data.table' Syntax
 Version: 1.0.2
 Depends:
-  R (>= 3.6.0),
-  data.table
+  R (>= 3.6.0)
 Imports:
   DBI,
   bit64,
@@ -17,6 +16,7 @@ Suggests:
   RMariaDB,
   RPostgres,
   RSQLite,
+  data.table,
   duckdb,
   testthat (>= 3.0.0),
   knitr,

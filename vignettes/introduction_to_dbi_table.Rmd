@@ -53,6 +53,7 @@ package functions. Let's get started by loading the package and opening the
 connection.
 
 ```{r library, message = FALSE}
+library(data.table)
 library(dbi.table)
 chinook <- chinook.duckdb()
 ```
