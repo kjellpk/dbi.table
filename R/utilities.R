@@ -145,3 +145,9 @@ shouldnt_print <- function(x) {
   session$print <- NULL
   ret
 }
+
+
+
+copy_vector <- function(x) {
+  rev(rev(x))
+}
