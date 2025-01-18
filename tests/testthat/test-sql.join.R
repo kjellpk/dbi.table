@@ -75,5 +75,21 @@ for (conn in conns) {
     expect_true(is.dbi.table(x))
   })
 
+
+
+  test_that("prefixed internal names work in on", {
+    expect_no_error({
+      Artist <- dbi.table(conn, DBI::Id("Artist"))[, c("Name")]
+      Album <- dbi.table(conn, DBI::Id("Album"))[, c("Title")]
+      on <- quote(`x.+xcwrl+3` == `y.+xcwrl+1`)
+    })
+
+    expect_s3_class({
+      sql_join(Album, Artist, "inner", on, c("x.", "y."), NULL)
+    }, class = "dbi.table")
+  })
+
+
+
   DBI::dbDisconnect(conn)
 }
