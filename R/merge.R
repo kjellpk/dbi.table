@@ -100,7 +100,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     stop("'x' is not a 'dbi.table'")
   }
 
-  if (missing(y)) {
+  if (missing(y) || is.null(y)) {
     return(relational_merge(x, recursive))
   }
 
@@ -126,6 +126,8 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
          "each have unique column names")
   }
 
+
+  # will need work here too
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
     if (is.null(rt <- related_tables(x, y)) || nrow(rt) < 1L) {
       by.x <- by.y <- intersect(names_x, names_y)
@@ -166,7 +168,13 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     by.x <- by.y <- by
   }
 
-  on <- paste(paste0("x.", by.x), paste0("y.", by.y), sep = " == ")
+  merge_dbi_table(x, y, by.x, by.y, all.x, all.y, sort, suffixes, no.dups)
+}
+
+
+merge_dbi_table <- function(x, y, by.x, by.y, all.x, all.y, sort, suffixes,
+                            no.dups) {
+  on <- paste(paste0("`x.", by.x, "`"), paste0("`y.", by.y, "`"), sep = " == ")
   on <- handy_andy(lapply(on, str2lang))
 
   if (!length(by.x)) {
@@ -181,35 +189,59 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     type <- "inner"
   }
 
-  xy <- sql.join(x, y, type, on)
+  names_x <- names(x)
+  names_y <- names(y)
 
-  x_length <- length(x)
-  by_x_jdx <- match(by.x, names_x)
-  x_non_by_jdx <- setdiff(seq_along(x), by_x_jdx)
-  by_y_jdx <- match(by.y, names_y)
-  y_non_by_jdx <- setdiff(seq_along(y), by_y_jdx)
+  xy <- sql_join(x, y, type, on, c("x.", "y."), NULL)
 
-  non_by <- names(xy)[c(x_non_by_jdx, x_length + y_non_by_jdx)]
-  non_by <- unname(sapply(non_by, as.name, simplify = FALSE))
+  x <- c(xy)[seq_along(x)]
+  names(x) <- names_x
+  y <- c(xy)[-seq_along(x)]
+  names(y) <- names_y
 
-  if (type %in% c("inner", "left")) {
-    by <- names_list(xy)[by_x_jdx]
-  } else if (type == "right") {
-    by <- names_list(xy)[x_length + by_y_jdx]
-  } else if (type == "outer") {
-    by_x <- sapply(names(xy)[by_x_jdx], as.name, simplify = FALSE)
-    by_y <- sapply(names(xy)[x_length + by_y_jdx], as.name, simplify = FALSE)
-    by <- unname(mapply(call, name = "coalesce", by_x, by_y))
-  } else { #for cross joins
-    by <- list()
-  }
-
-  j <- c(c(by, non_by))
-
-  # naming logical taken from merge.data.table (data.table version 1.14.10)
   start <- setdiff(names_x, by.x)
   end <- setdiff(names_y, by.y)
+
+  non_by <- c(x[start], y[end])
+
+  by_x <- list_of_by_columns(by.x, x)
+  keep <- !vapply(by_x, is.null, FALSE)
+  by_x <- by_x[keep]
+
+  if (type %in% c("inner", "left")) {
+    by <- by_x
+  } else {
+    by_y <- list_of_by_columns(by.y, y)
+    names(by_y) <- by.x
+    by_y <- by_y[keep]
+
+    if (type == "right") {
+      by <- by_y
+
+    } else if (type == "outer") {
+      by <- mapply(function(u, v) {
+        if (!is.null(u) && !is.null(v))
+          return(call("coalesce", u, v))
+        if (!is.null(u))
+          return(u)
+        NULL
+      }, u = by_x, v = by_y, SIMPLIFY = FALSE)
+    } else { #for cross joins
+      by <- list()
+    }
+  }
+
+  j <- c(by, non_by)
+  names_j <- names(j)
+  a <- attributes(xy)
+  a$names <- NULL
+  attributes(j) <- a
+  names(j) <- names_j
+
+  # naming logical taken from merge.data.table (data.table version 1.14.10)
+  by_names <- names(by)
   dupnames <- intersect(start, end)
+
   if (length(dupnames)) {
     start[match(dupnames, start, 0L)] <- paste0(dupnames, suffixes[1L])
     end[match(dupnames, end, 0L)] <- paste0(dupnames, suffixes[2L])
@@ -219,8 +251,8 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     end[match(dupkeyx, end, 0L)] <- paste0(dupkeyx, suffixes[2L])
   }
 
-  names(j) <- c(by.x, start, end)
-  handle_j(xy, j, by = NULL, enclos = NULL)
+  names(j) <- c(by_names, start, end)
+  j
 }
 
 
@@ -250,6 +282,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
 
     on[single_name] <- mapply(call,
                               name = "==",
+                              #use names_list here?
                               lapply(on_names[single_name], as.name),
                               on[single_name],
                               SIMPLIFY = FALSE,
@@ -341,4 +374,14 @@ extract_on_validator <- function(expr, x_names, i_names) {
   }
 
   NULL
+}
+
+
+
+list_of_by_columns <- function(nm, x) {
+  ret <- vector("list", length(nm))
+  names(ret) <- nm
+  idx <- intersect(nm, names(x))
+  ret[idx] <- x[idx]
+  ret
 }
