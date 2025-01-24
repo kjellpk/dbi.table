@@ -126,17 +126,19 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
          "each have unique column names")
   }
 
-
-  # will need work here too
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
     if (is.null(rt <- related_tables(x, y)) || nrow(rt) < 1L) {
       by.x <- by.y <- intersect(names_x, names_y)
     } else {
-      by.x <- match_fields(x, rt$field_x)
-      by.y <- match_fields(y, rt$field_y)
-      use <- !is.na(by.x) & !is.na(by.y)
-      by.x <- by.x[use]
-      by.y <- by.y[use]
+      rt_x <- rt[, c("catalog_x", "schema_x", "table_x", "field_x")]
+      by_x <- match_by_field(x, rt_x)
+      rt_y <- rt[, c("catalog_y", "schema_y", "table_y", "field_y")]
+      by_y <- match_by_field(y, rt_y)
+
+      if (!anyNA(by_x) && !anyNA(by_y)) {
+        by.x <- by_x
+        by.y <- by_y
+      }
     }
   }
 
@@ -168,12 +170,6 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     by.x <- by.y <- by
   }
 
-  merge_dbi_table(x, y, by.x, by.y, all.x, all.y, sort, suffixes, no.dups)
-}
-
-
-merge_dbi_table <- function(x, y, by.x, by.y, all.x, all.y, sort, suffixes,
-                            no.dups) {
   on <- paste(paste0("`x.", by.x, "`"), paste0("`y.", by.y, "`"), sep = " == ")
   on <- handy_andy(lapply(on, str2lang))
 
@@ -188,9 +184,6 @@ merge_dbi_table <- function(x, y, by.x, by.y, all.x, all.y, sort, suffixes,
   } else {
     type <- "inner"
   }
-
-  names_x <- names(x)
-  names_y <- names(y)
 
   xy <- sql_join(x, y, type, on, c("x.", "y."), NULL)
 
