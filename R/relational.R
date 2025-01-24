@@ -31,7 +31,6 @@ related_tables <- function(x, y = NULL) {
   merge_by <- intersect(names(SECOND_MERGE_BY), names(r))
   merge_by <- SECOND_MERGE_BY[merge_by]
 
-
   r <- merge(key_column_usage, r, by.x = merge_by, by.y = names(merge_by))
 
   r <- r[, list(constraint = fk_constraint_name,
@@ -45,7 +44,7 @@ related_tables <- function(x, y = NULL) {
                 field_y = column_name)]
 
   xids <- unique(get_data_source(x)$id)
-  xids <- as.data.frame(t(sapply(xids, function(u) u@name)))
+  xids <- as.data.frame(t(vapply(xids, function(u) u@name, character(3L))))
   xids <- as.dbi.table(info, xids, type = "query")
   names(xids) <- c("catalog_x", "schema_x", "table_x")
 
@@ -56,7 +55,7 @@ related_tables <- function(x, y = NULL) {
 
   if (!is.null(y)) {
     yids <- unique(get_data_source(y)$id)
-    yids <- as.data.frame(t(sapply(yids, function(u) u@name)))
+    yids <- as.data.frame(t(vapply(yids, function(u) u@name, character(3L))))
     yids <- as.dbi.table(info, yids, type = "query")
     names(yids) <- c("catalog_y", "schema_y", "table_y")
 
@@ -80,12 +79,26 @@ related_tables <- function(x, y = NULL) {
 
 
 
-match_fields <- function(x, fields) {
+match_by_field <- function(x, fields) {
   table_fields <- get_fields(x)
-  idx <- match(fields, table_fields$field)
-  i_names <- lapply(table_fields$internal_name[idx], as.name)
-  idx <- match(i_names, c(x))
-  names(x)[idx]
+
+  if (nrow(id <- unique(fields[, 1:3])) != 1L) {
+    return(rep(NA_character_, nrow(fields)))
+  }
+
+  id_name <- id[[1L, 3L]]
+  table_fields <- table_fields[table_fields$id_name == id_name, ]
+  idx <- match(fields[, 4L], table_fields$field)
+
+  internal_names <- table_fields[idx, "internal_name"]
+  internal_names <- lapply(internal_names, as.name)
+
+  cx <- c(x)
+  cx <- cx[vapply(cx, is.name, FALSE)]
+  cx <- cx[!duplicated(cx)]
+
+  idx <- match(internal_names, cx)
+  names(cx[idx])
 }
 
 
