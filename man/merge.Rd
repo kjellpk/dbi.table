@@ -74,28 +74,26 @@ Merge two \code{\link{dbi.table}}s. The \code{dbi.table} method is similar
 \details{
 Foreign key constraints. Foreign keys can only be queried when (1) the
   \code{dbi.table}'s schema is loaded, and (2) \code{dbi.table} understands
-  the underlying database's information schema. The merge is done at the SQL
-  level and can merge on columns that are not in the \code{dbi.table}s.
+  the underlying database's information schema.
 
-  This function uses \code{\link{sql.join}} to join \code{x} and \code{y}
-  then formats the result set to match the typical \code{merge} result.
+  \code{merge.dbi.table} uses \code{\link{sql.join}} to join \code{x} and
+  \code{y} then formats the result set to match the typical \code{merge}
+  output.
 }
 \examples{
-  dbi.attach(chinook.duckdb, name = "merge-example")
+  chinook <- dbi.catalog(chinook.duckdb)
 
   #The Album table has a foreign key constriant that references Artist
-  merge(Album, Artist)
+  merge(chinook$main$Album, chinook$main$Artist)
 
   #When y is omitted, x's foreign key realtionship is used to determin y
-  merge(Album)
+  merge(chinook$main$Album)
 
   #Multiple foreign keys are supported
-  csql(merge(Track))
+  csql(merge(chinook$main$Track))
 
   #Track reference Album but not Artist, Album does reference Artist
   #This dbi.table includes Artist.Name as well
-  csql(merge(Track, recursive = TRUE))
-
-  \dontshow{detach("duckdb:merge-example")}
+  csql(merge(chinook$main$Track, recursive = TRUE))
 
 }
