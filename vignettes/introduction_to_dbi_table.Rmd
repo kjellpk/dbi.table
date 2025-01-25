@@ -226,7 +226,7 @@ For this example, when the `by` argument is omitted, `dbi.table` still merges
 csql(merge(Album, Artist))
 ```
 When the `y` argument is omitted, `dbi.table`'s `merge` uses the foreign key
-constraints that reference `x` to determin the `y` (or `y`s) to merge with.
+constraints that reference `x` to determine the `y` (or `y`s) to merge with.
 
 ```{r merge_no_y}
 csql(merge(Track))
