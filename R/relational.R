@@ -127,95 +127,34 @@ relational_merge <- function(x, recursive = FALSE) {
                      on = c("table_catalog", "table_schema", "table_name")]
   columns <- as.data.frame(columns)
 
-  data_source <- get_data_source(x)
-  merge_source <- data_source[!duplicated(data_source$id), c("id_name", "id")]
-  merge_source <- cbind(merge_source,
-                        t(sapply(merge_source$id, function(u) u@name)))
+  rt <- split(rt, rt$constraint)
 
-  fields <- get_fields(x)
-  merge_fields <- merge(fields, merge_source, by = "id_name")
+  for (i in seq_along(rt)) {
+    rt_x <- rt[[i]][, c("catalog_x", "schema_x", "table_x", "field_x")]
+    if (!anyNA(by_x <- match_by_field(x, rt_x))) {
+      rt_y <- rt[[i]][, c("catalog_y", "schema_y", "table_y", "field_y")]
+      names(rt_y) <- c("table_catalog", "table_schema", "table_name", "field_y")
+      by_y <- paste(rt_y$table_name, rt_y$field_y, sep = ".")
 
-  a <- attributes(x)
-  x <- c(x)
+      rt_id <- rt_y[1L, c("table_catalog", "table_schema", "table_name")]
+      y_id <- DBI::Id(unlist(rt_id))
 
-  for (cnstr in unique(rt$constraint)) {
-    tmp <- rt[rt$constraint == cnstr, ]
+      y_fields <- merge(columns, rt_id)
+      y_fields <- y_fields$column_name[order(y_fields$ordinal_position)]
 
-    fk <- tmp[, c("catalog_x", "schema_x", "table_x", "field_x")]
-    names(fk) <- c("table_catalog", "table_schema", "table_name", "field")
+      y <- new_dbi_table(get_connection(x), y_id, y_fields)
+      names(y) <- paste(rt_y$table_name, names(y), sep = ".")
 
-    fk <- merge(merge_fields, fk, by = names(fk))
-
-    pk <- tmp[, c("catalog_y", "schema_y", "table_y", "field_y")]
-    names(pk) <- c("table_catalog", "table_schema", "table_name", "field")
-
-    new_id_name <- pk$table_name[[1L]]
-    if (new_id_name %in% fields$id_name) {
-      new_id_name <- unique_table_name()
+      x <- merge(x, y, by.x = by_x, by.y = by_y, all.x = TRUE)
     }
-
-    new_id <- pk[1L, c("table_catalog", "table_schema", "table_name")]
-    new_id <- DBI::Id(unlist(new_id))
-
-    new_fields <- merge(columns,
-                        pk[, c("table_catalog", "table_schema", "table_name")],
-                        by = c("table_catalog",
-                               "table_schema",
-                               "table_name"))
-
-    names(new_fields)[names(new_fields) == "column_name"] <- "field"
-    new_fields <- new_fields[order(new_fields$ordinal_position), ]
-
-    n <- nrow(fields)
-    new_fields$internal_name <- paste0(session$key_base,
-                                       seq_len(nrow(new_fields)) + n)
-    new_fields$id_name <- new_id_name
-
-    pk <- merge(new_fields, pk, by = names(pk))
-
-    on <- paste(pk$internal_name, fk$internal_name, sep = " == ")
-    on <- handy_andy(as.list(parse(text = on)))
-
-    new_ds <- data.frame(clause = "LEFT OUTER JOIN",
-                         id = I(list(new_id)),
-                         id_name = new_id_name,
-                         on = I(list(on)))
-
-    new_x <- names_list(new_fields$internal_name)
-    names(new_x) <- paste(new_id_name, new_fields$field, sep = ".")
-
-    data_source <- rbind(data_source, new_ds)
-    fields <- rbind(fields, new_fields[, names(fields)])
-
-    which_fk <- match(fk$internal_name, x)
-    has_fk <- !is.na(which_fk)
-
-    if (length(which_fk <- which_fk[has_fk])) {
-      x <- c(x[which_fk], x[-which_fk])
-    }
-
-    if (length(drop_pk <- match(pk[has_fk == TRUE]$internal_name, new_x))) {
-      new_x <- new_x[-drop_pk]
-    }
-
-    x <- c(x, new_x)
   }
 
-  a$data_source <- data_source
-  a$fields <- fields
-  a$names <- names(x)
-
-  x <- unname(x)
-  attributes(x) <- a
-
   if (recursive) {
-    x <- relational_merge(x, recursive = TRUE)
+    return(relational_merge(x, recursive))
   }
 
   x
 }
-
-
 
 fk_constraint_name <- NULL
 fk_table_catalog <- NULL
