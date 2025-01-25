@@ -86,13 +86,13 @@ Foreign key constraints. Foreign keys can only be queried when (1) the
   #The Album table has a foreign key constriant that references Artist
   merge(chinook$main$Album, chinook$main$Artist)
 
-  #When y is omitted, x's foreign key realtionship is used to determin y
+  #When y is omitted, x's foreign key relationship is used to determine y
   merge(chinook$main$Album)
 
   #Multiple foreign keys are supported
   csql(merge(chinook$main$Track))
 
-  #Track reference Album but not Artist, Album does reference Artist
+  #Track references Album but not Artist, Album references Artist
   #This dbi.table includes Artist.Name as well
   csql(merge(chinook$main$Track, recursive = TRUE))
 
