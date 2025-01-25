@@ -215,7 +215,6 @@ for (conn in conns) {
 
 
 
-
   test_that("extract anti-join works w/ char-call non-equi join", {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
