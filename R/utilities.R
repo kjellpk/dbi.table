@@ -127,6 +127,28 @@ assign_and_lock <- function(x, value, pos) {
 
 
 
+make_install_function <- function(catalog, id, fields, column_names) {
+  function(x) {
+    if (missing(x)) {
+      dbi_table <- new_dbi_table(catalog, id, fields)
+      names(dbi_table) <- copy_vector(column_names)
+      return(dbi_table)
+    }
+
+    stop("'dbi.table' cannot be modified", call. = FALSE)
+  }
+}
+
+
+
+install_in_schema <- function(x, catalog, id, fields, column_names, schema) {
+  FUN <- make_install_function(catalog, id, fields, column_names)
+  makeActiveBinding(x, FUN, schema)
+  lockBinding(x, schema)
+}
+
+
+
 short_class_names <- c(integer = "int", numeric = "num",
                        character = "char", POSIXct = "POSc",
                        logical = "lgcl", integer64 = "i64")

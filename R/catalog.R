@@ -104,10 +104,7 @@ install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
 
     schema <- schemas[[table_schema]]
 
-    x <- new_dbi_table(catalog, id, fields)
-    names(x) <- column_names
-
-    assign_and_lock(table_name, x, schema)
+    install_in_schema(table_name, catalog, id, fields, column_names, schema)
   })
 
   invisible()
