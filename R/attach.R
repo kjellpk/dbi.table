@@ -40,13 +40,14 @@
 dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
                        schema = NULL, graphics = TRUE) {
   what_name <- deparse1(substitute(what))
+
   if (!is.null(name) && (length(name <- as.character(name)) != 1L)) {
     stop("'name' is not a scalar character string")
   }
 
   if (!is_dbi_schema(what)) {
-    catalog <- dbi.catalog(what, schema = schema)
-    schemas <- setdiff(ls(catalog, all = TRUE), "./dbi_connection")
+    catalog <- dbi.catalog(what, schemas = schema)
+    schemas <- setdiff(ls(catalog, all.names = TRUE), "./dbi_connection")
 
     if (is.null(schema)) {
       choices <- setdiff(schemas, session$ignore_schemas)
