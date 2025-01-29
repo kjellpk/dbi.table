@@ -37,8 +37,10 @@ found on \code{what}, a menu is displayed to select a schema.}
 an \code{\link{environment}}, the attached schema is invisibly returned.
 }
 \description{
-Create a \code{\link{dbi.table}} for each database object in a schema and
-  place them on the search path.
+The database schema is attached to the R search path. This means that the
+  schema is searched by R when evaluating a variable, so that
+  \code{\link{dbi.table}}s in the schema can be accessed by simply giving
+  their names.
 }
 \seealso{
 \code{\link[base]{attach}}

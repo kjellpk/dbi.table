@@ -27,12 +27,12 @@ test_that("dbi.attach works", {
 
   expect_no_error(e <- dbi.attach(rna)) #works b/c only 1 schema
   expect_true(identical(as.environment(2L), e))
-  expect_equal(length(ls(e[["../catalog"]])), 2L)
+  expect_equal(length(ls(e[["../catalog"]])), 3L)
   expect_true("information_schema" %in% ls(e[["../catalog"]]))
   expect_true("rnacen" %in% ls(e[["../catalog"]]))
   expect_silent(detach(2L))
 
-  expect_no_error(e <- dbi.attach(rna, schema = "rnacen")) #works b/c only 1 schema
+  expect_no_error(e <- dbi.attach(rna, schema = "rnacen"))
   expect_true(identical(as.environment(2L), e))
   expect_equal(length(ls(e[["../catalog"]])), 2L)
   expect_true("information_schema" %in% ls(e[["../catalog"]]))

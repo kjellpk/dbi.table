@@ -16,6 +16,7 @@ db_short_name <- function(conn) {
 
 
 dbi_connection_package <- function(conn) {
+  conn <- dbi_connection(conn)
   if (!is.null(pkg <- attr(class(conn), "package", exact = TRUE))) {
     pkg
   } else {
