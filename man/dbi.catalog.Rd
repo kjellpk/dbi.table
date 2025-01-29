@@ -11,14 +11,11 @@ dbi.catalog(conn, schemas = NULL)
 zero-argument function that returns a connection handle.}
 
 \item{schemas}{a character vector of distinct schema names. These schemas will be loaded
-  into the returned \code{dbi.catalog}. The default \code{schemas = NULL}
-  loads all schemas in the catalog.
-s}
+into the \code{dbi.catalog}. The default \code{schemas = NULL} loads all
+schemas in the catalog.}
 }
 \value{
-\code{dbi.catalog} returns a \code{dbi.catalog} (internally an
-        \code{\link[base]{environment}} with the class attribute set to
-        \code{"dbi.catalog"}).
+a \code{dbi.catalog}.
 }
 \description{
 A \code{dbi.catalog} represents a database catalog.
@@ -27,7 +24,7 @@ A \code{dbi.catalog} represents a database catalog.
 # chinook.duckdb is a zero-argument function that returns a DBI handle
 (db <- dbi.catalog(chinook.duckdb))
 
-# a dbi.catalog corresponds to a catalog - list the schemas
+# list schemas
 ls(db)
 
 # list the tables in the schema 'main'

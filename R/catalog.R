@@ -8,18 +8,17 @@
 #'
 #' @param schemas
 #'   a character vector of distinct schema names. These schemas will be loaded
-#'   into the returned \code{dbi.catalog}. The default \code{schemas = NULL}
-#'   loads all schemas in the catalog.
-#'s
-#' @return \code{dbi.catalog} returns a \code{dbi.catalog} (internally an
-#'         \code{\link[base]{environment}} with the class attribute set to
-#'         \code{"dbi.catalog"}).
+#'   into the \code{dbi.catalog}. The default \code{schemas = NULL} loads all
+#'   schemas in the catalog.
+#'
+#' @return
+#'   a \code{dbi.catalog}.
 #'
 #' @examples
 #' # chinook.duckdb is a zero-argument function that returns a DBI handle
 #' (db <- dbi.catalog(chinook.duckdb))
 #'
-#' # a dbi.catalog corresponds to a catalog - list the schemas
+#' # list schemas
 #' ls(db)
 #'
 #' # list the tables in the schema 'main'
@@ -28,12 +27,7 @@
 #' @export
 dbi.catalog <- function(conn, schemas = NULL) {
   conn <- init_connection(conn)
-  new_dbi_catalog(conn, schemas, NULL)
-}
 
-
-
-new_dbi_catalog <- function(conn, schemas, columns) {
   catalog <- new.env(parent = emptyenv())
   assign("./dbi_connection", conn, catalog)
 
@@ -58,17 +52,12 @@ new_dbi_catalog <- function(conn, schemas, columns) {
 
   if (is.null(schemas)) {
     schemas <- schema_names
-  } else if (!is.list(schemas)) {
-    schemas <- as.character(schemas)
-    schemas <- intersect(schemas, schema_names)
   } else {
-    schemas <- schemas[intersect(names(schemas), schema_names)]
+    schemas <- intersect(as.character(schemas), schema_names)
   }
 
-  if (is.character(schemas)) {
-    names(schemas) <- schemas
-    schemas <- lapply(schemas, new_schema, catalog = catalog)
-  }
+  names(schemas) <- schemas
+  schemas <- lapply(schemas, new_schema, catalog = catalog)
 
   install_from_columns(columns, schemas, catalog)
 
