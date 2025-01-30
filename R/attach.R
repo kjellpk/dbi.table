@@ -100,7 +100,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   # The intended purpose of dbi.attach is to add data on the search path.
 
   e <- get("attach", "package:base")(what, pos = pos, name = name,
-           warn.conflicts = warn.conflicts)
+                                     warn.conflicts = warn.conflicts)
   class(e) <- "dbi.schema"
 
   rm(list = schema, pos = catalog)
