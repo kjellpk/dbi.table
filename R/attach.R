@@ -103,7 +103,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
            warn.conflicts = warn.conflicts)
   class(e) <- "dbi.schema"
 
-  rm(list = "main", pos = catalog)
+  rm(list = schema, pos = catalog)
   assign_and_lock(schema, e, catalog)
 
   invisible(e)
