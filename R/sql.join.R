@@ -207,27 +207,21 @@ can_join_as_y <- function(x) {
 
 
 make_xref <- function(x, y, fields, prefixes) {
-  x_names <- names(x)
-  y_names <- names(y)
-
-  dups <- intersect(x_names, y_names)
-
-  x_dups <- x[dups]
-  names(x_dups) <- paste_prefix(prefixes[[1L]], names(x_dups))
-  x_unique <- x[setdiff(x_names, dups)]
-  x_unique_pre <- x_unique
-  names(x_unique_pre) <- paste_prefix(prefixes[[1L]], names(x_unique_pre))
-  x <- c(x_dups, x_unique, x_unique_pre)
-
-  y_dups <- y[dups]
-  names(y_dups) <- paste_prefix(prefixes[[2L]], names(y_dups))
-  y_unique <- y[setdiff(y_names, dups)]
-  y_unique_pre <- y_unique
-  names(y_unique_pre) <- paste_prefix(prefixes[[2L]], names(y_unique_pre))
-  y <- c(y_dups, y_unique, y_unique_pre)
-
-  c(x, y)
+  dups <- intersect(names(x), names(y))
+  c(dbit_xref(x, dups, prefixes[[1L]]), dbit_xref(y, dups, prefixes[[2L]]))
 }
+
+
+
+dbit_xref <- function(dbit, dups, prefix) {
+  dbit_dups <- dbit[dups]
+  names(dbit_dups) <- paste_prefix(prefix, names(dbit_dups))
+  dbit_unique <- dbit[setdiff(names(dbit), dups)]
+  dbit_unique_pre <- dbit_unique
+  names(dbit_unique_pre) <- paste_prefix(prefix, names(dbit_unique_pre))
+  c(dbit_dups, dbit_unique, dbit_unique_pre)
+}
+
 
 
 paste_prefix <- function(p, n) {
