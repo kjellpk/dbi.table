@@ -45,40 +45,37 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
     stop("'name' is not a scalar character string")
   }
 
-  if (!is_dbi_schema(what)) {
-    catalog <- dbi.catalog(what, schemas = schema)
-    schemas <- setdiff(ls(catalog, all.names = TRUE), "./dbi_connection")
+  catalog <- dbi.catalog(what, schemas = schema)
+  schemas <- setdiff(ls(catalog, all.names = TRUE), "./dbi_connection")
 
-    if (is.null(schema)) {
-      choices <- setdiff(schemas, session$ignore_schemas)
-      if (length(choices) == 1L) {
-        schema <- choices
-      } else if (length(choices) > 1L && interactive()) {
-        schema <- utils::menu(choices,
-                              graphics = graphics,
-                              title = "Select Schema")
-        if (schema == 0L) {
-          return(invisible())
-        } else {
-          schema <- choices[[schema]]
-        }
+  if (is.null(schema)) {
+    choices <- setdiff(schemas, session$ignore_schemas)
+    if (length(choices) == 1L) {
+      schema <- choices
+    } else if (length(choices) > 1L && interactive()) {
+      schema <- utils::menu(choices,
+                            graphics = graphics,
+                            title = "Select Schema")
+      if (schema == 0L) {
+        return(invisible())
       } else {
-        schema <- NA_character_
+        schema <- choices[[schema]]
       }
     } else {
-      schema <- as.character(schema)
-      if (length(schema) != 1L) {
-        stop("'schema' is not a scalar character string")
-      }
+      schema <- NA_character_
     }
-
-    if (!(schema %in% schemas)) {
-      stop("schema '", schema, "' not found on connection '", what_name, "'")
+  } else {
+    schema <- as.character(schema)
+    if (length(schema) != 1L) {
+      stop("'schema' is not a scalar character string")
     }
-
-    what <- catalog[[schema]]
   }
 
+  if (!(schema %in% schemas)) {
+    stop("schema '", schema, "' not found on connection '", what_name, "'")
+  }
+
+  what <- catalog[[schema]]
   schema <- get("./schema_name", pos = what, inherits = FALSE)
 
   if (is.null(name)) {
@@ -104,8 +101,10 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
 
   e <- get("attach", "package:base")(what, pos = pos, name = name,
            warn.conflicts = warn.conflicts)
-
   class(e) <- "dbi.schema"
+
+  rm(list = "main", pos = catalog)
+  assign_and_lock(schema, e, catalog)
 
   invisible(e)
 }
