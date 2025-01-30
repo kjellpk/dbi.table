@@ -119,7 +119,7 @@ sql_join <- function(x, y, type, on, prefixes, parent_frame) {
   y_sub <- names_list(y_sub$internal_name, y_sub$old)
   new_y <- sub_lang(y, envir = y_sub)
 
-  xref <- xref_in(c(x), new_y, xy_fields, prefixes)
+  xref <- make_xref(c(x), new_y, xy_fields, prefixes)
   xy <- c(c(x), new_y)
   on <- sub_lang(on, envir = xref, specials = NULL, enclos = parent_frame)
 
@@ -206,7 +206,7 @@ can_join_as_y <- function(x) {
 
 
 
-xref_in <- function(x, y, fields, prefixes) {
+make_xref <- function(x, y, fields, prefixes) {
   x_names <- names(x)
   y_names <- names(y)
 
@@ -226,9 +226,7 @@ xref_in <- function(x, y, fields, prefixes) {
   names(y_unique_pre) <- paste_prefix(prefixes[[2L]], names(y_unique_pre))
   y <- c(y_dups, y_unique, y_unique_pre)
 
-  internal <- names_list(fields$internal_name, paste0(fields$src, fields$old))
-
-  c(x, y, internal)
+  c(x, y)
 }
 
 
