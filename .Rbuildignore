@@ -4,5 +4,4 @@
 ^dbi\.table\.code-workspace$
 ^scratch\.R$
 ^\.github$
-^notes$
 ^cran-comments\.md$
