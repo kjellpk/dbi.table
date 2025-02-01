@@ -1,3 +1,65 @@
+# 1.0.3 Changes Relative to Version 1.0.1 (Current CRAN Version)
+
+- At the request of the `data.table` maintainers, moved `data.table` from
+  Depends to Suggests.
+
+- Refactored code; no changes to core functionality of package.
+
+## Test Environments
+
+(Github Actions)
+
+* macos_latest (release)
+* windows-latest (release)
+* ubuntu-latest (devel)
+* ubuntu-latest (release)
+* ubuntu-latest (oldrel-1)
+
+# Key Notes from Previous CRAN Submission
+
+## The `dbi.attach` Function Calls `attach`
+
+One of the main features of `dbi.table` is the ability to attach database
+schemas to the search path; `dbi.table::dbi.attach` thus calls `attach`.
+To avoid Errors being thrown in R CMD check, this call to `attach` is
+implemented as follows.
+```
+  e <- get("attach", "package:base")(what, pos = pos, name = name,
+                                     warn.conflicts = warn.conflicts)
+```
+
+`dbi.attach` will not attach the same connection multiple times unless the user
+provides a distinct `name` in each subsequent call to `dbi.attach`.
+
+
+## Writing to the User's Home Filespace
+
+Possbile spurious warning.
+
+The package only creates files in the path returned by `tempdir`. Some databases
+(e.g., duckdb) support only a single open read/write connection. Subsequent
+calls to `chinook.duckdb()` need to return working DBI connections. There is a
+constraint that the basename of the database file name needs to be the name of
+the database catalog (that is, all the database files have to have the same
+basename). My solution is to put each database file in a separate temporary
+directory. These are created as follows, perhaps calling `tempfile` inside
+`dir.create` is throwing the false positive.
+
+```{r}
+temp_db_path <- function(db_file_name) {
+  if (!dir.create(tmp_path <- tempfile("ex"))) {
+    stop("could not create directory ", tmp_path)
+  }
+
+  file.path(tmp_path, db_file_name)
+}
+```
+  
+
+---
+
+# Comments for Previous CRAN Submissions
+
 This resubmission of the `dbi.table` package includes the changes requested by
 K. Lauseker from my first submission attempt. The requested changes and my
 actions are in section 1.0.1.
