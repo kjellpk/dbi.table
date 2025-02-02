@@ -5,7 +5,7 @@
 
 ## NOTES
 
-1. `dbi.table`s in schemas are now implemented as active bindings so that `data.table`'s `setcolorder` will not change their column order.
+1. `dbi.table`s in schemas are now implemented as active bindings so that `data.table`'s `setcolorder` does not change their column order.
 
 2. In `reference.test`, when the output of `all.equal` is not `TRUE` and `verbose = TRUE`, the format of the `message` now matches `print(all.equal(...))`. Thanks to @MichaelChirico for the report and fix.
 
