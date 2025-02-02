@@ -15,7 +15,7 @@
 * ubuntu-latest (release)
 * ubuntu-latest (oldrel-1)
 
-# Key Notes from Previous CRAN Submission
+# Relevant Notes from Previous CRAN Submission
 
 ## The `dbi.attach` Function Calls `attach`
 
@@ -54,7 +54,11 @@ temp_db_path <- function(db_file_name) {
   file.path(tmp_path, db_file_name)
 }
 ```
-  
+
+## References Describing the Methods in your Package
+
+There are no references other than the package vignette.
+
 
 ---
 
