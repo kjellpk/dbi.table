@@ -1,6 +1,8 @@
 test_that("set* functions work", {
   conns <- list(chinook.sqlite(), chinook.duckdb())
 
+  DBI::dbExecute(conns[[2L]], "SET threads TO 1;")
+
   for (conn in conns) {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
     expect_no_error(Artist <- dbi.table(conn, DBI::Id("Artist")))

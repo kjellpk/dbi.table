@@ -1,5 +1,6 @@
 test_that("dbplyr::translate_sql_ borks", {
   chinook <- dbi.catalog(chinook.duckdb)
+  DBI::dbExecute(chinook, DBI::SQL("SET threads TO 1;"))
 
   expect_no_error({
     DBI::dbExecute(chinook, DBI::SQL("LOAD parquet;"))

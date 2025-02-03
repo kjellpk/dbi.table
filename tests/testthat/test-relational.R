@@ -27,7 +27,8 @@ test_that("merge fails when relational data not available", {
 
 
 detach("RSQLite:chinook_sqlite")
-dbi.attach(chinook.duckdb)
+chinook <- dbi.attach(chinook.duckdb)
+DBI::dbExecute(chinook, DBI::SQL("SET threads TO 1;"))
 
 
 # Relational merge (1) finds the internal name of each foreign key column
