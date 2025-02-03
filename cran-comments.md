@@ -3,6 +3,9 @@
 - At the request of the `data.table` maintainers, moved `data.table` from
   Depends to Suggests.
 
+- Added Luis Rocha as a contributor (ctd) for the (Chinook) example database and
+  included his license in example_files/chinook_export/LICENSE. 
+
 - Refactored code; no changes to core functionality of package.
 
 ## Test Environments
