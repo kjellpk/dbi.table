@@ -5,10 +5,14 @@ session$special_symbols <- new.env(parent = emptyenv())
 session$key_base <- "+xcwrl+"
 session$tmp_base <- "DBI_TABLE_PACKAGE_TEMPORARY_TABLE_"
 session$ignore_schemas <- c("information_schema", "pg_catalog")
-session$default_information_schema_tables <- c("columns",
+session$default_information_schema_tables <- c("character_sets",
+                                               "columns",
+                                               "constraint_column_usage",
                                                "key_column_usage",
                                                "referential_constraints",
-                                               "tables")
+                                               "schemata",
+                                               "tables",
+                                               "table_constraints")
 
 .onLoad <- function(libname, pkgname) {
   add_special(".N", function(e, dbi_table, specials, env) call("n"))
