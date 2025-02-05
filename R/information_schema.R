@@ -67,21 +67,6 @@ get_information_schema <- function(x) {
 
 
 
-get_init_columns <- function(catalog) {
-  columns <- try(DBI::dbGetQuery(dbi_connection(catalog),
-                                 "SELECT * FROM information_schema.columns"),
-                 silent = TRUE)
-
-  if (is.data.frame(columns)) {
-    names(columns) <- tolower(names(columns))
-    return(columns)
-  }
-
-  NULL
-}
-
-
-
 # Define globally for R CMD check
 dbi_table <- NULL
 table_catalog <- NULL
