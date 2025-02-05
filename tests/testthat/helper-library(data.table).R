@@ -1,2 +1,2 @@
 library(data.table)
-setDTthreads(1L)
+data.table::setDTthreads(1L)
