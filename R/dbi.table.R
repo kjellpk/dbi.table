@@ -75,7 +75,7 @@ dbi.table <- function(conn, id) {
 
 
 
-new_dbi_table <- function(conn, id, fields = NULL) {
+new_dbi_table <- function(conn, id, fields = NULL, key = NULL) {
   if (inherits(id, "Id")) {
     id_name <- id@name[[length(id@name)]]
   } else {
@@ -104,19 +104,43 @@ new_dbi_table <- function(conn, id, fields = NULL) {
                        id_name = id_name,
                        field = fields)
 
-  dbi_table_object(x, conn, data_source, fields)
+  dbi_table_object(x, conn, data_source, fields, key)
 }
 
 
 
-dbi_table_object <- function(cdefs, conn, data_source, fields,
-                             distinct = FALSE, where = list(),
-                             group_by = list(), order_by = list(),
-                             ctes = list()) {
+dbi_table_object <- function(cdefs, conn, data_source, fields, key = NULL,
+                             distinct = FALSE, where = NULL,
+                             group_by = NULL, order_by = NULL,
+                             ctes = NULL) {
+  attr(cdefs, "conn") <- conn
+  attr(cdefs, "data_source") <- data_source
+  attr(cdefs, "fields") <- fields
 
-  structure(cdefs, conn = conn, data_source = data_source, fields = fields,
-            distinct = distinct, where = where, group_by = group_by,
-            order_by = order_by, ctes = ctes, class = "dbi.table")
+  if (length(key)) {
+    attr(cdefs, "sorted") <- copy_vector(key)
+  }
+
+  attr(cdefs, "distinct") <- distinct
+
+  if (length(where)) {
+    attr(cdefs, "where") <- where
+  }
+
+  if (length(group_by)) {
+    attr(cdefs, "group_by") <- group_by
+  }
+
+  if (length(order_by)) {
+    attr(cdefs, "order_by") <- order_by
+  }
+
+  if (length(ctes)) {
+    attr(cdefs, "ctes") <- ctes
+  }
+
+  class(cdefs) <- "dbi.table"
+  cdefs
 }
 
 

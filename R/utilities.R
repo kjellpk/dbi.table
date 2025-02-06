@@ -128,10 +128,10 @@ assign_and_lock <- function(x, value, pos) {
 
 
 
-make_install_function <- function(catalog, id, fields, column_names) {
+make_install_function <- function(catalog, id, fields, column_names, key) {
   function(x) {
     if (missing(x)) {
-      dbi_table <- new_dbi_table(catalog, id, fields)
+      dbi_table <- new_dbi_table(catalog, id, fields, key)
       names(dbi_table) <- copy_vector(column_names)
       return(dbi_table)
     }
@@ -142,8 +142,8 @@ make_install_function <- function(catalog, id, fields, column_names) {
 
 
 
-install_in_schema <- function(x, catalog, id, fields, column_names, schema) {
-  FUN <- make_install_function(catalog, id, fields, column_names)
+install_in_schema <- function(x, catalog, id, fields, column_names, key, schema) {
+  FUN <- make_install_function(catalog, id, fields, column_names, key)
   makeActiveBinding(x, FUN, schema)
   lockBinding(x, schema)
 }

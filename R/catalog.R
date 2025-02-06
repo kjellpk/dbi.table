@@ -62,20 +62,24 @@ dbi.catalog <- function(conn, schemas = NULL) {
 
 
 
+ID_COLUMNS <- c("table_catalog", "table_schema", "table_name")
+VALUE_COLUMNS <- c("column_name", "ordinal_position", "pk_ordinal_position")
+
 install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
   schema_names <- names(schemas)
-  id_cols <- intersect(c("table_catalog", "table_schema", "table_name"),
-                       names(columns))
+  id_cols <- intersect(ID_COLUMNS, names(columns))
 
   columns <- subset(columns,
                     subset = table_schema %in% schema_names,
-                    select = c(id_cols, c("column_name", "ordinal_position")))
+                    select = c(id_cols, VALUE_COLUMNS))
 
   tables <- split(columns, columns[, id_cols], drop = TRUE)
 
   tables <- lapply(tables, function(u) {
     id <- DBI::Id(unlist(u[1L, id_cols]))
     fields <- u$column_name[order(u$ordinal_position)]
+    key_idx <- !is.na(u$pk_ordinal_position)
+    key <- u$column_name[key_idx][u$pk_ordinal_position[key_idx]]
 
     if (to_lower) {
       table_schema <- tolower(u$table_schema[[1L]])
@@ -89,7 +93,7 @@ install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
 
     schema <- schemas[[table_schema]]
 
-    install_in_schema(table_name, catalog, id, fields, column_names, schema)
+    install_in_schema(table_name, catalog, id, fields, column_names, key, schema)
   })
 
   invisible()

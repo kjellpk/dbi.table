@@ -6,11 +6,7 @@ information_schema <- function(catalog, columns) {
   info <- new_schema(schema_name = "information_schema", catalog = catalog)
   info_columns <- subset(columns,
                          subset = tolower(table_schema) == "information_schema",
-                         select = c("table_catalog",
-                                    "table_schema",
-                                    "table_name",
-                                    "column_name",
-                                    "ordinal_position"))
+                         select = c(ID_COLUMNS, VALUE_COLUMNS))
 
   if (nrow(info_columns)) {
     install_from_columns(info_columns, list(information_schema = info),
