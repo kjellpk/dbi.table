@@ -1,4 +1,8 @@
 information_schema <- function(catalog, columns) {
+  if (!("table_schema" %in% names(columns))) {
+    return(NULL)
+  }
+
   info <- new_schema(schema_name = "information_schema", catalog = catalog)
   info_columns <- subset(columns,
                          subset = tolower(table_schema) == "information_schema",
@@ -24,7 +28,7 @@ information_schema <- function(catalog, columns) {
     })
   }
 
-  info
+  NULL
 }
 
 

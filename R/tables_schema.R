@@ -11,11 +11,22 @@ tables_schema_default <- function(conn) {
 
   if (is.data.frame(columns)) {
     names(columns) <- tolower(names(columns))
-    columns$pk_ordinal_position <- NA_integer_
-    return(columns)
+  } else {
+    columns <- mapply(function(conn, name) {
+      fields <- DBI::dbListFields(conn, name)
+      data.frame(table_name = name,
+                 column_name = fields,
+                 ordinal_position = seq_along(fields))
+    },
+    name = DBI::dbListTables(conn),
+    MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
+
+    columns <- do.call(rbind, columns)
+    row.names(columns) <- NULL
   }
 
-  NULL
+  columns$pk_ordinal_position <- NA_integer_
+  columns
 }
 
 

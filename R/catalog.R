@@ -37,12 +37,8 @@ dbi.catalog <- function(conn, schemas = NULL) {
 
   class(catalog) <- "dbi.catalog"
 
-  if (is.null(columns <- tables_schema(dbi_connection(catalog)))) {
-    info <- bare_bones_information_schema(catalog)
-    columns <- as.data.frame(info$columns)
-  } else {
-    info <- information_schema(catalog, columns)
-  }
+  columns <- tables_schema(dbi_connection(catalog))
+  information_schema(catalog, columns)
 
   if (is.null(columns$table_schema)) {
     schema_names <- columns$table_schema <- "main"
