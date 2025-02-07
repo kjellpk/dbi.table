@@ -98,7 +98,7 @@ new_dbi_table <- function(conn, id, fields = NULL, key = NULL) {
 
   internal_name <- paste0(session$key_base, seq_len(length(fields)))
 
-  x <- names_list(internal_name, copy_vector(fields))
+  x <- names_list(internal_name, fields)
 
   fields <- data.frame(internal_name = internal_name,
                        id_name = id_name,
@@ -113,6 +113,8 @@ dbi_table_object <- function(cdefs, conn, data_source, fields, key = NULL,
                              distinct = FALSE, where = NULL,
                              group_by = NULL, order_by = NULL,
                              ctes = NULL) {
+  names(cdefs) <- copy_vector(names(cdefs))
+
   attr(cdefs, "conn") <- conn
   attr(cdefs, "data_source") <- data_source
   attr(cdefs, "fields") <- fields
