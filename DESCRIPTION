@@ -1,7 +1,7 @@
 Package: dbi.table
 Type: Package
 Title: Database Queries Using 'data.table' Syntax
-Version: 1.0.3
+Version: 1.0.4
 Depends:
   R (>= 3.6.0)
 Imports:
