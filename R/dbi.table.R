@@ -159,6 +159,12 @@ get_fields <- function(x) {
 
 
 
+get_key <- function(x) {
+  attr(x, "sorted", exact = TRUE)
+}
+
+
+
 get_distinct <- function(x) {
   attr(x, "distinct", exact = TRUE)
 }

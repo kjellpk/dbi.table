@@ -202,6 +202,8 @@ handle_j <- function(x, j, by, enclos) {
     return(x)
   }
 
+  x_key_cols <- c(x)[get_key(x)]
+
   if (is.null(j_names <- names(j))) {
     j_names <- paste0("V", seq_along(j))
   }
@@ -221,11 +223,15 @@ handle_j <- function(x, j, by, enclos) {
     j <- handle_over(x, j, by, a$order_by)
   }
 
+  names(j) <- j_names
   j <- c(by, j)
-  a$names <- c(names(by), j_names)
-  attributes(j) <- a
 
-  j
+  j_key <- match(x_key_cols, j, nomatch = 0L)
+  j_key <- j_key[j_key > 0L]
+  j_key <- names(j)[j_key]
+
+  dbi_table_object(j, a$conn, a$data_source, a$fields, j_key, a$distinct,
+                   a$where, a$group_by, a$order_by, a$ctes)
 }
 
 
