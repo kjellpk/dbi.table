@@ -5,9 +5,8 @@
 #' @title Merge two dbi.tables
 #'
 #' @description
-#'   Merge two \code{\link{dbi.table}}s. The \code{dbi.table} method is similar
-#'   to the \code{\link[data.table]{data.table}} method except that the result
-#'   set is only determined up to row order and is not sorted by default.
+#'   Merge two \code{\link{dbi.table}}s. The \code{dbi.table} \code{merge}
+#'   method is modelled after the \code{\link[data.table]{data.table}}.
 #'
 #'   Default merge columns: if \code{x} has a foreign key constraint that
 #'   references \code{y} then the columns comprising this key are used; see
@@ -41,7 +40,8 @@
 #'   a logical value. Analogous to \code{all.x} above.
 #'
 #' @param sort
-#'   a logical value. Currently ignored.
+#'   a logical value. If TRUE (default), the key of the merged \code{dbi.table}
+#'   is set to the \code{by} / \code{by.x} columns.
 #'
 #' @param suffixes
 #'   a length-2 character vector. The suffixes to be used for making
@@ -92,7 +92,7 @@
 #' @export
 merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
                             all = FALSE, all.x = all, all.y = all,
-                            sort = FALSE, suffixes = c(".x", ".y"),
+                            sort = TRUE, suffixes = c(".x", ".y"),
                             no.dups = TRUE, recursive = FALSE, ...) {
   if (!is.dbi.table(x)) {
     stop("'x' is not a 'dbi.table'")
@@ -116,17 +116,17 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     warning("non-NULL value of 'incomparables' was ignored")
   }
 
-  names_x <- names(x)
-  names_y <- names(y)
+  x_names <- names(x)
+  y_names <- names(y)
 
-  if (anyDuplicated(names_x) || anyDuplicated(names_y)) {
+  if (anyDuplicated(x_names) || anyDuplicated(y_names)) {
     stop("the 'merge' method for 'dbi.table' requires that 'x' and 'y' ",
          "each have unique column names")
   }
 
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
     if (is.null(rt <- related_tables(x, y)) || nrow(rt) < 1L) {
-      by.x <- by.y <- intersect(names_x, names_y)
+      by.x <- by.y <- intersect(x_names, y_names)
     } else {
       rt_x <- rt[, c("catalog_x", "schema_x", "table_x", "field_x")]
       by_x <- match_by_field(x, rt_x)
@@ -151,17 +151,17 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
       stop("non-empty character vectors of column names are required for ",
            "'by.x' and 'by.y'")
 
-    if (!all(by.x %in% names_x))
+    if (!all(by.x %in% x_names))
       stop("Elements listed in 'by.x' must be valid column names in 'x'")
 
-    if (!all(by.y %in% names_y))
+    if (!all(by.y %in% y_names))
       stop("Elements listed in 'by.y' must be valid column names in 'y'")
   } else {
     if (!length(by)) {
       stop("a non-empty character vector of column names is required for 'by'")
     }
 
-    if (!all(by %in% intersect(names_x, names_y)))
+    if (!all(by %in% intersect(x_names, y_names)))
       stop("Elements listed in 'by' must be valid column names in 'x' and 'y'")
 
     by <- unname(by)
@@ -185,49 +185,30 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
   xy <- sql_join(x, y, type, on, c("x.", "y."), NULL)
 
-  x <- c(xy)[seq_along(x)]
-  names(x) <- names_x
-  y <- c(xy)[-seq_along(x)]
-  names(y) <- names_y
+  xy_x <- names_list(names(xy)[seq_along(x)], x_names)
+  xy_y <- names_list(names(xy)[-seq_along(x)], y_names)
 
-  start <- setdiff(names_x, by.x)
-  end <- setdiff(names_y, by.y)
-
-  non_by <- c(x[start], y[end])
-
-  by_x <- list_of_by_columns(by.x, x)
-  keep <- !vapply(by_x, is.null, FALSE)
-  by_x <- by_x[keep]
+  start <- setdiff(x_names, by.x)
+  end <- setdiff(y_names, by.y)
 
   if (type %in% c("inner", "left")) {
-    by <- by_x
-  } else {
-    by_y <- list_of_by_columns(by.y, y)
-    names(by_y) <- by.x
-    by_y <- by_y[keep]
-
-    if (type == "right") {
-      by <- by_y
-
-    } else if (type == "outer") {
-      by <- mapply(function(u, v) {
-        if (!is.null(u) && !is.null(v))
-          return(call("coalesce", u, v))
-        if (!is.null(u))
-          return(u)
-        NULL
-      }, u = by_x, v = by_y, SIMPLIFY = FALSE)
-    } else { #for cross joins
-      by <- list()
-    }
+    by <- xy_x[by.x]
+  } else if (type == "right") {
+    by <- xy_y[by.y]
+    names(by) <- by.x
+  } else if (type == "outer") {
+    by <- mapply(function(u, v) {
+      if (!is.null(u) && !is.null(v))
+        return(call("coalesce", u, v))
+      if (!is.null(u))
+        return(u)
+      NULL
+    }, u = xy_x[by.x], v = xy_y[by.y], SIMPLIFY = FALSE)
+  } else { #for cross joins
+    by <- list()
   }
 
-  j <- c(by, non_by)
-  names_j <- names(j)
-  a <- attributes(xy)
-  a$names <- NULL
-  attributes(j) <- a
-  names(j) <- names_j
+  xy <- handle_j(xy, c(by, xy_x[start], xy_y[end]), NULL, NULL)
 
   # naming logical taken from merge.data.table (data.table version 1.14.10)
   by_names <- names(by)
@@ -242,8 +223,13 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     end[match(dupkeyx, end, 0L)] <- paste0(dupkeyx, suffixes[2L])
   }
 
-  names(j) <- c(by_names, start, end)
-  j
+  names(xy) <- c(by_names, start, end)
+
+  if (isTRUE(sort)) {
+    attr(xy, "sorted") <- by_names
+  }
+
+  xy
 }
 
 
@@ -288,8 +274,15 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
   on_x <- as.character(lapply(on, `[[`, 2L))
   on_i <- as.character(lapply(on, `[[`, 3L))
 
-  on <- lapply(on, function(u) {u[[2L]] <- as.name(paste0("x.", u[[2L]])); u})
-  on <- lapply(on, function(u) {u[[3L]] <- as.name(paste0("i.", u[[3L]])); u})
+  on <- lapply(on, function(u) {
+    u[[2L]] <- as.name(paste0("x.", u[[2L]]))
+    u
+  })
+
+  on <- lapply(on, function(u) {
+    u[[3L]] <- as.name(paste0("i.", u[[3L]]))
+    u
+  })
 
   on <- handy_andy(on)
 
@@ -365,14 +358,4 @@ extract_on_validator <- function(expr, x_names, i_names) {
   }
 
   NULL
-}
-
-
-
-list_of_by_columns <- function(nm, x) {
-  ret <- vector("list", length(nm))
-  names(ret) <- nm
-  idx <- intersect(nm, names(x))
-  ret[idx] <- x[idx]
-  ret
 }

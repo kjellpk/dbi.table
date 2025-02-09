@@ -43,7 +43,7 @@ test_that("relational merge works", {
   }, "dbi.table")
 
   ref <- merge(as.data.table(Track), as.data.table(g),
-               by.x = "GenreId", by.y = "gid", sort = FALSE)
+               by.x = "GenreId", by.y = "gid")
 
   expect_true(all.equal(as.data.table(track_genre), ref,
                         ignore.row.order = TRUE))
@@ -75,7 +75,7 @@ test_that("relational merge works", {
     y <- as.data.table(get(i))
     setnames(y, names(y), paste(i, names(y), sep = "."))
     track <- merge(track, y, by.x = paste0(i, "Id"), by.y = names(y)[[1L]],
-                   all.x = TRUE, sort = FALSE)
+                   all.x = TRUE)
   }
 
   expect_true(all.equal(as.data.table(x), track, ignore.row.order = TRUE))
@@ -100,7 +100,7 @@ test_that("relational merge works with recursive = TRUE", {
     }
 
     track <- merge(track, y, by.x = paste0(i, "Id"), by.y = names(y)[[1L]],
-                   all.x = TRUE, sort = FALSE)
+                   all.x = TRUE)
   }
 
   expect_true(all.equal(as.data.table(x), track, ignore.row.order = TRUE))

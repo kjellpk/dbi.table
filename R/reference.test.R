@@ -72,10 +72,6 @@ reference.test <- function(expr, envir = parent.frame(),
   dbit_eval <- data.table::as.data.table(dbit_eval)
   dt_eval <- eval(expr, envir = dbits, enclos = envir)
 
-  # merge sets key by default so unkey
-  data.table::setkey(dbit_eval, NULL)
-  data.table::setkey(dt_eval, NULL)
-
   eq <- all.equal(dt_eval, dbit_eval,
                   ignore.row.order = ignore.row.order)
 

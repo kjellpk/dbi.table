@@ -14,7 +14,7 @@
   all = FALSE,
   all.x = all,
   all.y = all,
-  sort = FALSE,
+  sort = TRUE,
   suffixes = c(".x", ".y"),
   no.dups = TRUE,
   recursive = FALSE,
@@ -39,7 +39,8 @@ are included in the output.}
 
 \item{all.y}{a logical value. Analogous to \code{all.x} above.}
 
-\item{sort}{a logical value. Currently ignored.}
+\item{sort}{a logical value. If TRUE (default), the key of the merged \code{dbi.table}
+is set to the \code{by} / \code{by.x} columns.}
 
 \item{suffixes}{a length-2 character vector. The suffixes to be used for making
 non-\code{by} column names unique. The suffix behavior works in a similar
@@ -59,9 +60,8 @@ name as any \code{by.x}.}
 a \code{\link{dbi.table}}.
 }
 \description{
-Merge two \code{\link{dbi.table}}s. The \code{dbi.table} method is similar
-  to the \code{\link[data.table]{data.table}} method except that the result
-  set is only determined up to row order and is not sorted by default.
+Merge two \code{\link{dbi.table}}s. The \code{dbi.table} \code{merge}
+  method is modelled after the \code{\link[data.table]{data.table}}.
 
   Default merge columns: if \code{x} has a foreign key constraint that
   references \code{y} then the columns comprising this key are used; see
