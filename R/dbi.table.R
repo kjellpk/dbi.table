@@ -385,6 +385,12 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
 #'   literal numeric vector of integer values indexing the columns of \code{x}.
 #'   Use \code{by} to control grouping when evaluating \code{j}.
 #'
+#' @param keyby
+#'   Same as \code{by}, but additionally sets the key of the resulting
+#'   \code{dbi.table} to the columns provided in \code{by}. May also be
+#'   \code{TRUE} or \code{FALSE} when \code{by} is provided as an alternative
+#'   way to accomplish the same operation.
+#'
 #' @param nomatch
 #'   Either \code{NA} or \code{NULL}.
 #'
@@ -413,7 +419,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
 #'   }
 #'
 #' @export
-"[.dbi.table" <- function(x, i, j, by, nomatch = NA, on = NULL) {
+"[.dbi.table" <- function(x, i, j, by, keyby, nomatch = NA, on = NULL) {
   x_sub <- substitute(x)
   parent <- parent.frame()
 
@@ -440,10 +446,25 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
 
   stopifnot(is.null(i) || is.call(i) || is.dbi.table(i))
 
-  if (missing(by)) {
+  by_missing <- (missing(by) && missing(keyby))
+  if (by_missing || missing(j)) {
+    if (!by_missing) {
+      warning("ignoring by/keyby because 'j' is not supplied")
+    }
     by <- NULL
+    keyby <- FALSE
   } else {
-    by <- preprocess_by(substitute(by), x, parent, !missing(j))
+    if (missing(by)) {
+      by <- preprocess_by(substitute(keyby), x, parent, !missing(j))
+      keyby <- TRUE
+    } else {
+      by <- preprocess_by(substitute(by), x, parent, !missing(j))
+      if (missing(keyby)) {
+        keyby <- FALSE
+      } else if (!is.logical(keyby) || (length(keyby) != 1L)) {
+        stop("when by and keyby are both provided, keyby must be TRUE or FALSE")
+      }
+    }
   }
 
   if (missing(j)) {

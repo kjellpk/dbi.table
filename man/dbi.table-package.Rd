@@ -8,7 +8,7 @@
 \usage{
 dbi.table(conn, id)
 
-\method{[}{dbi.table}(x, i, j, by, nomatch = NA, on = NULL)
+\method{[}{dbi.table}(x, i, j, by, keyby, nomatch = NA, on = NULL)
 }
 \arguments{
 \item{conn}{A \code{\link[DBI:DBIConnection-class]{DBIConnection}} object, as
@@ -54,6 +54,11 @@ Use \code{j} to select (and optionally, transform) the columns of \code{x}.}
 \code{x}, an expression of the form \code{start_name:end_name}, or a
 literal numeric vector of integer values indexing the columns of \code{x}.
 Use \code{by} to control grouping when evaluating \code{j}.}
+
+\item{keyby}{Same as \code{by}, but additionally sets the key of the resulting
+\code{dbi.table} to the columns provided in \code{by}. May also be
+\code{TRUE} or \code{FALSE} when \code{by} is provided as an alternative
+way to accomplish the same operation.}
 
 \item{nomatch}{Either \code{NA} or \code{NULL}.}
 
