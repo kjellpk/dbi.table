@@ -260,29 +260,62 @@ print.dbi.table <- function(x, ...) {
     return(invisible(x))
   }
 
-  ans <- as.data.frame(x, n = 6)
-  classes <- display_class(ans)
+  opts <- list(topn = getOption("datatable.print.topn", 5L),
+               class = getOption("datatable.print.class", TRUE),
+               print.keys = getOption("datatable.print.keys", TRUE))
+
+  dots <- list(...)
+  idx <- intersect(names(dots), names(opts))
+  opts[idx] <- dots[idx]
+
+  if (length(n <- as.integer(opts$topn)) == 1L && !is.na(n)) {
+    n <- max(1L, n)
+  } else {
+    n <- 5L
+  }
+
+  print.keys <- opts$print.keys
+  print.class <- opts$class
+
+  if (nrow(ans <- as.data.frame(x, n = n + 1L)) > n) {
+    ans <- ans[seq_len(n), ]
+    print_continue <- TRUE
+  } else {
+    print_continue <- FALSE
+  }
 
   m <- as.matrix(format(ans))
-  m <- rbind(classes, m)
-  dimnames(m)[[1L]] <- rep.int("", nrow(m))
+
+  if (isTRUE(print.class)) {
+    classes <- display_class(ans)
+    m <- rbind(classes, m)
+  }
 
   cat(paste0("<", db_short_name(dbi_connection(x)), ">"),
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
 
-  if (nrow(m) > 6L) {
-    print(m[1:6, , drop = FALSE], quote = FALSE, right = TRUE)
-    cat(" ---\n")
-  } else if (nrow(m) > 1L) {
-    print(m, quote = FALSE, right = TRUE)
-  } else {
+  if (isTRUE(print.keys) && length(k <- attr(x, "sorted", exact = TRUE))) {
+    pre <- "Key: "
+    if (!getOption("dbitable.strict.key", FALSE)) {
+      pre <- paste("(Non-Strict)", pre)
+    }
+    cat(paste0(pre, "<", paste(k, collapse = ", "), ">\n"))
+  }
+
+  if (nrow(ans) < 1L) {
     m <- paste("Empty dbi.table (0 rows and", length(ans), "cols):",
                paste(names(ans), collapse = ","))
     if (nchar(m) > (width <- getOption("width", 80L))) {
       m <- paste0(substring(m, 1L, width - 3L), "...")
     }
     cat(m, "\n", sep = "")
+  } else {
+    dimnames(m)[[1L]] <- rep.int("", nrow(m))
+    print(m, quote = FALSE, right = TRUE)
+    if (print_continue) {
+      cat(" ---\n")
+    }
   }
 
   invisible(x)
