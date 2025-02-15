@@ -6,7 +6,7 @@
 \alias{[.dbi.table}
 \title{DBI Table}
 \usage{
-dbi.table(conn, id)
+dbi.table(conn, id, check.names = FALSE, key = NULL, stringsAsFactors = FALSE)
 
 \method{[}{dbi.table}(x, i, j, by, keyby, nomatch = NA, on = NULL)
 }
@@ -20,6 +20,16 @@ returned by \code{\link[DBI]{dbConnect}}. Alternatively, a
 an \code{Id} by \code{\link[DBI]{Id}}), or a \code{\link[DBI]{SQL}} object
 (advanced) identifying a database object (e.g., table or view) on
 \code{conn}.}
+
+\item{check.names}{Just as \code{check.names} in \code{link[data.table]{data.table}} and
+\code{link[base]{data.frame}}.}
+
+\item{key}{A character vector of one or more column names to set as the resulting
+\code{dbi.table}'s key.}
+
+\item{stringsAsFactors}{A logical value (default is \code{FALSE}). Convert all \code{character}
+columns to \code{factor}s when executing the \code{dbi.table}'s underlying
+SQL query and retrieving the result set.}
 
 \item{x}{A \code{dbi.table}.}
 

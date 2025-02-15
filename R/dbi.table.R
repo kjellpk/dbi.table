@@ -20,6 +20,19 @@
 #'   (advanced) identifying a database object (e.g., table or view) on
 #'   \code{conn}.
 #'
+#' @param check.names
+#'   Just as \code{check.names} in \code{link[data.table]{data.table}} and
+#'   \code{link[base]{data.frame}}.
+#'
+#' @param key
+#'   A character vector of one or more column names to set as the resulting
+#'   \code{dbi.table}'s key.
+#'
+#' @param stringsAsFactors
+#'   A logical value (default is \code{FALSE}). Convert all \code{character}
+#'   columns to \code{factor}s when executing the \code{dbi.table}'s underlying
+#'   SQL query and retrieving the result set.
+#'
 #' @return
 #'   A \code{dbi.table}.
 #'
@@ -55,7 +68,8 @@
 #'   \dontshow{DBI::dbDisconnect(duck)}
 #'
 #' @export
-dbi.table <- function(conn, id) {
+dbi.table <- function(conn, id, check.names = FALSE, key = NULL,
+                      stringsAsFactors = FALSE) {
   conn <- get_connection(conn)
 
   if (inherits(id, "SQL")) {
@@ -70,12 +84,19 @@ dbi.table <- function(conn, id) {
     id <- check_id(id)
   }
 
-  new_dbi_table(conn, id)
+  x <- new_dbi_table(conn, id, key = key, stringsAsFactors = stringsAsFactors)
+
+  if (isTRUE(check.names)) {
+    names(x) <- make.names(names(x), unique = TRUE)
+  }
+
+  x
 }
 
 
 
-new_dbi_table <- function(conn, id, fields = NULL, key = NULL) {
+new_dbi_table <- function(conn, id, fields = NULL, key = NULL,
+                          stringsAsFactors = FALSE) {
   if (inherits(id, "Id")) {
     id_name <- id@name[[length(id@name)]]
   } else {
@@ -104,7 +125,8 @@ new_dbi_table <- function(conn, id, fields = NULL, key = NULL) {
                        id_name = id_name,
                        field = fields)
 
-  dbi_table_object(x, conn, data_source, fields, key)
+  dbi_table_object(x, conn, data_source, fields, key,
+                   stringsAsFactors = stringsAsFactors)
 }
 
 
@@ -112,7 +134,7 @@ new_dbi_table <- function(conn, id, fields = NULL, key = NULL) {
 dbi_table_object <- function(cdefs, conn, data_source, fields, key = NULL,
                              distinct = FALSE, where = NULL,
                              group_by = NULL, order_by = NULL,
-                             ctes = NULL) {
+                             ctes = NULL, stringsAsFactors = FALSE) {
   names(cdefs) <- copy_vector(names(cdefs))
 
   attr(cdefs, "conn") <- conn
@@ -140,6 +162,8 @@ dbi_table_object <- function(cdefs, conn, data_source, fields, key = NULL,
   if (length(ctes)) {
     attr(cdefs, "ctes") <- ctes
   }
+
+  attr(cdefs, "stringsAsFactors") <- stringsAsFactors
 
   class(cdefs) <- "dbi.table"
   cdefs
@@ -191,6 +215,12 @@ get_order_by <- function(x) {
 
 get_ctes <- function(x) {
   attr(x, "ctes", exact = TRUE)
+}
+
+
+
+get_stringsAsFactors <- function(x) {
+  attr(x, "stringsAsFactors", exact = TRUE)
 }
 
 
@@ -340,7 +370,14 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
     }
   }
 
-  DBI::dbFetch(res, n = n)
+  result_set <- DBI::dbFetch(res, n = n)
+
+  if (isTRUE(get_stringsAsFactors(x))) {
+    f_idx <- vapply(result_set, is.character, FALSE)
+    result_set[f_idx] <- lapply(result_set[f_idx], factor)
+  }
+
+  result_set
 }
 
 
