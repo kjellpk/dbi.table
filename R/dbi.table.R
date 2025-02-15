@@ -225,6 +225,25 @@ get_stringsAsFactors <- function(x) {
 
 
 
+#' @export
+"names<-.dbi.table" <- function(x, value) {
+  value <- as.character(value)
+
+  if ((nn <- length(value)) != (nc <- length(x))) {
+    stop("Can't assign ", nn, " names to a ", nc, "-column dbi.table",
+         call. = FALSE)
+  }
+
+  if (length(x_key <- get_key(x))) {
+    attr(x, "sorted") <- value[match(x_key, names(x))]
+  }
+
+  attr(x, "names") <- value
+  x
+}
+
+
+
 #' @rdname as.dbi.table
 #' @name as.dbi.table
 #'
