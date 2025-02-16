@@ -70,7 +70,7 @@ paren <- function(x) {
 #'   none (invisible \code{NULL}).
 #'
 #' @export
-csql <- function(x, n = getOption("dbi_table_max_fetch", 10000L)) {
+csql <- function(x, n = getOption("dbitable.max.fetch", 10000L)) {
   cat(paste0(write_select_query(x, n), "\n"))
 }
 

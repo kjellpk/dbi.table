@@ -10,7 +10,7 @@
   row.names = NULL,
   optional = FALSE,
   ...,
-  n = getOption("dbi_table_max_fetch", 10000L)
+  n = getOption("dbitable.max.fetch", 10000L)
 )
 }
 \arguments{
@@ -40,7 +40,7 @@ By default, \code{as.data.frame} returns up to 10,000 rows (see the
   \code{n} argument). To override this limit, either call
   \code{as.data.frame} and provide the \code{n} argument (e.g., \code{n = -1}
   to return the entire result set), or set the option
-  \code{dbi_table_max_fetch} to the desired default value of \code{n}.
+  \code{dbitable.max.fetch} to the desired default value of \code{n}.
 }
 \examples{
   duck <- chinook.duckdb()

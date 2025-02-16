@@ -23,10 +23,10 @@
   conn,
   statement,
   ...,
-  n = getOption("dbi_table_max_fetch", 10000L)
+  n = getOption("dbitable.max.fetch", 10000L)
 )
 
-\S4method{dbGetQuery}{dbi.table,missing}(conn, statement, ..., n = getOption("dbi_table_max_fetch", 10000L))
+\S4method{dbGetQuery}{dbi.table,missing}(conn, statement, ..., n = getOption("dbitable.max.fetch", 10000L))
 
 \S4method{dbGetInfo}{dbi.catalog}(dbObj, ...)
 

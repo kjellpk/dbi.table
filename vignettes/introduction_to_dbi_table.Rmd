@@ -103,7 +103,7 @@ and the last 5 rows are displayed.
 
 Note: by default, `as.data.table` (and the empty extracts shortcut) fetch a
 maximum of 10,000 rows. To override this limit, either set the option
-`dbi_table_max_fetch` or call `as.data.table` and provide the `n` argument
+`dbitable.max.fetch` or call `as.data.table` and provide the `n` argument
 (e.g., `n = -1` to fetch the entire result set). 
 
 The `csql` utility displays the query.

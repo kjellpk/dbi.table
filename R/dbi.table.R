@@ -357,7 +357,7 @@ print.dbi.table <- function(x, ...) {
 #'   \code{n} argument). To override this limit, either call
 #'   \code{as.data.frame} and provide the \code{n} argument (e.g., \code{n = -1}
 #'   to return the entire result set), or set the option
-#'   \code{dbi_table_max_fetch} to the desired default value of \code{n}.
+#'   \code{dbitable.max.fetch} to the desired default value of \code{n}.
 #'
 #' @seealso
 #'   \code{\link[base]{as.data.frame}} (the generic method in the
@@ -379,7 +379,7 @@ print.dbi.table <- function(x, ...) {
 #'
 #' @export
 as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
-                                    n = getOption("dbi_table_max_fetch",
+                                    n = getOption("dbitable.max.fetch",
                                                   10000L)) {
   res <- try(DBI::dbSendStatement(dbi_connection(x),
                                   write_select_query(x, n)),

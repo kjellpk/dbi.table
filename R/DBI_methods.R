@@ -11,7 +11,7 @@ dbGetInfo_dbi_table_pkg <- function(dbObj, ...) {
 
 
 dbSendStatement_dbi_table_pkg <- function(conn, statement, ...,
-                                          n = getOption("dbi_table_max_fetch",
+                                          n = getOption("dbitable.max.fetch",
                                                         10000L)) {
   DBI::dbSendStatement(dbi_connection(conn), write_select_query(conn, n))
 }
@@ -19,7 +19,7 @@ dbSendStatement_dbi_table_pkg <- function(conn, statement, ...,
 
 
 dbGetQuery_dbi_table_pkg <- function(conn, statement, ...,
-                                     n = getOption("dbi_table_max_fetch",
+                                     n = getOption("dbitable.max.fetch",
                                                    10000L)) {
   DBI::dbGetQuery(dbi_connection(conn), write_select_query(conn, n), n = n)
 }
