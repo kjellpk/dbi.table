@@ -584,7 +584,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
   }
 
   if (is_call_to(j) == ":=") {
-    return(handle_colon_equal(x, i, j, by, parent, x_sub))
+    return(handle_the_walrus(x, i, j, by, parent, x_sub))
   }
 
   if (is.dbi.table(i)) {

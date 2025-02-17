@@ -29,38 +29,6 @@ special_list <- function(e, dbi_table, specials, env) {
 
 
 
-special_colon_equals <- function(e, dbi_table, specials, env) {
-  if (length(e) == 2L && !is.null(names(e[[2]]))) {
-    e[2] <- sub_lang(e[2], envir = dbi_table, specials = specials,
-                     enclos = env)
-    return(e)
-  }
-
-  rhs <- sub_lang(e[[3]], envir = dbi_table, specials = specials, enclos = env)
-
-  if (is_call_to(rhs) == "list") {
-    rhs[[1]] <- as.name(":=")
-  } else {
-    rhs <- call(":=", rhs)
-  }
-
-  if (is.call(nm <- e[[2]])) {
-    lhs <- eval(nm, env)
-  } else if (is.name(nm)) {
-    lhs <- as.character(nm)
-  }
-
-  if (is.null(nms <- names(rhs))) {
-    nms <- character(length(rhs))
-  }
-
-  nms[-1] <- lhs
-  names(rhs) <- nms
-  rhs
-}
-
-
-
 special_in <- function(e, dbi_table, specials, env) {
   e[[1]] <- as.name("%in%")
   e[[2]] <- sub_lang(e[[2]], dbi_table, specials, env)

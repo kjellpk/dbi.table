@@ -250,7 +250,7 @@ handle_over <- function(x, j, partition, order) {
 
 
 
-handle_colon_equal <- function(x, i, j, by, env, x_sub) {
+handle_the_walrus <- function(x, i, j, by, env, x_sub) {
   if (!is.null(i)) {
     if (is_call_to(i) == "order") {
       order_by <- update_order_by(x, i, enclos = env)
