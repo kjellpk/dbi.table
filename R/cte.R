@@ -38,7 +38,8 @@ as_cte <- function(x) {
   cte <- list(x)
   names(cte) <- id_name
 
-  dbi_table_object(v, get_connection(x), data_source, fields,
+  dbi_table_object(cdefs = v, conn = get_connection(x),
+                   data_source = data_source, fields = fields,
                    order_by = order_by, ctes = c(ctes, cte))
 }
 

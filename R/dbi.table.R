@@ -125,16 +125,17 @@ new_dbi_table <- function(conn, id, fields = NULL, key = NULL,
                        id_name = id_name,
                        field = fields)
 
-  dbi_table_object(x, conn, data_source, fields, key,
+  dbi_table_object(cdefs = x, conn = conn, data_source = data_source,
+                   fields = fields, key = key,
                    stringsAsFactors = stringsAsFactors)
 }
 
 
 
 dbi_table_object <- function(cdefs, conn, data_source, fields, key = NULL,
-                             distinct = FALSE, where = NULL,
-                             group_by = NULL, order_by = NULL,
-                             ctes = NULL, stringsAsFactors = FALSE) {
+                             distinct = FALSE, where = NULL, group_by = NULL,
+                             order_by = NULL, ctes = NULL,
+                             stringsAsFactors = FALSE) {
   names(cdefs) <- copy_vector(names(cdefs))
 
   attr(cdefs, "conn") <- conn
@@ -284,6 +285,14 @@ print.dbi.table <- function(x, ...) {
     print_continue <- FALSE
   }
 
+  if (length(x_key <- get_key(x))) {
+    o <- as.call(c(as.name("order"),
+                   lapply(x_key, as.name),
+                   list(na.last = FALSE)))
+    o <- eval(o, envir = ans)
+    ans <- ans[o, ]
+  }
+
   m <- as.matrix(format(ans))
 
   if (isTRUE(print.class)) {
@@ -295,12 +304,9 @@ print.dbi.table <- function(x, ...) {
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
 
-  if (isTRUE(print.keys) && length(k <- attr(x, "sorted", exact = TRUE))) {
-    pre <- "Key: "
-    if (!getOption("dbitable.strict.key", FALSE)) {
-      pre <- paste("(Non-Strict)", pre)
-    }
-    cat(paste0(pre, "<", paste(k, collapse = ", "), ">\n"))
+  if (isTRUE(print.keys) && length(x_key)) {
+    pre <- "Key (non-strict)"
+    cat(paste0(pre, ": <", paste(x_key, collapse = ", "), ">\n"))
   }
 
   if (nrow(ans) < 1L) {

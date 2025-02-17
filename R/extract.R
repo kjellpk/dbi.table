@@ -230,8 +230,10 @@ handle_j <- function(x, j, by, enclos) {
   j_key <- j_key[j_key > 0L]
   j_key <- names(j)[j_key]
 
-  dbi_table_object(j, a$conn, a$data_source, a$fields, j_key, a$distinct,
-                   a$where, a$group_by, a$order_by, a$ctes)
+  dbi_table_object(cdefs = j, conn = a$conn, data_source = a$data_source,
+                   fields = a$fields, key = j_key, distinct = a$distinct,
+                   where = a$where, group_by = a$group_by,
+                   order_by = a$order_by, ctes = a$ctes)
 }
 
 

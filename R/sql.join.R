@@ -174,12 +174,8 @@ sql_join <- function(x, y, type, on, prefixes, parent_frame) {
   y_names[idx] <- paste0(prefixes[[2L]], y_names[idx])
 
   names(xy) <- c(x_names, y_names)
-  dbi_table_object(cdefs = xy,
-                   conn = xy_conn,
-                   data_source = xy_data_source,
-                   fields = xy_fields,
-                   where = xy_where,
-                   order_by = xy_order_by,
+  dbi_table_object(cdefs = xy, conn = xy_conn, data_source = xy_data_source,
+                   fields = xy_fields, where = xy_where, order_by = xy_order_by,
                    ctes = xy_ctes)
 }
 
