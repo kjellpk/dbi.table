@@ -151,15 +151,26 @@ handle_i_call <- function(x, i, enclos) {
 
 
 
-update_order_by <- function(x, i) {
-  i <- as.list(i[-1])
-  i <- i[!vapply(i, is.null, FALSE)]
+update_order_by <- function(x, i, include_key = FALSE) {
+  order_by <- NULL
 
-  if (length(i) < 1) {
-    return(list())
+  if (include_key && length(x_key <- get_key(x))) {
+    x_key <- c(x)[x_key]
+  } else {
+    x_key <- NULL
   }
 
-  unique(c(i, get_order_by(x)))
+  if (is.call(i)) {
+    i <- as.list(i[-1])
+
+    if (length(i) == 1L && is.null(x[[1L]])) {
+      return(x_key)
+    }
+
+    order_by <- c(order_by, i[!vapply(i, is.null, FALSE)])
+  }
+
+  unique(c(order_by, get_order_by(x), x_key))
 }
 
 
@@ -220,7 +231,7 @@ handle_j <- function(x, j, by, enclos) {
   if (all(calls_can_aggregate(j))) {
     a$group_by <- by
   } else {
-    j <- handle_over(x, j, by, a$order_by)
+    j <- handle_over(x, j, by, update_order_by(x, NULL, include_key = TRUE))
   }
 
   names(j) <- j_names
@@ -253,7 +264,7 @@ handle_over <- function(x, j, partition, order) {
 handle_the_walrus <- function(x, i, j, by, env, x_sub) {
   if (!is.null(i)) {
     if (is_call_to(i) == "order") {
-      order_by <- update_order_by(x, i)
+      order_by <- update_order_by(x, i, include_key = TRUE)
     } else {
       stop("when using :=, if 'i' is not missing it must be a call to 'order'",
            call. = FALSE)
