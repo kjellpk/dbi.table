@@ -151,7 +151,7 @@ handle_i_call <- function(x, i, enclos) {
 
 
 
-update_order_by <- function(x, i, enclos) {
+update_order_by <- function(x, i) {
   i <- as.list(i[-1])
   i <- i[!vapply(i, is.null, FALSE)]
 
@@ -165,7 +165,7 @@ update_order_by <- function(x, i, enclos) {
 
 
 handle_i_order <- function(x, i, enclos) {
-  attr(x, "order_by") <- update_order_by(x, i, enclos)
+  attr(x, "order_by") <- update_order_by(x, i)
   x
 }
 
@@ -253,7 +253,7 @@ handle_over <- function(x, j, partition, order) {
 handle_the_walrus <- function(x, i, j, by, env, x_sub) {
   if (!is.null(i)) {
     if (is_call_to(i) == "order") {
-      order_by <- update_order_by(x, i, enclos = env)
+      order_by <- update_order_by(x, i)
     } else {
       stop("when using :=, if 'i' is not missing it must be a call to 'order'",
            call. = FALSE)
