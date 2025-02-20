@@ -18,9 +18,10 @@ Suggests:
   RSQLite,
   data.table,
   duckdb,
-  testthat (>= 3.0.0),
   knitr,
-  rmarkdown
+  rmarkdown,
+  testthat (>= 3.0.0),
+  withr
 Description:
   Query database tables over a 'DBI' connection using 'data.table' syntax.
   Attach database schemas to the search path. Automatically merge using foreign

@@ -1,15 +1,12 @@
-conns <- list(chinook.sqlite(), chinook.duckdb())
-DBI::dbExecute(conns[[2L]], "SET threads TO 1;")
+for (n in names(chinook_connections)) {
+  conn <- chinook_connections[[n]]
 
-for (conn in conns) {
-  test_that("dbi.table works", {
+  test_that(paste0("dbi.table works", " [", n, "]"), {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
     expect_true(is.dbi.table(Album))
   })
 
-
-
-  test_that("simple subset works", {
+  test_that(paste0("simple subset works", " [", n, "]"), {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
     expect_true(reference.test(
       Album[AlbumId > 7 & AlbumId < 13],
@@ -17,9 +14,7 @@ for (conn in conns) {
     ))
   })
 
-
-
-  test_that("aggregation works", {
+  test_that(paste0("aggregation works", " [", n, "]"), {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference.test(
       Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
@@ -28,9 +23,7 @@ for (conn in conns) {
     ))
   })
 
-
-
-  test_that("aggregation works with by", {
+  test_that(paste0("aggregation works with by", " [", n, "]"), {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference.test(
       Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
@@ -40,9 +33,7 @@ for (conn in conns) {
     ))
   })
 
-
-
-  test_that("window works", {
+  test_that(paste0("window works", " [", n, "]"), {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference.test(
       Track[, .(TrackId,
@@ -52,9 +43,7 @@ for (conn in conns) {
     ))
   })
 
-
-
-  test_that("window works with by", {
+  test_that(paste0("window works with by", " [", n, "]"), {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference.test(
       Track[, .(TrackId,
@@ -65,9 +54,7 @@ for (conn in conns) {
     ))
   })
 
-
-
-  test_that("j syntax consistent with data.table", {
+  test_that(paste0("j syntax consistent with data.table", " [", n, "]"), {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
 
     expect_true(reference.test(
@@ -100,7 +87,7 @@ for (conn in conns) {
       verbose = FALSE
     ))
 
-    expect_no_error(tmp <- c("MediaTypeId", "UnitPrice", "Name", "Milliseconds"))
+    tmp <- c("MediaTypeId", "UnitPrice", "Name", "Milliseconds")
 
     expect_error(Track[][, tmp])
     expect_error(Track[, tmp])
@@ -134,7 +121,7 @@ for (conn in conns) {
 
 
 
-  test_that("local works", {
+  test_that(paste0("local works", " [", n, "]"), {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
 
     expect_true(reference.test(
@@ -148,7 +135,8 @@ for (conn in conns) {
 
 
 
-  test_that("i a dbi.table, data.table, or data.frame works", {
+  test_that(paste0("i a dbi.table, data.table, or data.frame works",
+                   " [", n, "]"), {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
     expect_no_error(id2 <- unique(Album[ArtistId == 2, .(ArtistId)]))
 
@@ -170,7 +158,7 @@ for (conn in conns) {
 
 
 
-  test_that("empty temporary tables work", {
+  test_that(paste0("empty temporary tables work", " [", n, "]"), {
     expect_true(
       nrow(as.dbi.table(conn, datasets::iris[0, ], type = "query")[]) == 0L
     )
@@ -179,8 +167,4 @@ for (conn in conns) {
       nrow(as.dbi.table(conn, datasets::iris[0, ], type = "temporary")[]) == 0L
     )
   })
-
-
-
-  DBI::dbDisconnect(conn)
 }

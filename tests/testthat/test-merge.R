@@ -1,9 +1,7 @@
-conns <- list(chinook.sqlite(), chinook.duckdb())
-DBI::dbExecute(conns[[2L]], "SET threads TO 1;")
+for (n in names(chinook_connections)) {
+  conn <- chinook_connections[[n]]
 
-for (conn in conns) {
-
-  test_that("inner merge works", {
+  test_that(paste0("inner merge works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
     expect_true(reference.test(
@@ -12,9 +10,7 @@ for (conn in conns) {
     ))
   })
 
-
-
-  test_that("left merge works", {
+  test_that(paste0("left merge works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
     expect_true(reference.test(
@@ -26,7 +22,7 @@ for (conn in conns) {
 
 
 
-  test_that("right merge works", {
+  test_that(paste0("right merge works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
     expect_true(reference.test(
@@ -38,7 +34,7 @@ for (conn in conns) {
 
 
 
-  test_that("outer merge works", {
+  test_that(paste0("outer merge works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
     expect_true(reference.test(
@@ -50,7 +46,7 @@ for (conn in conns) {
 
 
 
-  test_that("by works", {
+  test_that(paste0("by works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_true(reference.test(
@@ -61,7 +57,7 @@ for (conn in conns) {
 
 
 
-  test_that("sometimes merge doesn't work", {
+  test_that(paste0("sometimes merge doesn't work", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Genre <- dbi.table(conn, DBI::Id("Genre"))
     expect_error(merge(Album, Genre))
@@ -76,7 +72,7 @@ for (conn in conns) {
 
 
 
-  test_that("self merge works", {
+  test_that(paste0("self merge works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
       merge(Album, Album, by = c("AlbumId", "ArtistId")),
@@ -86,7 +82,7 @@ for (conn in conns) {
 
 
 
-  test_that("self merge works with no.dups = FALSE", {
+  test_that(paste0("self merge works with no.dups = FALSE", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_warning(reference.test(
       merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE),
@@ -103,7 +99,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract merge works", {
+  test_that(paste0("extract merge works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_true(reference.test(
@@ -114,7 +110,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract merge foreign key join", {
+  test_that(paste0("extract merge foreign key join", " [", n, "]"), {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -125,7 +121,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract merge w/ foreign key joins using the binary operator ==", {
+  test_that(paste0("extract merge w/ foreign key joins using the binary operator ==", " [", n, "]"), {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -138,7 +134,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract merge w/ syntax as X[Y, on=.(a, b)]", {
+  test_that(paste0("extract merge w/ syntax as X[Y, on=.(a, b)]", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_true(reference.test(
@@ -149,7 +145,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract merge w/ (non-equi) joins using binary operators >=, <=", {
+  test_that(paste0("extract merge w/ (non-equi) joins using binary operators >=, <=", " [", n, "]"), {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -162,7 +158,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract merge w/ (non-equi) joins using binary operators >, <", {
+  test_that(paste0("extract merge w/ (non-equi) joins using binary operators >, <", " [", n, "]"), {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
     expect_true(reference.test(
@@ -173,7 +169,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract self-merge withs w/ half-named character", {
+  test_that(paste0("extract self-merge withs w/ half-named character", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
       Album[Album, on = c("AlbumId", ArtistId = "ArtistId")],
@@ -183,7 +179,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract anti-join works w/ character", {
+  test_that(paste0("extract anti-join works w/ character", " [", n, "]"), {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
@@ -194,7 +190,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract anti-join works w/ character non-equi join", {
+  test_that(paste0("extract anti-join works w/ character non-equi join", " [", n, "]"), {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
@@ -205,7 +201,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract anti-join works w/ call non-equi join", {
+  test_that(paste0("extract anti-join works w/ call non-equi join", " [", n, "]"), {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
@@ -216,7 +212,7 @@ for (conn in conns) {
 
 
 
-  test_that("extract anti-join works w/ char-call non-equi join", {
+  test_that(paste0("extract anti-join works w/ char-call non-equi join", " [", n, "]"), {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_true(reference.test(
@@ -227,7 +223,7 @@ for (conn in conns) {
 
 
 
-  test_that("merge preserves where and order by", {
+  test_that(paste0("merge preserves where and order by", " [", n, "]"), {
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     Album <- dbi.table(conn, DBI::Id("Album"))
 
@@ -248,6 +244,4 @@ for (conn in conns) {
       verbose = FALSE
     ))
   })
-
-  DBI::dbDisconnect(conn)
 }

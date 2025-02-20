@@ -4,11 +4,9 @@
 
 dbi.attach(chinook.sqlite)
 
-
 test_that("merge works on shared column (ArtistId)", {
   expect_true(reference.test(merge(Album, Artist)))
 })
-
 
 test_that("merge fails when relational data not available", {
   x <- Artist[, .(id = ArtistId, Name)]
@@ -25,11 +23,11 @@ test_that("merge fails when relational data not available", {
   expect_true(identical(merge(Track), Track))
 })
 
-
 detach("RSQLite:chinook_sqlite")
+
+
 chinook <- dbi.attach(chinook.duckdb)
 DBI::dbExecute(chinook, DBI::SQL("SET threads TO 1;"))
-
 
 # Relational merge (1) finds the internal name of each foreign key column
 # in the dbi.table's fields attribute, then (2) finds the first column in the
@@ -49,7 +47,6 @@ test_that("relational merge works", {
                         ignore.row.order = TRUE))
 })
 
-
 # Merge should fail when a column in the foreign key constraint is
 # not in the dbi.table.
 
@@ -61,7 +58,6 @@ test_that("relational merge fails when column missing", {
   # a non-empty character vector of column names is required for 'by'
   expect_error(merge(track, Genre))
 })
-
 
 test_that("relational merge works", {
   expect_s3_class(x <- merge(Track), "dbi.table")
@@ -80,7 +76,6 @@ test_that("relational merge works", {
 
   expect_true(all.equal(as.data.table(x), track, ignore.row.order = TRUE))
 })
-
 
 test_that("relational merge works with recursive = TRUE", {
   expect_s3_class(x <- merge(Track, recursive = TRUE), "dbi.table")
@@ -105,6 +100,5 @@ test_that("relational merge works with recursive = TRUE", {
 
   expect_true(all.equal(as.data.table(x), track, ignore.row.order = TRUE))
 })
-
 
 detach("duckdb:chinook_duckdb")

@@ -1,9 +1,7 @@
-conns <- list(chinook.sqlite(), chinook.duckdb())
-DBI::dbExecute(conns[[2L]], "SET threads TO 1;")
+for (n in names(chinook_connections)) {
+  conn <- chinook_connections[[n]]
 
-for (conn in conns) {
-
-  test_that("inner join works", {
+  test_that(paste0("inner join works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_no_error(
@@ -12,9 +10,7 @@ for (conn in conns) {
     expect_true(is.dbi.table(x))
   })
 
-
-
-  test_that("left join works", {
+  test_that(paste0("left join works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_no_error(
@@ -23,9 +19,7 @@ for (conn in conns) {
     expect_true(is.dbi.table(x))
   })
 
-
-
-  test_that("right join works", {
+  test_that(paste0("right join works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_no_error(
@@ -34,9 +28,7 @@ for (conn in conns) {
     expect_true(is.dbi.table(x))
   })
 
-
-
-  test_that("outer join works", {
+  test_that(paste0("outer join works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_no_error(
@@ -45,9 +37,7 @@ for (conn in conns) {
     expect_true(is.dbi.table(x))
   })
 
-
-
-  test_that("cross join works", {
+  test_that(paste0("cross join works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_no_error(
@@ -56,9 +46,7 @@ for (conn in conns) {
     expect_true(is.dbi.table(x))
   })
 
-
-
-  test_that("cross join throws warning when on != NULL", {
+  test_that(paste0("cross join throws warning when on != NULL", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     Artist <- dbi.table(conn, DBI::Id("Artist"))
     expect_error(
@@ -66,17 +54,11 @@ for (conn in conns) {
     )
   })
 
-
-
-  test_that("self join works", {
+  test_that(paste0("self join works", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_no_error(
       x <- sql.join(Album, Album, on = x.ArtistId == y.AlbumId)
     )
     expect_true(is.dbi.table(x))
   })
-
-
-
-  DBI::dbDisconnect(conn)
 }

@@ -1,9 +1,8 @@
-test_that("dbi.table works on data.table help examples", {
+for (n in names(memory_connections)) {
+  conn <- memory_connections[[n]]
 
-  conns <- list(DBI::dbConnect(RSQLite::SQLite(), ":memory:"),
-                DBI::dbConnect(duckdb::duckdb(), ":memory:"))
-
-  for (conn in conns) {
+  test_that(paste0("dbi.table works on data.table help examples",
+                   " [", n, "]"), {
     DT <- data.table(x = rep(c("b", "a", "c"), each = 3),
                      y = c(1, 3, 6),
                      v = 1:9)
@@ -341,8 +340,5 @@ test_that("dbi.table works on data.table help examples", {
   #       }, by = x]                        # anonymous lambda in 'j', j accepts any valid
                                             # expression. TO REMEMBER: every element of
                                             # the list becomes a column in result.
-
-    expect_no_error(rm(colNum, DBIT, DT, X))
-    expect_no_error(DBI::dbDisconnect(conn))
-  }
-})
+  })
+}
