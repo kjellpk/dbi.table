@@ -119,8 +119,6 @@ for (n in names(chinook_connections)) {
     ))
   })
 
-
-
   test_that(paste0("local works", " [", n, "]"), {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
 
@@ -132,8 +130,6 @@ for (n in names(chinook_connections)) {
     expect_no_error(ArtistId <- 7)
     expect_true(Album[ArtistId == local(ArtistId), .N][]$N == 1L)
   })
-
-
 
   test_that(paste0("i a dbi.table, data.table, or data.frame works",
                    " [", n, "]"), {
@@ -156,8 +152,6 @@ for (n in names(chinook_connections)) {
     ))
   })
 
-
-
   test_that(paste0("empty temporary tables work", " [", n, "]"), {
     expect_true(
       nrow(as.dbi.table(conn, datasets::iris[0, ], type = "query")[]) == 0L
@@ -166,5 +160,27 @@ for (n in names(chinook_connections)) {
     expect_true(
       nrow(as.dbi.table(conn, datasets::iris[0, ], type = "temporary")[]) == 0L
     )
+  })
+
+  test_that(paste0("over picks up key", " [", n, "]"), {
+    expect_no_error(
+      Album <- dbi.table(conn, "Album", key = c("ArtistId", "Title"))
+    )
+
+    expect_true(reference.test(
+      Album[, .(AlbumId, s = sum(AlbumId), cs = cumsum(AlbumId))],
+      ignore.row.order = FALSE, verbose = FALSE
+    ))
+  })
+
+  test_that(paste0("order works w/ key", " [", n, "]"), {
+    expect_no_error(
+      Album <- dbi.table(conn, "Album", key = c("Title"))
+    )
+
+    expect_true(reference.test(
+      Album[order(AlbumId), .(AlbumId, cs = cumsum(AlbumId))],
+      ignore.row.order = FALSE, verbose = FALSE
+    ))
   })
 }
