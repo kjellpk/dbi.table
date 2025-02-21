@@ -7,28 +7,6 @@ unsupported <- function(sym) {
 
 
 
-special_list <- function(e, dbi_table, specials, env) {
-  e[[1]] <- as.name("list")
-
-  if (is.null(nm <- names(e))) {
-    nm <- character(length(e))
-  }
-
-  if (any(idx <- (nchar(nm) == 0L) & vapply(e, is.name, FALSE))) {
-    tmp <- vapply(e[idx], as.character, "")
-    is_spec <- tmp %in% names(session$special_symbols)
-    tmp[is_spec] <- ifelse(substring(tmp[is_spec], 1, 1) == ".",
-                           substring(tmp[is_spec], 2),
-                           tmp[is_spec])
-    nm[idx] <- tmp
-    names(e) <- nm
-  }
-
-  lapply(e[-1], sub_lang, envir = dbi_table, specials = specials, enclos = env)
-}
-
-
-
 special_in <- function(e, dbi_table, specials, env) {
   e[[1]] <- as.name("%in%")
   e[[2]] <- sub_lang(e[[2]], dbi_table, specials, env)
