@@ -176,7 +176,18 @@ update_order_by <- function(x, i, include_key = FALSE) {
 
 
 handle_i_order <- function(x, i, enclos) {
-  attr(x, "order_by") <- update_order_by(x, i)
+  order_by <- update_order_by(x, i)
+
+  if (length(x_key <- get_key(x))) {
+    x_key <- names_list(x_key)
+    m <- min(length(x_key), length(order_by))
+
+    if (!all(mapply(identical, sub_lang(x_key[m], c(x), NULL), order_by[m]))) {
+      attr(x, "sorted") <- NULL
+    }
+  }
+
+  attr(x, "order_by") <- order_by
   x
 }
 
