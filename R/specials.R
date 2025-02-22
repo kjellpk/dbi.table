@@ -1,3 +1,11 @@
+add_special <- function(symbol, fun = unsupported(symbol)) {
+  stopifnot(is.character(symbol) && (length(symbol) == 1L) && nchar(symbol) > 0)
+  session$special_symbols[[symbol]] <- fun
+  invisible()
+}
+
+
+
 unsupported <- function(sym) {
   eval(bquote(function(e, dbi_table, specials, env) {
     stop("the 'data.table' special symbol '", .(sym), "' is not supported by ",
@@ -12,6 +20,14 @@ special_in <- function(e, dbi_table, specials, env) {
   e[[2]] <- sub_lang(e[[2]], dbi_table, specials, env)
   e[[3]] <- if_allowed_mode(eval(e[[3]], envir = env))
   e
+}
+
+
+
+special_notin <- function(e, dbi_table, specials, env) {
+  e[[1]] <- as.name("%in%")
+  e <- as.call(list(as.name("!"), e))
+  sub_lang(e, dbi_table, specials, env)
 }
 
 
@@ -51,8 +67,7 @@ special_LIKE <- function(e, dbi_table, specials, env) {
 
 
 
-add_special <- function(symbol, fun = unsupported(symbol)) {
-  stopifnot(is.character(symbol) && (length(symbol) == 1L) && nchar(symbol) > 0)
-  session$special_symbols[[symbol]] <- fun
-  invisible()
+special_order <- function(e, dbi_table, specials, env) {
+  e[[1L]] <- as.name("order")
+  sub_lang(e, dbi_table, enclos = env)
 }

@@ -27,8 +27,10 @@ session$default_information_schema_tables <- c("character_sets",
   add_special("%chin%", special_in)
   add_special("local", special_local)
   add_special("!", special_not)
+  add_special("%notin%", special_notin)
   add_special("%like%", special_like)
   add_special("%LIKE%", special_LIKE)
+  add_special("chorder", special_order)
 
   NULL
 }
