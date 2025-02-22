@@ -145,8 +145,8 @@ becomes the *WHERE* clause in the `dbi.table`'s underlying SQL query.
 csql(my_album[AlbumId == ArtistId + 1])
 ```
 
-When `i` is a call to `order` (or `forder`), it becomes the *ORDER BY* clause in
-the `dbi.table`'s underlying SQL query.
+When `i` is a call to `order` (or `chorder`), it becomes the *ORDER BY* clause
+in the `dbi.table`'s underlying SQL query.
 
 ```{r i_order}
 csql(my_album[order(nchar(Title), -AlbumId)])
