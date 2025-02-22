@@ -1,4 +1,78 @@
-chinook <- dbi.catalog(chinook_connections$chinook_duckdb)
+chinook <- dbi.catalog(chinook.duckdb)
+
+test_that("DBI::{Create,Append,Remove}Table work", {
+  expect_no_error({
+    DBI::dbCreateTable(chinook, "iris", iris)
+  })
+
+  expect_no_error({
+    DBI::dbAppendTable(chinook, "iris", iris)
+  })
+
+  expect_no_error({
+    DBI::dbRemoveTable(chinook, "iris")
+  })
+
+  expect_no_error({
+    DBI::dbCreateTable(chinook$main, "iris", iris)
+  })
+
+  expect_no_error({
+    DBI::dbAppendTable(chinook$main, "iris", iris)
+  })
+
+  expect_no_error({
+    DBI::dbRemoveTable(chinook$main, "iris")
+  })
+
+  expect_no_error({
+    DBI::dbCreateTable(chinook$main$Track, "iris", iris)
+  })
+
+  expect_no_error({
+    DBI::dbAppendTable(chinook$main$Track, "iris", iris)
+  })
+
+  expect_no_error({
+    DBI::dbRemoveTable(chinook$main$Track, "iris")
+  })
+})
+
+
+
+test_that("DBI::{Write,Read}Table work", {
+  expect_no_error({
+    DBI::dbWriteTable(chinook, "iris", iris)
+  })
+
+  expect_identical(DBI::dbReadTable(chinook, "iris"), iris)
+
+  expect_no_error({
+    DBI::dbRemoveTable(chinook, "iris")
+  })
+
+    expect_no_error({
+    DBI::dbWriteTable(chinook$main, "iris", iris)
+  })
+
+  expect_identical(DBI::dbReadTable(chinook$main, "iris"), iris)
+
+  expect_no_error({
+    DBI::dbRemoveTable(chinook$main, "iris")
+  })
+
+  expect_no_error({
+    DBI::dbWriteTable(chinook$main$Track, "iris", iris)
+  })
+
+  expect_identical(DBI::dbReadTable(chinook$main$Track, "iris"), iris)
+
+  expect_no_error({
+    DBI::dbRemoveTable(chinook$main$Track, "iris")
+  })
+})
+
+
 
 test_that("DBI::dbExecute works", {
   expect_no_error({
@@ -136,4 +210,46 @@ test_that("DBI::dbSendStatement works w/ statement not missing", {
   expect_no_error({
     DBI::dbClearResult(res)
   })
+})
+
+
+
+test_that("DBI::dbWithTransaction works", {
+  expect_no_error(
+    DBI::dbWriteTable(chinook, "cash", data.frame(amount = 100))
+  )
+
+  expect_no_error(
+    DBI::dbWriteTable(chinook, "account", data.frame(amount = 2000))
+  )
+
+  expect_no_error(DBI::dbWithTransaction(chinook, {
+    withdrawal <- 300
+    DBI::dbExecute(chinook, "UPDATE cash SET amount = amount + ?",
+                   list(withdrawal))
+    DBI::dbExecute(chinook, "UPDATE account SET amount = amount - ?",
+                   list(withdrawal))
+  }))
+
+  expect_no_error(DBI::dbWithTransaction(chinook$main, {
+    withdrawal <- 300
+    DBI::dbExecute(chinook$main, "UPDATE cash SET amount = amount + ?",
+                   list(withdrawal))
+    DBI::dbExecute(chinook$main, "UPDATE account SET amount = amount - ?",
+                   list(withdrawal))
+  }))
+
+  expect_no_error(DBI::dbWithTransaction(chinook$main$Album, {
+    withdrawal <- 300
+    DBI::dbExecute(chinook$main$Album, "UPDATE cash SET amount = amount + ?",
+                   list(withdrawal))
+    DBI::dbExecute(chinook$main$Album, "UPDATE account SET amount = amount - ?",
+                   list(withdrawal))
+  }))
+
+  expect_equal(DBI::dbReadTable(chinook, "cash")$amount, 1000)
+  expect_equal(DBI::dbReadTable(chinook, "account")$amount, 1100)
+
+  expect_no_error(DBI::dbRemoveTable(chinook, "cash"))
+  expect_no_error(DBI::dbRemoveTable(chinook, "account"))
 })
