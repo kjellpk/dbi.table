@@ -1,31 +1,3 @@
-dbExecute_dbi_table_pkg <- function(conn, statement, ...) {
-  DBI::dbExecute(dbi_connection(conn), statement, ...)
-}
-
-
-
-dbGetInfo_dbi_table_pkg <- function(dbObj, ...) {
-  DBI::dbGetInfo(dbi_connection(dbObj), ...)
-}
-
-
-
-dbSendStatement_dbi_table_pkg <- function(conn, statement, ...,
-                                          n = getOption("dbitable.max.fetch",
-                                                        10000L)) {
-  DBI::dbSendStatement(dbi_connection(conn), write_select_query(conn, n))
-}
-
-
-
-dbGetQuery_dbi_table_pkg <- function(conn, statement, ...,
-                                     n = getOption("dbitable.max.fetch",
-                                                   10000L)) {
-  DBI::dbGetQuery(dbi_connection(conn), write_select_query(conn, n), n = n)
-}
-
-
-
 #' @importFrom methods setOldClass
 #' @export
 setOldClass("dbi.catalog")
@@ -45,88 +17,252 @@ setOldClass("dbi.table")
 
 
 ################################################################################
-#' DBI Methods for \code{dbi.table}s
+#' @name
+#'   dbi.table.DBI
 #'
-#' Call DBI methods using the underlying DBI connection.
+#' @title
+#'   DBI Methods for \code{dbi.table}s
+#'
+#' @description
+#'   Call DBI methods using the underlying DBI connection.
 #'
 #' @param conn
-#'   a \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.
+#'   A \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.
 #'
 #' @param dbObj
-#'   a \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.
+#'   A \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.
+#'
+#' @param name
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
+#'
+#' @param fields
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
+#'
+#' @param value
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
 #'
 #' @param statement
-#'   a \code{\link[DBI]{SQL}} object.
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
 #'
-#' @param ...
-#'   other parameters passed on to methods.
+#' @param code
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
 #'
-#' @param n
-#'   an integer value. A nonnegative value limits the number of records returned
-#'   by the query. A negative value omits the LIMIT (or TOP) clause entirely.
+#' @param row.names
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
+#'
+#' @param temporary
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
+#'
+#' @param \dots
+#'   Additional parameters to pass to methods.
 #'
 #' @seealso
-#'   \code{\link[DBI]{dbExecute}}, \code{\link[DBI]{dbGetInfo}},
-#'   \code{\link[DBI]{dbSendStatement}}
+#'   \code{\link[DBI]{dbAppendTable}},
+#'   \code{\link[DBI]{dbCreateTable}},
+#'   \code{\link[DBI]{dbExecute}},
+#'   \code{\link[DBI]{dbGetInfo}},
+#'   \code{\link[DBI]{dbGetQuery}},
+#'   \code{\link[DBI]{dbReadTable}},
+#'   \code{\link[DBI]{dbRemoveTable}},
+#'   \code{\link[DBI]{dbSendStatement}},
+#'   \code{\link[DBI]{dbWithTransaction}}
 #'
 #' @docType methods
+#'
 #' @rdname DBI-methods
-#' @aliases dbExecute,dbi.catalog,SQL-method
-#' @importFrom DBI dbExecute SQL
+NULL
+
+
+################################################################################
+# dbAppendTable
+################################################################################
+
+dbAppendTable_dbi_table_pkg <- function(conn, name, value, ...,
+                                        row.names = NULL) {
+  DBI::dbAppendTable(dbi_connection(conn), name, value, ...,
+                     row.names = row.names)
+}
+
+
+
+#' @docType methods
+#' @rdname DBI-methods
+#' @aliases dbAppendTable,dbi.catalog-method
+#' @importFrom DBI dbAppendTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbAppendTable,
+          signature = "dbi.catalog",
+          definition = dbAppendTable_dbi_table_pkg)
+
+
+
+#' @docType methods
+#' @rdname DBI-methods
+#' @aliases dbAppendTable,dbi.schema-method
+#' @importFrom DBI dbAppendTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbAppendTable,
+          signature = "dbi.schema",
+          definition = dbAppendTable_dbi_table_pkg)
+
+
+
+#' @docType methods
+#' @rdname DBI-methods
+#' @aliases dbAppendTable,dbi.table-method
+#' @importFrom DBI dbAppendTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbAppendTable,
+          signature = "dbi.table",
+          definition = dbAppendTable_dbi_table_pkg)
+
+
+
+################################################################################
+
+# dbAppendTableArrow
+# dbBegin
+# dbBind
+# dbBindArrow
+# dbBreak
+# dbCallProc
+# dbCanConnect
+# dbClearResult
+# dbColumnInfo
+# dbCommit
+# dbConnect
+
+################################################################################
+# dbCreateTable
+################################################################################
+
+dbCreateTable_dbi_table_pkg <- function(conn, name, fields, ...,
+                                        row.names, temporary) {
+  DBI::dbCreateTable(dbi_connection(conn), name, fields, ...,
+                     row.names = row.names, temporary = temporary)
+}
+
+
+
+#' @docType methods
+#' @rdname DBI-methods
+#' @aliases dbCreateTable,dbi.catalog-method
+#' @importFrom DBI dbCreateTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbCreateTable,
+          signature = "dbi.catalog",
+          definition = dbCreateTable_dbi_table_pkg)
+
+
+
+#' @docType methods
+#' @rdname DBI-methods
+#' @aliases dbCreateTable,dbi.schema-method
+#' @importFrom DBI dbCreateTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbCreateTable,
+          signature = "dbi.schema",
+          definition = dbCreateTable_dbi_table_pkg)
+
+
+
+#' @docType methods
+#' @rdname DBI-methods
+#' @aliases dbCreateTable,dbi.table-method
+#' @importFrom DBI dbCreateTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbCreateTable,
+          signature = "dbi.table",
+          definition = dbCreateTable_dbi_table_pkg)
+
+
+
+################################################################################
+
+# dbCreateTableArrow
+# dbDataType
+# dbDisconnect
+# dbDriver
+
+################################################################################
+# dbExecute
+################################################################################
+
+dbExecute_dbi_table_pkg <- function(conn, statement, ...) {
+  DBI::dbExecute(dbi_connection(conn), statement, ...)
+}
+
+
+
+#' @docType methods
+#' @rdname DBI-methods
+#' @aliases dbExecute,dbi.catalog-method
+#' @importFrom DBI dbExecute
 #' @importFrom methods setMethod
 #' @export
 setMethod(f = dbExecute,
-          signature = c("dbi.catalog", "SQL"),
+          signature = "dbi.catalog",
           definition = dbExecute_dbi_table_pkg)
 
 
 
 #' @rdname DBI-methods
-#' @aliases dbExecute,dbi.schema,SQL-method
-#' @importFrom DBI dbExecute SQL
+#' @aliases dbExecute,dbi.schema-method
+#' @importFrom DBI dbExecute
 #' @importFrom methods setMethod
 #' @export
 setMethod(f = dbExecute,
-          signature = c("dbi.schema", "SQL"),
+          signature = "dbi.schema",
           definition = dbExecute_dbi_table_pkg)
 
 
 
 #' @rdname DBI-methods
-#' @aliases dbExecute,dbi.table,SQL-method
-#' @importFrom DBI dbExecute SQL
+#' @aliases dbExecute,dbi.table-method
+#' @importFrom DBI dbExecute
 #' @importFrom methods setMethod
 #' @export
 setMethod(f = dbExecute,
-          signature = c("dbi.table", "SQL"),
+          signature = "dbi.table",
           definition = dbExecute_dbi_table_pkg)
 
 
 
-#' @rdname DBI-methods
-#' @aliases dbSendStatement,dbi.table,missing-method
-#' @importFrom DBI dbSendStatement
-#' @importFrom methods setMethod
-#' @export
-setMethod(f = dbSendStatement,
-          signature = c("dbi.table", "missing"),
-          definition = dbSendStatement_dbi_table_pkg)
+################################################################################
+
+# dbExistsTable
+# dbFetch
+# dbFetchArrow
+# dbFetchArrowChunk
+# dbGetConnectArgs
+# dbGetDBIVersion
+# dbGetException
+
+################################################################################
+# dbGetInfo
+################################################################################
+
+dbGetInfo_dbi_table_pkg <- function(dbObj, ...) {
+  DBI::dbGetInfo(dbi_connection(dbObj), ...)
+}
 
 
 
 #' @rdname DBI-methods
-#' @aliases dbGetQuery,dbi.table,missing-method
-#' @importFrom DBI dbGetQuery
-#' @importFrom methods setMethod
-#' @export
-setMethod(f = dbGetQuery,
-          signature = c("dbi.table", "missing"),
-          definition = dbGetQuery_dbi_table_pkg)
-
-
-
-#' @rdname DBI-methods
-#' @aliases dbGetInfo,dbi.table
+#' @aliases dbGetInfo,dbi.catalog-method
 #' @importFrom DBI dbGetInfo
 #' @importFrom methods setMethod
 #' @export
@@ -137,7 +273,7 @@ setMethod(f = dbGetInfo,
 
 
 #' @rdname DBI-methods
-#' @aliases dbGetInfo,dbi.table
+#' @aliases dbGetInfo,dbi.schema-method
 #' @importFrom DBI dbGetInfo
 #' @importFrom methods setMethod
 #' @export
@@ -148,10 +284,369 @@ setMethod(f = dbGetInfo,
 
 
 #' @rdname DBI-methods
-#' @aliases dbGetInfo,dbi.table
+#' @aliases dbGetInfo,dbi.table-method
 #' @importFrom DBI dbGetInfo
 #' @importFrom methods setMethod
 #' @export
 setMethod(f = dbGetInfo,
           signature = "dbi.table",
           definition = dbGetInfo_dbi_table_pkg)
+
+
+
+################################################################################
+# dbGetQuery
+################################################################################
+
+dbGetQuery_dbi_table <- function(conn, statement, ...) {
+  if (is.null(n <- list(...)$n)) {
+    n <- getOption("dbitable.max.fetch", 10000L)
+  }
+  DBI::dbGetQuery(dbi_connection(conn), write_select_query(conn, n), n = n)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetQuery,dbi.table,missing-method
+#' @importFrom DBI dbGetQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetQuery,
+          signature = c("dbi.table", "missing"),
+          definition = dbGetQuery_dbi_table)
+
+
+
+dbGetQuery_dbi_table_pkg <- function(conn, statement, ...) {
+  DBI::dbGetQuery(dbi_connection(conn), statement, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetQuery,dbi.catalog-method
+#' @importFrom DBI dbGetQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetQuery,
+          signature = "dbi.catalog",
+          definition = dbGetQuery_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetQuery,dbi.schema-method
+#' @importFrom DBI dbGetQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetQuery,
+          signature = "dbi.schema",
+          definition = dbGetQuery_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbGetQuery,dbi.table-method
+#' @importFrom DBI dbGetQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbGetQuery,
+          signature = "dbi.table",
+          definition = dbGetQuery_dbi_table_pkg)
+
+
+
+################################################################################
+
+# dbGetQueryArrow
+# dbGetRowCount
+# dbGetRowsAffected
+# dbGetStatement
+# dbHasCompleted
+# dbIsReadOnly
+# dbIsValid
+# dbListConnections
+# dbListFields
+# dbListObjects
+# dbListResults
+# dbListTables
+# dbQuoteIdentifier
+# dbQuoteLiteral
+# dbQuoteString
+
+################################################################################
+# dbReadTable
+################################################################################
+
+dbReadTable_dbi_table_pkg <- function(conn, name, ...) {
+  DBI::dbReadTable(dbi_connection(conn), name, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbReadTable,dbi.catalog-method
+#' @importFrom DBI dbReadTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbReadTable,
+          signature = "dbi.catalog",
+          definition = dbReadTable_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbReadTable,dbi.schema-method
+#' @importFrom DBI dbReadTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbReadTable,
+          signature = "dbi.schema",
+          definition = dbReadTable_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbReadTable,dbi.table-method
+#' @importFrom DBI dbReadTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbReadTable,
+          signature = "dbi.table",
+          definition = dbReadTable_dbi_table_pkg)
+
+
+
+################################################################################
+
+# dbReadTableArrow
+
+################################################################################
+# dbRemoveTable
+################################################################################
+
+dbRemoveTable_dbi_table_pkg <- function(conn, name, ...) {
+  DBI::dbRemoveTable(dbi_connection(conn), name, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbRemoveTable,dbi.catalog-method
+#' @importFrom DBI dbRemoveTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbRemoveTable,
+          signature = "dbi.catalog",
+          definition = dbRemoveTable_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbRemoveTable,dbi.schema-method
+#' @importFrom DBI dbRemoveTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbRemoveTable,
+          signature = "dbi.schema",
+          definition = dbRemoveTable_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbRemoveTable,dbi.table-method
+#' @importFrom DBI dbRemoveTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbRemoveTable,
+          signature = "dbi.table",
+          definition = dbRemoveTable_dbi_table_pkg)
+
+
+
+################################################################################
+
+# dbRollback
+# dbSendQuery
+# dbSendQueryArrow
+
+################################################################################
+# dbSendStatement
+################################################################################
+
+dbSendStatement_dbi_table <- function(conn, statement, ...) {
+  if (is.null(n <- list(...)$n)) {
+    n <- getOption("dbitable.max.fetch", 10000L)
+  }
+
+  DBI::dbSendStatement(dbi_connection(conn), write_select_query(conn, n))
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbSendStatement,dbi.table,missing-method
+#' @importFrom DBI dbSendStatement
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbSendStatement,
+          signature = c("dbi.table", "missing"),
+          definition = dbSendStatement_dbi_table)
+
+
+
+dbSendStatement_dbi_table_pkg <- function(conn, statement, ...) {
+  DBI::dbSendStatement(dbi_connection(conn), statement, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbSendStatement,dbi.catalog-method
+#' @importFrom DBI dbSendStatement
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbSendStatement,
+          signature = "dbi.catalog",
+          definition = dbSendStatement_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbSendStatement,dbi.schema-method
+#' @importFrom DBI dbSendStatement
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbSendStatement,
+          signature = "dbi.schema",
+          definition = dbSendStatement_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbSendStatement,dbi.table-method
+#' @importFrom DBI dbSendStatement
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbSendStatement,
+          signature = "dbi.table",
+          definition = dbSendStatement_dbi_table_pkg)
+
+
+
+################################################################################
+
+# dbSetDataMappings
+# dbUnloadDriver
+# dbUnquoteIdentifier
+
+################################################################################
+# dbWithTransaction
+################################################################################
+
+dbWithTransaction_dbi_table_pkg <- function(conn, code, ...) {
+  DBI::dbWithTransaction(dbi_connection(conn), code, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbWithTransaction,dbi.catalog-method
+#' @importFrom DBI dbWithTransaction
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbWithTransaction,
+          signature = "dbi.catalog",
+          definition = dbWithTransaction_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbWithTransaction,dbi.schema-method
+#' @importFrom DBI dbWithTransaction
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbWithTransaction,
+          signature = "dbi.schema",
+          definition = dbWithTransaction_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbWithTransaction,dbi.table-method
+#' @importFrom DBI dbWithTransaction
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbWithTransaction,
+          signature = "dbi.table",
+          definition = dbWithTransaction_dbi_table_pkg)
+
+
+
+################################################################################
+# dbWriteTable
+################################################################################
+
+dbWriteTable_dbi_table_pkg <- function(conn, name, value, ...) {
+  DBI::dbWriteTable(dbi_connection(conn), name, value, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbWriteTable,dbi.catalog-method
+#' @importFrom DBI dbWriteTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbWriteTable,
+          signature = "dbi.catalog",
+          definition = dbWriteTable_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbWriteTable,dbi.schema-method
+#' @importFrom DBI dbWriteTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbWriteTable,
+          signature = "dbi.schema",
+          definition = dbWriteTable_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbWriteTable,dbi.table-method
+#' @importFrom DBI dbWriteTable
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbWriteTable,
+          signature = "dbi.table",
+          definition = dbWriteTable_dbi_table_pkg)
+
+
+
+################################################################################
+
+# dbWriteTableArrow
+# fetch
+# Id
+# isSQLKeyword
+# isSQLKeyword.default
+# make.db.names
+# make.db.names.default
+# show
+# SQL
+# sqlAppendTable
+# sqlAppendTableTemplate
+# sqlColumnToRownames
+# sqlCommentSpec
+# sqlCreateTable
+# sqlData
+# sqlInterpolate
+# SQLKeywords
+# sqlParseVariables
+# sqlParseVariablesImpl
+# sqlQuoteSpec
+# sqlRownamesToColumn
