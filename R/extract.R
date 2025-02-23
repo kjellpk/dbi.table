@@ -338,6 +338,14 @@ handle_the_walrus <- function(x, i, j, by, env, x_sub) {
     x_env <- find_environment(x_name, class = "dbi.table", envir = env)
 
     if (!is.null(x_env)) {
+      if (is_dbi_schema(x_env)) {
+        search_path_envs <- lapply(search(), as.environment)
+
+        if (any(vapply(search_path_envs, identical, FALSE, y = x_env))) {
+          x_env <- env
+        }
+      }
+
       res <- try(assign(x_name, x, pos = x_env), silent = TRUE)
       if (inherits(res, "try-error")) {
         warning(attr(res, "condition")$message, call. = FALSE)

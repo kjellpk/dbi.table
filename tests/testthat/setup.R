@@ -26,26 +26,6 @@ memory_connections <- list(
 DBI::dbExecute(memory_connections$memory_duckdb, "SET threads TO 1;")
 
 
-### Set up DBI connection functions ############################################
-
-rnacentral.postgres <- function() {
-  DBI::dbConnect(RPostgres::Postgres(),
-                 user = "reader",
-                 password = "NWDMCE5xdipIjRrp",
-                 host = "hh-pgsql-public.ebi.ac.uk",
-                 port = 5432L,
-                 dbname = "pfmegrnargs")
-}
-
-ctu.mariadb <- function() {
-  DBI::dbConnect(RMariaDB::MariaDB(),
-                 user = "guest",
-                 password = "ctu-relational",
-                 host = "relational.fel.cvut.cz",
-                 port = 3306)
-}
-
-
 ### Teardown - close DBI connections ###########################################
 
 withr::defer({
