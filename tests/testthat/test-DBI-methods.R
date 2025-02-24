@@ -144,6 +144,31 @@ test_that("DBI::dbGetQuery works w/ statement not missing", {
 
 
 
+test_that("DBI::dbQuoteIdentifier works", {
+  id <- DBI::Id(table_name = "table_name")
+  expect_no_error(DBI::dbQuoteIdentifier(chinook, id))
+  expect_no_error(DBI::dbQuoteIdentifier(chinook$main, id))
+  expect_no_error(DBI::dbQuoteIdentifier(chinook$main$Album, id))
+})
+
+
+
+test_that("DBI::dbQuoteLiteral works", {
+  expect_no_error(DBI::dbQuoteLiteral(chinook, 1L))
+  expect_no_error(DBI::dbQuoteLiteral(chinook$main, 1L))
+  expect_no_error(DBI::dbQuoteLiteral(chinook$main$Album, 1L))
+})
+
+
+
+test_that("DBI::dbQuoteString works", {
+  expect_no_error(DBI::dbQuoteString(chinook, "string"))
+  expect_no_error(DBI::dbQuoteString(chinook$main, "string"))
+  expect_no_error(DBI::dbQuoteString(chinook$main$Album, "string"))
+})
+
+
+
 test_that("DBI::dbSendStatement works w/ statement missing", {
   expect_s4_class({
     res <- DBI::dbSendStatement(chinook$main$Album, n = 9L)

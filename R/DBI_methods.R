@@ -52,6 +52,10 @@ setOldClass("dbi.table")
 #'   Please refer to the documentation for the generic function (links can be
 #'   found in the 'See Also' section).
 #'
+#' @param x
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
+
 #' @param row.names
 #'   Please refer to the documentation for the generic function (links can be
 #'   found in the 'See Also' section).
@@ -70,6 +74,9 @@ setOldClass("dbi.table")
 #'   \code{\link[DBI]{dbGetInfo}},
 #'   \code{\link[DBI]{dbGetQuery}},
 #'   \code{\link[DBI]{dbReadTable}},
+#'   \code{\link[DBI]{dbQuoteIdentifier}},
+#'   \code{\link[DBI]{dbQuoteLiteral}},
+#'   \code{\link[DBI]{dbQuoteString}},
 #'   \code{\link[DBI]{dbRemoveTable}},
 #'   \code{\link[DBI]{dbSendStatement}},
 #'   \code{\link[DBI]{dbWithTransaction}}
@@ -371,9 +378,136 @@ setMethod(f = dbGetQuery,
 # dbListObjects
 # dbListResults
 # dbListTables
+
+
+################################################################################
 # dbQuoteIdentifier
+################################################################################
+
+dbQuoteIdentifier_dbi_table_pkg <- function(conn, x, ...)  {
+  DBI::dbQuoteIdentifier(dbi_connection(conn), x, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteIdentifier,dbi.catalog-method
+#' @importFrom DBI dbQuoteIdentifier
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteIdentifier,
+          signature = "dbi.catalog",
+          definition = dbQuoteIdentifier_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteIdentifier,dbi.schema-method
+#' @importFrom DBI dbQuoteIdentifier
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteIdentifier,
+          signature = "dbi.schema",
+          definition = dbQuoteIdentifier_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteIdentifier,dbi.table-method
+#' @importFrom DBI dbQuoteIdentifier
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteIdentifier,
+          signature = "dbi.table",
+          definition = dbQuoteIdentifier_dbi_table_pkg)
+
+
+
+################################################################################
 # dbQuoteLiteral
+################################################################################
+
+dbQuoteLiteral_dbi_table_pkg <- function(conn, x, ...)  {
+  DBI::dbQuoteLiteral(dbi_connection(conn), x, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteLiteral,dbi.catalog-method
+#' @importFrom DBI dbQuoteLiteral
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteLiteral,
+          signature = "dbi.catalog",
+          definition = dbQuoteLiteral_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteLiteral,dbi.schema-method
+#' @importFrom DBI dbQuoteLiteral
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteLiteral,
+          signature = "dbi.schema",
+          definition = dbQuoteLiteral_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteLiteral,dbi.table-method
+#' @importFrom DBI dbQuoteLiteral
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteLiteral,
+          signature = "dbi.table",
+          definition = dbQuoteLiteral_dbi_table_pkg)
+
+
+
+################################################################################
 # dbQuoteString
+################################################################################
+
+dbQuoteString_dbi_table_pkg <- function(conn, x, ...)  {
+  DBI::dbQuoteString(dbi_connection(conn), x, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteString,dbi.catalog-method
+#' @importFrom DBI dbQuoteString
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteString,
+          signature = "dbi.catalog",
+          definition = dbQuoteString_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteString,dbi.schema-method
+#' @importFrom DBI dbQuoteString
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteString,
+          signature = "dbi.schema",
+          definition = dbQuoteString_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbQuoteString,dbi.table-method
+#' @importFrom DBI dbQuoteString
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbQuoteString,
+          signature = "dbi.table",
+          definition = dbQuoteString_dbi_table_pkg)
+
+
 
 ################################################################################
 # dbReadTable

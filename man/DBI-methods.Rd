@@ -25,6 +25,21 @@
 \alias{dbGetQuery,dbi.schema-method}
 \alias{dbGetQuery,dbi.table,ANY-method}
 \alias{dbGetQuery,dbi.table-method}
+\alias{dbQuoteIdentifier,dbi.catalog,ANY-method}
+\alias{dbQuoteIdentifier,dbi.catalog-method}
+\alias{dbQuoteIdentifier,dbi.schema,ANY-method}
+\alias{dbQuoteIdentifier,dbi.schema-method}
+\alias{dbQuoteIdentifier,dbi.table,ANY-method}
+\alias{dbQuoteIdentifier,dbi.table-method}
+\alias{dbQuoteLiteral,dbi.catalog-method}
+\alias{dbQuoteLiteral,dbi.schema-method}
+\alias{dbQuoteLiteral,dbi.table-method}
+\alias{dbQuoteString,dbi.catalog,ANY-method}
+\alias{dbQuoteString,dbi.catalog-method}
+\alias{dbQuoteString,dbi.schema,ANY-method}
+\alias{dbQuoteString,dbi.schema-method}
+\alias{dbQuoteString,dbi.table,ANY-method}
+\alias{dbQuoteString,dbi.table-method}
 \alias{dbReadTable,dbi.catalog,ANY-method}
 \alias{dbReadTable,dbi.catalog-method}
 \alias{dbReadTable,dbi.schema,ANY-method}
@@ -87,6 +102,24 @@
 
 \S4method{dbGetQuery}{dbi.table,ANY}(conn, statement, ...)
 
+\S4method{dbQuoteIdentifier}{dbi.catalog,ANY}(conn, x, ...)
+
+\S4method{dbQuoteIdentifier}{dbi.schema,ANY}(conn, x, ...)
+
+\S4method{dbQuoteIdentifier}{dbi.table,ANY}(conn, x, ...)
+
+\S4method{dbQuoteLiteral}{dbi.catalog}(conn, x, ...)
+
+\S4method{dbQuoteLiteral}{dbi.schema}(conn, x, ...)
+
+\S4method{dbQuoteLiteral}{dbi.table}(conn, x, ...)
+
+\S4method{dbQuoteString}{dbi.catalog,ANY}(conn, x, ...)
+
+\S4method{dbQuoteString}{dbi.schema,ANY}(conn, x, ...)
+
+\S4method{dbQuoteString}{dbi.table,ANY}(conn, x, ...)
+
 \S4method{dbReadTable}{dbi.catalog,ANY}(conn, name, ...)
 
 \S4method{dbReadTable}{dbi.schema,ANY}(conn, name, ...)
@@ -144,6 +177,9 @@ found in the 'See Also' section).}
 
 \item{dbObj}{A \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.}
 
+\item{x}{Please refer to the documentation for the generic function (links can be
+found in the 'See Also' section).}
+
 \item{code}{Please refer to the documentation for the generic function (links can be
 found in the 'See Also' section).}
 }
@@ -157,6 +193,9 @@ Call DBI methods using the underlying DBI connection.
   \code{\link[DBI]{dbGetInfo}},
   \code{\link[DBI]{dbGetQuery}},
   \code{\link[DBI]{dbReadTable}},
+  \code{\link[DBI]{dbQuoteIdentifier}},
+  \code{\link[DBI]{dbQuoteLiteral}},
+  \code{\link[DBI]{dbQuoteString}},
   \code{\link[DBI]{dbRemoveTable}},
   \code{\link[DBI]{dbSendStatement}},
   \code{\link[DBI]{dbWithTransaction}}
