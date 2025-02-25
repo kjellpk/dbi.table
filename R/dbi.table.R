@@ -279,7 +279,7 @@ print.dbi.table <- function(x, ...) {
   print.class <- opts$class
 
   if (nrow(ans <- as.data.frame(x, n = n + 1L)) > n) {
-    ans <- ans[seq_len(n), ]
+    ans <- ans[seq_len(n), , drop = FALSE]
     print_continue <- TRUE
   } else {
     print_continue <- FALSE
@@ -290,7 +290,7 @@ print.dbi.table <- function(x, ...) {
                    lapply(x_key, as.name),
                    list(na.last = FALSE)))
     o <- eval(o, envir = ans)
-    ans <- ans[o, ]
+    ans <- ans[o, , drop = FALSE]
   }
 
   m <- as.matrix(format(ans))
