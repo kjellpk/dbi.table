@@ -66,12 +66,17 @@ paren <- function(x) {
 #'   a single integer value. When nonnegative, limits the number of rows
 #'   returned by the query to \code{n}.
 #'
+#' @param strict
+#'   a logical value. If \code{TRUE} and \code{x} has a key, the key is
+#'   appended to the ORDER BY clause.
+#'
 #' @return
 #'   none (invisible \code{NULL}).
 #'
 #' @export
-csql <- function(x, n = getOption("dbitable.max.fetch", 10000L)) {
-  cat(paste0(write_select_query(x, n), "\n"))
+csql <- function(x, n = getOption("dbitable.max.fetch", 10000L),
+                 strict = FALSE) {
+  cat(paste0(write_select_query(x, n, isTRUE(strict)), "\n"))
 }
 
 

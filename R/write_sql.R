@@ -1,4 +1,4 @@
-write_select_query <- function(x, n = -1L) {
+write_select_query <- function(x, n = -1L, strict = FALSE) {
   if (inherits(x, "SQL")) {
     return(x)
   }
@@ -8,7 +8,7 @@ write_select_query <- function(x, n = -1L) {
                 from = write_from(x),
                 where = write_where(x),
                 group_by = write_group_by(x),
-                order_by = write_order_by(x),
+                order_by = write_order_by(x, strict),
                 limit = write_limit(x, n))
 
   paste(query[!sapply(query, is.null)], collapse = "\n\n")
@@ -126,11 +126,15 @@ write_group_by <- function(x) {
 
 
 
-write_order_by <- function(x) {
+write_order_by <- function(x, strict) {
   conn <- dbi_connection(x)
 
-  if (length(order_by <- get_order_by(x))) {
+  if (is.null(order_by <- get_order_by(x)) && strict) {
+    x_key <- sub_lang(lapply(get_key(x), as.name), c(x), NULL)
+    order_by <- unique(c(order_by, x_key))
+  }
 
+  if (length(order_by)) {
     is_unary_minus <- function(u) {
       is.call(u) && (u[[1]] == as.name("-")) && (length(u) == 2)
     }

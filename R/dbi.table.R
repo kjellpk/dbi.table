@@ -263,7 +263,8 @@ print.dbi.table <- function(x, ...) {
 
   opts <- list(topn = getOption("datatable.print.topn", 5L),
                class = getOption("datatable.print.class", TRUE),
-               print.keys = getOption("datatable.print.keys", TRUE))
+               print.keys = getOption("datatable.print.keys", TRUE),
+               strict = getOption("dbitable.print.strict", FALSE))
 
   dots <- list(...)
   idx <- intersect(names(dots), names(opts))
@@ -277,15 +278,16 @@ print.dbi.table <- function(x, ...) {
 
   print.keys <- opts$print.keys
   print.class <- opts$class
+  strict <- opts$strict
 
-  if (nrow(ans <- as.data.frame(x, n = n + 1L)) > n) {
+  if (nrow(ans <- as.data.frame(x, n = n + 1L, strict = strict)) > n) {
     ans <- ans[seq_len(n), , drop = FALSE]
     print_continue <- TRUE
   } else {
     print_continue <- FALSE
   }
 
-  if (length(x_key <- get_key(x))) {
+  if (length(x_key <- get_key(x)) && !strict) {
     o <- as.call(c(as.name("order"),
                    lapply(x_key, as.name),
                    list(na.last = FALSE)))
@@ -305,7 +307,10 @@ print.dbi.table <- function(x, ...) {
       "\n")
 
   if (isTRUE(print.keys) && length(x_key)) {
-    pre <- "Key (non-strict)"
+    pre <- "Key"
+    if (!strict) {
+      pre <- paste(pre, "(non-strict)")
+    }
     cat(paste0(pre, ": <", paste(x_key, collapse = ", "), ">\n"))
   }
 
@@ -387,9 +392,12 @@ print.dbi.table <- function(x, ...) {
 as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
                                     n = getOption("dbitable.max.fetch",
                                                   10000L)) {
-  res <- try(DBI::dbSendStatement(dbi_connection(x),
-                                  write_select_query(x, n)),
-             silent = TRUE)
+  dots <- list(...)
+  strict <- dots$strict
+
+  query <- write_select_query(x, n, isTRUE(strict))
+
+  res <- try(DBI::dbSendStatement(dbi_connection(x), query), silent = TRUE)
 
   if (inherits(res, "DBIResult")) {
     on.exit(DBI::dbClearResult(res))
@@ -419,7 +427,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
       }
     }
 
-    res <- DBI::dbSendStatement(dbi_connection(x), write_select_query(x, n))
+    res <- DBI::dbSendStatement(dbi_connection(x), query)
 
     if (inherits(res, "DBIResult")) {
       on.exit(DBI::dbClearResult(res))

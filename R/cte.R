@@ -33,14 +33,19 @@ as_cte <- function(x) {
   order_by <- lapply(order_by, sub_lang, envir = v, specials = NULL)
 
   ctes <- get_ctes(x)
-  attr(x, "ctes") <- list()
-  attr(x, "order_by") <- list()
+  attr(x, "ctes") <- NULL
+
+  x_key <- get_key(x)
+  attr(x, "sorted") <- NULL
+
+  attr(x, "order_by") <- NULL
+
   cte <- list(x)
   names(cte) <- id_name
 
   dbi_table_object(cdefs = v, conn = get_connection(x),
-                   data_source = data_source, fields = fields,
-                   order_by = order_by, ctes = c(ctes, cte))
+                   data_source = data_source, fields = fields, key = x_key,
+                   order_by = order_by, ctes = c(cte, ctes))
 }
 
 

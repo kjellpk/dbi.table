@@ -4,13 +4,16 @@
 \alias{csql}
 \title{See SQL}
 \usage{
-csql(x, n = getOption("dbitable.max.fetch", 10000L))
+csql(x, n = getOption("dbitable.max.fetch", 10000L), strict = FALSE)
 }
 \arguments{
 \item{x}{a \code{dbi.table}.}
 
 \item{n}{a single integer value. When nonnegative, limits the number of rows
 returned by the query to \code{n}.}
+
+\item{strict}{a logical value. If \code{TRUE} and \code{x} has a key, the key is
+appended to the ORDER BY clause.}
 }
 \value{
 none (invisible \code{NULL}).
