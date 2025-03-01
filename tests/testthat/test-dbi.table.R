@@ -6,11 +6,10 @@ for (n in names(chinook_connections)) {
     expect_true(is.dbi.table(Album))
   })
 
-  test_that(paste0("simple subset works", " [", n, "]"), {
+  test_that(paste0("logical subset works", " [", n, "]"), {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
     expect_true(reference.test(
-      Album[AlbumId > 7 & AlbumId < 13],
-      verbose = FALSE
+      Album[AlbumId > 7 & AlbumId < 13]
     ))
   })
 
@@ -18,8 +17,10 @@ for (n in names(chinook_connections)) {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference.test(
       Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
-                MEAN = mean(Milliseconds, na.rm = TRUE))],
-      verbose = FALSE
+                MEAN = mean(Milliseconds, na.rm = TRUE),
+                MIN = min(Milliseconds, na.rm = TRUE),
+                MAX = max(Milliseconds, na.rm = TRUE),
+                N = .N)]
     ))
   })
 
@@ -27,9 +28,11 @@ for (n in names(chinook_connections)) {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
     expect_true(reference.test(
       Track[, .(SUM = sum(Milliseconds, na.rm = TRUE),
-                MEAN = mean(Milliseconds, na.rm = TRUE)),
-            by = .(GenreId)],
-      verbose = FALSE
+                MEAN = mean(Milliseconds, na.rm = TRUE),
+                MIN = min(Milliseconds, na.rm = TRUE),
+                MAX = max(Milliseconds, na.rm = TRUE),
+                N = .N),
+            by = .(GenreId)]
     ))
   })
 
@@ -38,8 +41,7 @@ for (n in names(chinook_connections)) {
     expect_true(reference.test(
       Track[, .(TrackId,
                 x = as.numeric(Milliseconds) /
-                  sum(as.numeric(Milliseconds), na.rm = TRUE))],
-      verbose = FALSE
+                  sum(as.numeric(Milliseconds), na.rm = TRUE))]
     ))
   })
 
@@ -49,8 +51,7 @@ for (n in names(chinook_connections)) {
       Track[, .(TrackId,
                 x = as.numeric(Milliseconds) /
                   sum(as.numeric(Milliseconds), na.rm = TRUE)),
-            by = .(GenreId)],
-      verbose = FALSE
+            by = .(GenreId)]
     ))
   })
 
@@ -58,33 +59,27 @@ for (n in names(chinook_connections)) {
     expect_no_error(Track <- dbi.table(conn, DBI::Id("Track")))
 
     expect_true(reference.test(
-      Track[, Name:MediaTypeId],
-      verbose = FALSE
+      Track[, Name:MediaTypeId]
     ))
 
     expect_true(reference.test(
-      Track[, 1:MediaTypeId],
-      verbose = FALSE
+      Track[, 1:MediaTypeId]
     ))
 
     expect_true(reference.test(
-      Track[, Name:6],
-      verbose = FALSE
+      Track[, Name:6]
     ))
 
     expect_true(reference.test(
-      Track[, 1:6],
-      verbose = FALSE
+      Track[, 1:6]
     ))
 
     expect_true(reference.test(
-      Track[, c("MediaTypeId", "UnitPrice", "Name", "Milliseconds")],
-      verbose = FALSE
+      Track[, c("MediaTypeId", "UnitPrice", "Name", "Milliseconds")]
     ))
 
     expect_true(reference.test(
-      Track[, c(4, 2, 3, 1)],
-      verbose = FALSE
+      Track[, c(4, 2, 3, 1)]
     ))
 
     tmp <- c("MediaTypeId", "UnitPrice", "Name", "Milliseconds")
@@ -93,8 +88,7 @@ for (n in names(chinook_connections)) {
     expect_error(Track[, tmp])
 
     expect_true(reference.test(
-      Track[, ..tmp],
-      verbose = FALSE
+      Track[, ..tmp]
     ))
 
     # expect_true(reference.test(
@@ -109,13 +103,11 @@ for (n in names(chinook_connections)) {
     expect_no_error(Track[, .N])
 
     expect_true(reference.test(
-      Track[, list(N = .N)],
-      verbose = FALSE
+      Track[, list(N = .N)]
     ))
 
     expect_true(reference.test(
-      Track[, .N, MediaTypeId],
-      verbose = FALSE
+      Track[, .N, MediaTypeId]
     ))
   })
 
@@ -123,8 +115,7 @@ for (n in names(chinook_connections)) {
     expect_no_error(Album <- dbi.table(conn, DBI::Id("Album")))
 
     expect_true(reference.test(
-      Album[ArtistId == ArtistId],
-      verbose = FALSE
+      Album[ArtistId == ArtistId]
     ))
 
     expect_no_error(ArtistId <- 7)
@@ -137,18 +128,15 @@ for (n in names(chinook_connections)) {
     expect_no_error(id2 <- unique(Album[ArtistId == 2, .(ArtistId)]))
 
     expect_true(reference.test(
-      Album[id2, on = "ArtistId"],
-      verbose = FALSE
+      Album[id2, on = "ArtistId"]
     ))
 
     expect_true(reference.test(
-      Album[data.table(ArtistId = 2), on = "ArtistId"],
-      verbose = FALSE
+      Album[data.table(ArtistId = 2), on = "ArtistId"]
     ))
 
     expect_true(reference.test(
-      Album[data.frame(ArtistId = 2), on = "ArtistId"],
-      verbose = FALSE
+      Album[data.frame(ArtistId = 2), on = "ArtistId"]
     ))
   })
 
@@ -169,7 +157,7 @@ for (n in names(chinook_connections)) {
 
     expect_true(reference.test(
       Album[, .(AlbumId, s = sum(AlbumId), cs = cumsum(AlbumId))],
-      ignore.row.order = FALSE, verbose = FALSE
+      ignore.row.order = FALSE
     ))
   })
 
@@ -180,7 +168,7 @@ for (n in names(chinook_connections)) {
 
     expect_true(reference.test(
       Album[order(AlbumId), .(AlbumId, cs = cumsum(AlbumId))],
-      ignore.row.order = FALSE, verbose = FALSE
+      ignore.row.order = FALSE
     ))
   })
 }
