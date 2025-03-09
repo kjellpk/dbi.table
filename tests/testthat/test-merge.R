@@ -187,4 +187,53 @@ for (n in names(chinook_connections)) {
       merge(Album, Artist, by = "ArtistId")}
     ))
   })
+
+  test_that(paste0("merge default columns matcc dtat.table", " [", n, "]"), {
+
+    # When x and y have a shared key column (ArtistId), it is the used as the
+    # default column to merge on.
+
+    x <- dbi.table(conn, DBI::Id("Album"), key = "ArtistId")
+    y <- dbi.table(conn, DBI::Id("Genre"), key = "GenreId")
+    names(y) <- c("ArtistId", "Title")
+
+    for (allx in c(FALSE, TRUE)) {
+      for (ally in c(FALSE, TRUE)) {
+        expect_true(reference.test({
+          merge(x, y, all.x = allx, all.y = ally)
+        }))
+      }
+    }
+
+    # When x has a key and y does not, then the default columns to merge on
+    # are the shared columns of key(x) and y.
+
+    x <- dbi.table(conn, DBI::Id("Album"), key = "ArtistId")
+    y <- dbi.table(conn, DBI::Id("Genre"))
+    names(y) <- c("ArtistId", "Title")
+
+    for (allx in c(FALSE, TRUE)) {
+      for (ally in c(FALSE, TRUE)) {
+        expect_true(reference.test({
+          merge(x, y, all.x = allx, all.y = ally)
+        }))
+      }
+    }
+
+    # When neither x nor y have a key, then the default columns to merge on
+    # are the shared columns of x and y.
+
+    x <- dbi.table(conn, DBI::Id("Album"))
+    y <- dbi.table(conn, DBI::Id("Genre"))
+    names(y) <- c("ArtistId", "Name")
+
+    for (allx in c(FALSE, TRUE)) {
+      for (ally in c(FALSE, TRUE)) {
+        expect_true(reference.test({
+          merge(x, y, all.x = allx, all.y = ally)
+        }))
+      }
+    }
+
+  })
 }

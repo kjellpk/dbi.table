@@ -5,13 +5,25 @@
 #' @title Merge two dbi.tables
 #'
 #' @description
-#'   Merge two \code{\link{dbi.table}}s. The \code{dbi.table} \code{merge}
-#'   method is modelled after the \code{\link[data.table]{data.table}}.
+#'   Merge two \code{\link{dbi.table}}s.
 #'
-#'   Default merge columns: if \code{x} has a foreign key constraint that
-#'   references \code{y} then the columns comprising this key are used; see
-#'   details. When a foreign key cannot be found, then the common columns
-#'   between the two \code{dbi.tables}s are used.
+#'   By default, the columns to merge on are determined by the first of the
+#'   following cases to apply.
+#'
+#'   \enumerate{
+#'     \item If there is a foreign key relating \code{x} and \code{y} (either
+#'           \code{x} referencing \code{y}, or \code{y} referencing \code{x}),
+#'           then this foreign key determins the columns to merge on.
+#'
+#'     \item If \code{x} and \code{y} each have a key and these keys share 1 or
+#'           more columns, then merge on these shared key columns.
+#'
+#'     \item If \code{x} has a key and 1 or more of \code{x}'s key columns are
+#'           present in \code{y}, then merge on these common columns.
+#'
+#'     \item If \code{x} and \code{y} share 1 or more common columns, then
+#'           merge on these common columns.
+#'   }
 #'
 #'   Use the \code{by}, \code{by.x}, and \code{by.y} arguments explicitly to
 #'   override this default.
@@ -125,9 +137,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
-    if (is.null(rt <- related_tables(x, y)) || nrow(rt) < 1L) {
-      by.x <- by.y <- intersect(x_names, y_names)
-    } else {
+    if (length(rt <- related_tables(x, y)) && nrow(rt) > 0L) {
       rt_x <- rt[, c("catalog_x", "schema_x", "table_x", "field_x")]
       by_x <- match_by_field(x, rt_x)
       rt_y <- rt[, c("catalog_y", "schema_y", "table_y", "field_y")]
@@ -136,6 +146,18 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
       if (!anyNA(by_x) && !anyNA(by_y)) {
         by.x <- by_x
         by.y <- by_y
+      }
+    } else if (length(x_key <- get_key(x)) && length(y_key <- get_key(y))) {
+      if (length(tmp <- intersect(x_key, y_key))) {
+        by <- tmp
+      }
+    } else if (length(x_key)) {
+      if (length(tmp <- intersect(x_key, y_names))) {
+        by <- tmp
+      }
+    } else {
+      if (length(tmp <- intersect(x_names, y_names))) {
+        by <- tmp
       }
     }
   }
