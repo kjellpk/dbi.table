@@ -21,8 +21,8 @@
 #'   \code{conn}.
 #'
 #' @param check.names
-#'   Just as \code{check.names} in \code{link[data.table]{data.table}} and
-#'   \code{link[base]{data.frame}}.
+#'   Just as \code{check.names} in \code{\link[data.table]{data.table}} and
+#'   \code{\link[base]{data.frame}}.
 #'
 #' @param key
 #'   A character vector of one or more column names to set as the resulting
@@ -43,6 +43,60 @@
 #'     \item \code{\link{csql}} to see the underlying SQL query.
 #'   }
 #'
+#' @section Keys:
+#'   A key marks a \code{dbi.table} as sorted with an attribute \code{"sorted"}.
+#'   The sorted columns are the key. The key can be any number of columns.
+#'   Unlike \code{data.table}, the underlying data are not physically sorted, so
+#'   there is no performance improvement. However, there remain benefits to
+#'   using keys:
+#'
+#'   \enumerate{
+#'     \item The key provides a default order for window queries so that
+#'           functions like \code{\link[data.table]{shift}} and
+#'           \code{\link[base]{cumsum}} give reproducible output.
+#'     \item \code{dbi.table}'s \code{merge} method uses a \code{dbi.table}'s
+#'           key to determin the default columns to merge on in the same way
+#'           that \code{data.table}'s merge method does. Note: if a
+#'           \code{dbi.table} has a foreign key relationship, that will be used
+#'           to determin the default columns to merge on before the
+#'           \code{dbi.table}'s key is considered.
+#'   }
+#'
+#'   A table's primary key is used as the default \code{key} when it can be
+#'   determined.
+#'
+#'   \strong{Differences vs. \code{data.table} Keys}
+#'
+#'   There are a few key differences between \code{dbi.table} keys and
+#'   \code{data.table} keys.
+#'
+#'   \enumerate{
+#'     \item In \code{data.table}, \code{NA}s are always first. Some databases
+#'           (e.g., PostgreSQL) sort \code{NULL}s last by default and some
+#'           databases (e.g., SQLite) sort them first. \code{as.data.frame} does
+#'           not change the order of the result set returned by the database.
+#'           Note that \code{as.data.table} uses the \code{dbi.table}'s key so
+#'           that the resulting \code{data.table} is sorted in the usual
+#'           \code{data.table} way.
+#'     \item The sort is \emph{not} stable: the order of ties may change on
+#'           subsequent evaluations of the \code{dbi.table}'s underlying SQL
+#'           query.
+#'   }
+#'
+#'   \strong{Strict Processing of Keys}
+#'
+#'   By default, when previewing data (\code{dbi.table}'s \code{\link{print}}
+#'   method), the key is not included in the underlying SQL query's ORDER BY
+#'   clause. However, the result set is sorted locally to resepct the key. This
+#'   behavior is referred to as a \emph{non-strict} evaluation of the key and
+#'   the printed output labels the key \code{(non-strict)}. To override the
+#'   default behavior for a single preview, call \code{print} explicitly and
+#'   provide the optional argument \code{strict = TRUE}. To change the default
+#'   behavior, set the option \code{dbitable.print.strict} to \code{TRUE}.
+#'
+#'   Non-strict evaluation of keys reduces the time taken to retrieve the
+#'   preview.
+#'
 #' @examples
 #'   # open a connection to the Chinook example database using duckdb
 #'   duck <- chinook.duckdb()
@@ -57,7 +111,7 @@
 #'   # 'id' can also be 'SQL'; use the same DBI connection as Album
 #'   Genre <- dbi.table(Album, DBI::SQL("chinook_duckdb.main.Genre"))
 #'
-#'   # use the extract (\code{[}) method to subset the dbi.table
+#'   # use the extract ([...]) method to subset the dbi.table
 #'   Album[AlbumId < 5, .(Title, nchar = paste(nchar(Title), "characters"))]
 #'
 #'   # use csql to see the underlying SQL query
