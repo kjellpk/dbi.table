@@ -446,10 +446,13 @@ print.dbi.table <- function(x, ...) {
 as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
                                     n = getOption("dbitable.max.fetch",
                                                   10000L)) {
-  dots <- list(...)
-  strict <- dots$strict
+  if (is.null(strict <- list(...)$strict)) {
+    strict <- TRUE
+  } else {
+    strict <- as.logical(strict)
+  }
 
-  query <- write_select_query(x, n, isTRUE(strict))
+  query <- write_select_query(x, n, strict)
 
   res <- try(DBI::dbSendStatement(dbi_connection(x), query), silent = TRUE)
 
