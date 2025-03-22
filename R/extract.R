@@ -273,17 +273,13 @@ handle_over <- function(x, j, partition, order) {
 
 
 handle_the_walrus <- function(x, i, j, by, env, x_sub) {
-  if (!is.null(i)) {
-    if (is_call_to(i) == "order") {
-      order_by <- update_order_by(x, i, include_key = TRUE)
-    } else {
-      stop("when using :=, if 'i' is not missing it must be a call to 'order'",
-           call. = FALSE)
-    }
-  } else {
-    order_by <- NULL
+
+  if (length(i) && !is_call_to(i) == "order") {
+    stop("when using :=, if 'i' is not missing it must be a call to 'order'",
+         call. = FALSE)
   }
 
+  order_by <- update_order_by(x, i, include_key = TRUE)
   by <- handle_by(x, by)
 
   if (length(j) == 3L) {
