@@ -102,6 +102,7 @@ special_shift <- function(e, dbi_table, specials, env) {
     type <- ifelse(type == "lag", "lead", "lag")
   }
 
-  e <- call(type, x = e[[2L]], n = n, default = fill)
+  # Don't call 'call' here directly - R CMD check throws a partial match warning
+  e <- as.call(list(as.name(type), x = e[[2L]], n = n, default = fill))
   sub_lang(e, dbi_table, enclos = env)
 }
