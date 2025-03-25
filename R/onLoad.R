@@ -31,6 +31,7 @@ session$default_information_schema_tables <- c("character_sets",
   add_special("%like%", special_like)
   add_special("%LIKE%", special_LIKE)
   add_special("chorder", special_order)
+  add_special("shift", special_shift)
 
   NULL
 }

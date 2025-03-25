@@ -71,3 +71,37 @@ special_order <- function(e, dbi_table, specials, env) {
   e[[1L]] <- as.name("order")
   sub_lang(e, dbi_table, enclos = env)
 }
+
+
+
+shift_args <- function(x, n = 1L, fill = NA, type = "lag", give.names = FALSE) {
+  list(n = n, fill = fill, type = type, give.names = give.names)
+}
+
+
+
+special_shift <- function(e, dbi_table, specials, env) {
+  sargs <- e
+  sargs[[1L]] <- as.name("shift_args")
+  sargs <- eval(sargs)
+
+  n <- as.integer(sargs$n)
+  fill <- sargs$fill
+  type <- match.arg(sargs$type, choices = c("lag", "lead", "shift", "cyclic"))
+
+  if (type == "cyclic") {
+    stop("'type = cyclic' is not supported by dbi.table", call. = FALSE)
+  }
+
+  if (type == "shift") {
+    type <- "lag"
+  }
+
+  if (n < 0L) {
+    n <- abs(n)
+    type <- ifelse(type == "lag", "lead", "lag")
+  }
+
+  e <- call(type, x = e[[2L]], n = n, default = fill)
+  sub_lang(e, dbi_table, enclos = env)
+}
