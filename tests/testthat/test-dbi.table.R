@@ -20,6 +20,7 @@ for (n in names(chinook_connections)) {
                 MEAN = mean(Milliseconds, na.rm = TRUE),
                 MIN = min(Milliseconds, na.rm = TRUE),
                 MAX = max(Milliseconds, na.rm = TRUE),
+                SD = sd(Milliseconds, na.rm = TRUE),
                 N = .N)]
     ))
   })
@@ -31,6 +32,7 @@ for (n in names(chinook_connections)) {
                 MEAN = mean(Milliseconds, na.rm = TRUE),
                 MIN = min(Milliseconds, na.rm = TRUE),
                 MAX = max(Milliseconds, na.rm = TRUE),
+                SD = sd(Milliseconds, na.rm = TRUE),
                 N = .N),
             by = .(GenreId)]
     ))

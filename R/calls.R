@@ -166,7 +166,7 @@ window_calls <- function(x, conn) {
 
 
 
-AGGREGATE_FUNCTIONS <- c("mean", "sum", "min", "max", "n")
+AGGREGATE_FUNCTIONS <- c("mean", "sum", "min", "max", "sd", "var", "n")
 
 call_can_aggregate <- function(e) {
   if (is_scalar_atomic(e)) {
