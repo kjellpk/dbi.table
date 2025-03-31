@@ -19,5 +19,5 @@ SELECT "columns".table_catalog AS table_catalog,
    AND ("columns".table_name = key_column_usage.table_name)
    AND ("columns".column_name = key_column_usage.column_name)
 
- WHERE table_constraints.constraint_type = 'PRIMARY KEY'
+ WHERE table_constraints.constraint_type = 'PRIMARY KEY';
  

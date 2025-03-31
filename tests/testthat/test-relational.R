@@ -1,12 +1,4 @@
-# When the information schema is "bare bones" or doesn't include the
-# 'referential_constraints' view, then merge should work like an unkeyed
-# data.table.
-
 dbi.attach(chinook.sqlite)
-
-test_that("merge works on shared column (ArtistId)", {
-  expect_true(reference.test(merge(Album, Artist)))
-})
 
 test_that("merge fails when relational data not available", {
   x <- Artist[, .(id = ArtistId, Name)]

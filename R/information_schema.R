@@ -3,25 +3,36 @@ information_schema <- function(catalog, columns) {
     return(NULL)
   }
 
-  info <- new_schema(schema_name = "information_schema", catalog = catalog)
+  id_columns <- intersect(ID_COLUMNS, names(columns))
   info_columns <- subset(columns,
                          subset = tolower(table_schema) == "information_schema",
-                         select = c(ID_COLUMNS, VALUE_COLUMNS))
+                         select = c(id_columns, VALUE_COLUMNS))
 
   if (nrow(info_columns)) {
+    info <- new_schema(schema_name = "information_schema", catalog = catalog)
     install_from_columns(info_columns, list(information_schema = info),
                          catalog, to_lower = TRUE)
   } else {
-    lapply(session$default_information_schema_tables, function(u) {
-      id <- DBI::SQL(paste0("information_schema.", u))
-      info_table <- try(new_dbi_table(catalog, id), silent = TRUE)
-      if (is.dbi.table(info_table)) {
-        names(info_table) <- tolower(names(info_table))
-        assign_and_lock(u, info_table, info)
-      } else {
-        FALSE
-      }
-    })
+    id <- DBI::SQL("information_schema.tables")
+    tables <- try(new_dbi_table(catalog, id), silent = TRUE)
+
+    if (is.dbi.table(tables)) {
+      info <- new_schema(schema_name = "information_schema", catalog = catalog)
+      names(tables) <- tolower(names(tables))
+      assign_and_lock("tables", tables, info)
+
+      ists <- setdiff(session$default_information_schema_tables, "tables")
+      lapply(ists, function(u) {
+        id <- DBI::SQL(paste0("information_schema.", u))
+        info_table <- try(new_dbi_table(catalog, id), silent = TRUE)
+        if (is.dbi.table(info_table)) {
+          names(info_table) <- tolower(names(info_table))
+          assign_and_lock(u, info_table, info)
+        } else {
+          FALSE
+        }
+      })
+    }
   }
 
   NULL

@@ -4,7 +4,7 @@ tables_schema <- function(conn) {
 
 
 
-#' @rawNamespace S3method(tables_schema, default, tables_schema_default)
+#' @rawNamespace S3method(tables_schema,default,tables_schema_default)
 tables_schema_default <- function(conn) {
   columns <- try(DBI::dbGetQuery(conn, sql_statement("tables_schema_default")),
                  silent = TRUE)
@@ -30,7 +30,16 @@ tables_schema_default <- function(conn) {
 }
 
 
-#' @rawNamespace S3method(tables_schema, duckdb_connection, tables_schema_duckdb)
+
+#' @rawNamespace S3method(tables_schema,duckdb_connection,tables_schema_duckdb)
 tables_schema_duckdb <- function(conn) {
   DBI::dbGetQuery(conn, sql_statement("tables_schema_duckdb"))
+}
+
+
+
+
+#' @rawNamespace S3method(tables_schema,SQLiteConnection,tables_schema_sqlite)
+tables_schema_sqlite <- function(conn) {
+  DBI::dbGetQuery(conn, sql_statement("tables_schema_sqlite"))
 }

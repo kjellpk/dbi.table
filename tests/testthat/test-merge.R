@@ -188,7 +188,7 @@ for (n in names(chinook_connections)) {
     ))
   })
 
-  test_that(paste0("merge default columns matcc dtat.table", " [", n, "]"), {
+  test_that(paste0("merge default columns match data.table", " [", n, "]"), {
 
     # When x and y have a shared key column (ArtistId), it is the used as the
     # default column to merge on.

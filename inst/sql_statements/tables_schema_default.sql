@@ -1,2 +1,2 @@
 SELECT *
-  FROM information_schema.columns
+  FROM information_schema.columns;

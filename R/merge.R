@@ -136,6 +136,12 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
          "each have unique column names")
   }
 
+  if ((!is.null(by.x) || !is.null(by.y)) && length(by.x) != length(by.y))
+    stop("'by.x' and 'by.y' are not the same length")
+
+  if (!missing(by) && !missing(by.x))
+    warning("specification of 'by' superseded by 'by.x' and 'by.y'")
+
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
     if (length(rt <- related_tables(x, y)) && nrow(rt) > 0L) {
       rt_x <- rt[, c("catalog_x", "schema_x", "table_x", "field_x")]
@@ -147,26 +153,32 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
         by.x <- by_x
         by.y <- by_y
       }
-    } else if (length(x_key <- get_key(x)) && length(y_key <- get_key(y))) {
-      if (length(tmp <- intersect(x_key, y_key))) {
-        by <- tmp
-      }
-    } else if (length(x_key)) {
-      if (length(tmp <- intersect(x_key, y_names))) {
-        by <- tmp
-      }
     } else {
-      if (length(tmp <- intersect(x_names, y_names))) {
-        by <- tmp
+      by <- intersect(x_key <- get_key(x), get_key(y))
+
+      if (!length(by)) {
+        by <- x_key
       }
+
+      if (!length(by)) {
+        by <- intersect(x_names, y_names)
+      }
+
+      if (length(by) < 1L || !is.character(by)) {
+        stop("a non-empty vector of column names for 'by' is required")
+      }
+
+      if (!all(by %in% x_names)) {
+        stop("at least one column listed in 'by' is not present in 'x'")
+      }
+      if (!all(idx <- by %in% y_names)) {
+        stop("at least one column listed in 'by' is not present in 'y'")
+      }
+
+      by <- unname(by)
+      by.x <- by.y <- by
     }
   }
-
-  if ((!is.null(by.x) || !is.null(by.y)) && length(by.x) != length(by.y))
-    stop("'by.x' and 'by.y' are not the same length")
-
-  if (!missing(by) && !missing(by.x))
-    warning("specification of 'by' superseded by 'by.x' and 'by.y'")
 
   if (!is.null(by.x)) {
     if (length(by.x) == 0L || !is.character(by.x) || !is.character(by.y))
