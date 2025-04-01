@@ -1,21 +1,42 @@
-dbi.attach(chinook.sqlite)
+# When relational information is not avaiable then dbi.table behaves like
+# data.table.
 
-test_that("merge fails when relational data not available", {
-  x <- Artist[, .(id = ArtistId, Name)]
+test_that("merge when relational data not available", {
+  conn <- chinook_connections$chinook_sqlite
 
-  # non-empty character vectors of column names are required
-  # for 'by.x' and 'by.y'
-  expect_error(merge(Album, x))
+  Album <- dbi.table(conn, DBI::Id("Album"))
+  Genre <- dbi.table(conn, DBI::Id("Genre"))
+
+  # a non-empty vector of column names for 'by' is required
+  expect_error(merge(Album, Genre))
 
   # A non-empty vector of column names for `by` is required.
-  expect_error(merge(as.data.table(Album), as.data.table(x)))
+  expect_error(merge(as.data.table(Album), as.data.table(Genre)))
+
+  # Merge on shared key column.
+  Genre <- dbi.table(conn, DBI::Id("Genre"), key = "GenreId")
+  names(Genre) <- c("ArtistId", "Name")
+  Album <- dbi.table(conn, DBI::Id("Album"), key = "ArtistId")
+  expect_true(reference.test(merge(Album, Genre)))
+
+  # When there is no shared key column, then by = key(x).
+  Album <- dbi.table(conn, DBI::Id("Album"), key = "ArtistId")
+  Album2 <- dbi.table(conn, DBI::Id("Album"))
+  names(Album2) <- c("AlbumId", "Title2", "ArtistId")
+  op <- options(datatable.allow.cartesian = TRUE)
+  withr::defer(options(op))
+  expect_true(reference.test(merge(Album, Album2)))
+
+  # When neither x nor y has a key, the merge on common columns.
+  Artist <- dbi.table(conn, DBI::Id("Artist"))
+  Album <- dbi.table(conn, DBI::Id("Album"))
+  expect_true(reference.test(merge(Artist, Album)))
 
   # A relational merge (merge on foreign keys) should just return x since
   # related tables return NULL.
+  Track <- dbi.table(conn, DBI::Id("Track"))
   expect_true(identical(merge(Track), Track))
 })
-
-detach("RSQLite:chinook_sqlite")
 
 
 chinook <- dbi.attach(chinook.duckdb)
