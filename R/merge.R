@@ -16,13 +16,13 @@
 #'           then this foreign key determins the columns to merge on.
 #'
 #'     \item If \code{x} and \code{y} each have a key and these keys share 1 or
-#'           more columns, then merge on these shared key columns.
+#'           more columns, then merge on the shared key columns.
 #'
-#'     \item If \code{x} has a key and 1 or more of \code{x}'s key columns are
-#'           present in \code{y}, then merge on these common columns.
+#'     \item If \code{x} has a key, it is used as the default columns to merge
+#'           on.
 #'
 #'     \item If \code{x} and \code{y} share 1 or more common columns, then
-#'           merge on these common columns.
+#'           merge on the common columns.
 #'   }
 #'
 #'   Use the \code{by}, \code{by.x}, and \code{by.y} arguments explicitly to
