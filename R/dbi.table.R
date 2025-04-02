@@ -721,16 +721,17 @@ unique.dbi.table <- function(x, incomparables = FALSE, ...) {
 #' @export
 as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
   conn <- get_connection(conn)
+  x_key <- get_key(x)
   x <- as.data.frame(x)
   n <- nrow(x)
   type <- match.arg(type)
 
   if (type == "temporary") {
-    return(temporary_dbi_table(conn, x))
+    return(temporary_dbi_table(conn, x, key = x_key))
   }
 
   if (type == "query") {
-    return(in_query_cte(conn, x))
+    return(in_query_cte(conn, x, key = x_key))
   }
 
   if (n > getOption("dbi_table_max_in_query", 500L)) {
@@ -741,7 +742,8 @@ as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
       return(in_query_cte(conn, x))
     }
 
-    if (is.dbi.table(tmp <- try(temporary_dbi_table(conn, x), silent = TRUE))) {
+    if (is.dbi.table(tmp <- try(temporary_dbi_table(conn, x, key = x_key),
+                                silent = TRUE))) {
       return(tmp)
     }
 
@@ -754,12 +756,12 @@ as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
             "will fail if statement is too large")
   }
 
-  in_query_cte(conn, x)
+  in_query_cte(conn, x, key = x_key)
 }
 
 
 
-temporary_dbi_table <- function(conn, x) {
+temporary_dbi_table <- function(conn, x, key = NULL) {
   dbi_conn <- dbi_connection(conn)
   stopifnot(inherits(dbi_conn, "DBIConnection"))
 
@@ -774,7 +776,7 @@ temporary_dbi_table <- function(conn, x) {
   }
 
   temp_id <- DBI::Id(temp_name)
-  x <- new_dbi_table(conn, temp_id, names(x))
+  x <- new_dbi_table(conn, temp_id, names(x), key)
 
   temp_dbi_table <- new.env(parent = emptyenv())
   temp_dbi_table$id <- temp_id
@@ -795,7 +797,7 @@ finalize_temp_dbi_table <- function(e) {
 
 
 
-in_query_cte <- function(conn, data) {
+in_query_cte <- function(conn, data, key = NULL) {
   dbi_conn <- dbi_connection(conn)
   data <- as.data.frame(data)
 
@@ -807,7 +809,7 @@ in_query_cte <- function(conn, data) {
 
   cte_name <- unique_table_name("IN_QUERY_CTE")
   id <- DBI::Id(cte_name)
-  x <- new_dbi_table(conn, id, names(data))
+  x <- new_dbi_table(conn, id, names(data), key)
 
   qnames <- DBI::dbQuoteIdentifier(dbi_conn, names(data))
   col_modes <- vapply(data, storage.mode, "")

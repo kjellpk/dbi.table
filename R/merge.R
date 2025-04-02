@@ -106,16 +106,12 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
                             all = FALSE, all.x = all, all.y = all,
                             sort = TRUE, suffixes = c(".x", ".y"),
                             no.dups = TRUE, recursive = FALSE, ...) {
-  if (!is.dbi.table(x)) {
-    stop("'x' is not a 'dbi.table'")
-  }
-
   if (missing(y) || is.null(y)) {
     return(relational_merge(x, recursive))
   }
 
   if (!is.dbi.table(y)) {
-    stop("'y' is not a 'dbi.table'")
+    y <- as.dbi.table(y, ...)
   }
 
   dots <- list(...)
