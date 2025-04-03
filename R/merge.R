@@ -5,34 +5,40 @@
 #' @title Merge two dbi.tables
 #'
 #' @description
-#'   Merge two \code{\link{dbi.table}}s.
-#'
-#'   By default, the columns to merge on are determined by the first of the
-#'   following cases to apply.
+#'   Merge two \code{\link{dbi.table}}s. By default, the columns to merge on are
+#'   determined by the first of the following cases to apply.
 #'
 #'   \enumerate{
 #'     \item If there is a foreign key relating \code{x} and \code{y} (either
 #'           \code{x} referencing \code{y}, or \code{y} referencing \code{x}),
-#'           then this foreign key determins the columns to merge on.
+#'           then it is used to set \code{by.x} and \code{by.y}.
 #'
-#'     \item If \code{x} and \code{y} each have a key and these keys share 1 or
-#'           more columns, then merge on the shared key columns.
+#'     \item If \code{x} and \code{y} have shared key columns, then they are
+#'           used to set \code{by} (that is,
+#'           \code{by = intersect(key(x), key(y))} when
+#'           \code{intersect(key(x), key(y))} has length greater than zero).
 #'
-#'     \item If \code{x} has a key, it is used as the default columns to merge
-#'           on.
+#'     \item If \code{x} has a key, then it is used to set \code{by} (that is,
+#'           \code{by = key(x)} when \code{key(x)} has length greater than
+#'           zero).
 #'
-#'     \item If \code{x} and \code{y} share 1 or more common columns, then
-#'           merge on the common columns.
+#'     \item If \code{x} and \code{y} have columns in common, then they are used
+#'           to set
+#'           \code{by} (that is, \code{by = intersect(names(x), names(y))} when
+#'           \code{intersect(names(x), names(y))} has length greater than zero).
 #'   }
 #'
 #'   Use the \code{by}, \code{by.x}, and \code{by.y} arguments explicitly to
 #'   override this default.
 #'
 #' @param x,y
-#'   \code{\link{dbi.table}}s sharing the same DBI connection.
+#'   \code{\link{dbi.table}}s sharing the same DBI connection. If \code{y} is
+#'   not a \code{dbi.table} but does inherit from \code{data.frame}, then it is
+#'   coerced to a \code{dbi.table} using \code{\link{as.dbi.table}}.
 #'
 #' @param by
-#'   A vector of shared column names in \code{x} and \code{y} to merge on.
+#'   a character vector of shared column names in \code{x} and \code{y} to merge
+#'   on.
 #'
 #' @param by.x,by.y
 #'   character vectors of column names in \code{x} and \code{y} to merge on.
@@ -52,8 +58,8 @@
 #'   a logical value. Analogous to \code{all.x} above.
 #'
 #' @param sort
-#'   a logical value. If TRUE (default), the key of the merged \code{dbi.table}
-#'   is set to the \code{by} / \code{by.x} columns.
+#'   a logical value. When TRUE (default), the key of the merged
+#'   \code{dbi.table} is set to the \code{by} / \code{by.x} columns.
 #'
 #' @param suffixes
 #'   a length-2 character vector. The suffixes to be used for making
@@ -61,9 +67,9 @@
 #'   fashion to the \code{\link[base]{merge.data.frame}} method.
 #'
 #' @param no.dups
-#'  a logical value. When \code{TRUE}, suffixes are also appended to
-#'  non-\code{by.y} column names in \code{y} when they have the same column
-#'  name as any \code{by.x}.
+#'   a logical value. When \code{TRUE}, suffixes are also appended to
+#'   non-\code{by.y} column names in \code{y} when they have the same column
+#'   name as any \code{by.x}.
 #'
 #' @param recursive
 #'   a logical value. Only used when \code{y} is missing. When \code{TRUE},
@@ -71,19 +77,24 @@
 #'   \code{dbi.table}s. See examples.
 #'
 #' @param \dots
-#'   additional arguments are ignored.
+#'   additional arguments are passed to \code{\link{as.dbi.table}}.
 #'
 #' @return
 #'   a \code{\link{dbi.table}}.
 #'
-#' @details
-#'   Foreign key constraints. Foreign keys can only be queried when (1) the
-#'   \code{dbi.table}'s schema is loaded, and (2) \code{dbi.table} understands
-#'   the underlying database's information schema.
+#' @section Foreign Key Constraints:
+#'   Foreign keys can only be queried when (1) the \code{dbi.table}'s schema is
+#'   loaded, and (2) \code{dbi.table} understands the underlying database's
+#'   information schema.
 #'
+#' @details
 #'   \code{merge.dbi.table} uses \code{\link{sql.join}} to join \code{x} and
 #'   \code{y} then formats the result set to match the typical \code{merge}
 #'   output.
+#'
+#' @seealso
+#'   \code{\link[data.table]{merge.data.table}},
+#'   \code{\link[base]{merge.data.frame}}
 #'
 #' @examples
 #'   chinook <- dbi.catalog(chinook.duckdb)

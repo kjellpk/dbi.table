@@ -22,9 +22,12 @@
 )
 }
 \arguments{
-\item{x, y}{\code{\link{dbi.table}}s sharing the same DBI connection.}
+\item{x, y}{\code{\link{dbi.table}}s sharing the same DBI connection. If \code{y} is
+not a \code{dbi.table} but does inherit from \code{data.frame}, then it is
+coerced to a \code{dbi.table} using \code{\link{as.dbi.table}}.}
 
-\item{by}{A vector of shared column names in \code{x} and \code{y} to merge on.}
+\item{by}{a character vector of shared column names in \code{x} and \code{y} to merge
+on.}
 
 \item{by.x, by.y}{character vectors of column names in \code{x} and \code{y} to merge on.}
 
@@ -39,8 +42,8 @@ are included in the output.}
 
 \item{all.y}{a logical value. Analogous to \code{all.x} above.}
 
-\item{sort}{a logical value. If TRUE (default), the key of the merged \code{dbi.table}
-is set to the \code{by} / \code{by.x} columns.}
+\item{sort}{a logical value. When TRUE (default), the key of the merged
+\code{dbi.table} is set to the \code{by} / \code{by.x} columns.}
 
 \item{suffixes}{a length-2 character vector. The suffixes to be used for making
 non-\code{by} column names unique. The suffix behavior works in a similar
@@ -54,44 +57,50 @@ name as any \code{by.x}.}
 \code{merge} is called recursively on each of the just-merged
 \code{dbi.table}s. See examples.}
 
-\item{\dots}{additional arguments are ignored.}
+\item{\dots}{additional arguments are passed to \code{\link{as.dbi.table}}.}
 }
 \value{
 a \code{\link{dbi.table}}.
 }
 \description{
-Merge two \code{\link{dbi.table}}s.
-
-  By default, the columns to merge on are determined by the first of the
-  following cases to apply.
+Merge two \code{\link{dbi.table}}s. By default, the columns to merge on are
+  determined by the first of the following cases to apply.
 
   \enumerate{
     \item If there is a foreign key relating \code{x} and \code{y} (either
           \code{x} referencing \code{y}, or \code{y} referencing \code{x}),
-          then this foreign key determins the columns to merge on.
+          then it is used to set \code{by.x} and \code{by.y}.
 
-    \item If \code{x} and \code{y} each have a key and these keys share 1 or
-          more columns, then merge on the shared key columns.
+    \item If \code{x} and \code{y} have shared key columns, then they are
+          used to set \code{by} (that is,
+          \code{by = intersect(key(x), key(y))} when
+          \code{intersect(key(x), key(y))} has length greater than zero).
 
-    \item If \code{x} has a key, it is used as the default columns to merge
-          on.
+    \item If \code{x} has a key, then it is used to set \code{by} (that is,
+          \code{by = key(x)} when \code{key(x)} has length greater than
+          zero).
 
-    \item If \code{x} and \code{y} share 1 or more common columns, then
-          merge on the common columns.
+    \item If \code{x} and \code{y} have columns in common, then they are used
+          to set
+          \code{by} (that is, \code{by = intersect(names(x), names(y))} when
+          \code{intersect(names(x), names(y))} has length greater than zero).
   }
 
   Use the \code{by}, \code{by.x}, and \code{by.y} arguments explicitly to
   override this default.
 }
 \details{
-Foreign key constraints. Foreign keys can only be queried when (1) the
-  \code{dbi.table}'s schema is loaded, and (2) \code{dbi.table} understands
-  the underlying database's information schema.
-
-  \code{merge.dbi.table} uses \code{\link{sql.join}} to join \code{x} and
+\code{merge.dbi.table} uses \code{\link{sql.join}} to join \code{x} and
   \code{y} then formats the result set to match the typical \code{merge}
   output.
 }
+\section{Foreign Key Constraints}{
+
+  Foreign keys can only be queried when (1) the \code{dbi.table}'s schema is
+  loaded, and (2) \code{dbi.table} understands the underlying database's
+  information schema.
+}
+
 \examples{
   chinook <- dbi.catalog(chinook.duckdb)
 
@@ -108,4 +117,8 @@ Foreign key constraints. Foreign keys can only be queried when (1) the
   #This dbi.table includes Artist.Name as well
   csql(merge(chinook$main$Track, recursive = TRUE))
 
+}
+\seealso{
+\code{\link[data.table]{merge.data.table}},
+  \code{\link[base]{merge.data.frame}}
 }
