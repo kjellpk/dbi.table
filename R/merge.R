@@ -275,6 +275,21 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
 
 merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
+  x_key <- get_key(x)
+
+  if (is.null(on)) {
+    if (length(x_key)) {
+      if (is.null(i_key <- get_key(i))) {
+        i_key <- names(i)
+      }
+
+      idx <- seq_len(min(length(x_key), length(i_key)))
+      on <- paste(x_key[idx], i_key[idx], sep = " == ")
+    } else {
+      stop("when 'on' is NULL, 'x' must be keyed", call. = FALSE)
+    }
+  }
+
   names(x) <- paste0("x.", x_names <- names(x))
   names(i) <- paste0("i.", i_names <- names(i))
 
@@ -362,6 +377,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
     xi <- handle_j(xi, j, by = NULL)
   }
 
+  attr(xi, "sorted") <- x_key
   xi
 }
 
