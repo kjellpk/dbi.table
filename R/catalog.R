@@ -38,6 +38,9 @@ dbi.catalog <- function(conn, schemas = NULL) {
   class(catalog) <- "dbi.catalog"
 
   columns <- tables_schema(dbi_connection(catalog))
+  columns$ordinal_position <- as.integer(columns$ordinal_position)
+  columns$pk_ordinal_position <- as.integer(columns$pk_ordinal_position)
+
   information_schema(catalog, columns)
 
   if (is.null(columns$table_schema)) {
@@ -78,8 +81,8 @@ install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
   tables <- lapply(tables, function(u) {
     id <- DBI::Id(unlist(u[1L, id_cols]))
     fields <- u$column_name[order(u$ordinal_position)]
-    key_idx <- !is.na(u$pk_ordinal_position)
-    key <- u$column_name[key_idx][u$pk_ordinal_position[key_idx]]
+    key <- subset(u, subset = !is.na(u$pk_ordinal_position))
+    key <- key$column_name[key$pk_ordinal_position]
 
     if (to_lower) {
       table_schema <- tolower(u$table_schema[[1L]])
@@ -93,7 +96,8 @@ install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
 
     schema <- schemas[[table_schema]]
 
-    install_in_schema(table_name, catalog, id, fields, column_names, key, schema)
+    install_in_schema(table_name, catalog, id, fields,
+                      column_names, key, schema)
   })
 
   invisible()
