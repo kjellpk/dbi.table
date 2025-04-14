@@ -453,7 +453,6 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
   }
 
   query <- write_select_query(x, n, strict)
-
   res <- try(DBI::dbSendStatement(dbi_connection(x), query), silent = TRUE)
 
   if (inherits(res, "DBIResult")) {
@@ -476,9 +475,10 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
     }
 
     if (is.environment(e <- get_connection(x))) {
-      conn <- e$.dbi_connection
+      conn <- dbi_connection(e)
       if (!is.null(recon <- attr(conn, "recon", exact = TRUE))) {
-        e$.dbi_connection <- init_connection(recon)
+        try(DBI::dbDisconnect(conn), silent = TRUE)
+        assign("./dbi_connection", init_connection(recon), pos = e)
       } else {
         stop(attr(res, "condition"))
       }
