@@ -151,3 +151,10 @@ default_schema_sqlite <- function(conn) {
 default_schema_duckdb <- function(conn) {
   DBI::dbGetQuery(conn, "SELECT current_schema()")[[1L]]
 }
+
+
+
+#' @rawNamespace S3method(default_schema,"Microsoft SQL Server",default_schema_Microsoft_SQL_Server)
+default_schema_Microsoft_SQL_Server <- function(conn) {
+  DBI::dbGetQuery(conn, "SELECT SCHEMA_NAME()")[[1L]]
+}

@@ -1,3 +1,9 @@
+related_tables <- function(x, y = NULL) {
+  UseMethod("related_tables")
+}
+
+
+
 FIRST_MERGE_BY <- c("constraint_catalog",
                     "constraint_schema",
                     "constraint_name",
@@ -13,8 +19,8 @@ SECOND_MERGE_BY <- c(fk_unique_constraint_catalog = "constraint_catalog",
                      fk_ordinal_position = "ordinal_position")
 
 
-
-related_tables <- function(x, y = NULL) {
+#' @rawNamespace S3method(related_tables,default,related_tables_default)
+related_tables_default <- function(x, y = NULL) {
   info <- get_information_schema(x)
 
   if (is.null(referential_constraints <- info$referential_constraints) ||

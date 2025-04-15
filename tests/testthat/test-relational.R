@@ -1,7 +1,7 @@
 # When relational information is not avaiable then dbi.table behaves like
 # data.table.
 
-test_that("merge when relational data not available", {
+test_that("merge works when relational data not available", {
   conn <- chinook_connections$chinook_sqlite
 
   Album <- dbi.table(conn, DBI::Id("Album"))

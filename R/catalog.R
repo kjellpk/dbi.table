@@ -47,18 +47,21 @@ dbi.catalog <- function(conn, schemas) {
   columns$ordinal_position <- as.integer(columns$ordinal_position)
   columns$pk_ordinal_position <- as.integer(columns$pk_ordinal_position)
 
-  information_schema(catalog, columns)
-
   if (is.null(columns$table_schema)) {
     schema_names <- columns$table_schema <- "main"
   } else {
-    schema_names <- setdiff(unique(columns$table_schema), "information_schema")
+    schema_names <- unique(columns$table_schema)
   }
 
   if (is.na(schemas)) {
     schemas <- schema_names
   } else {
-    schemas <- intersect(schemas, schema_names)
+    if (length(not_found <- setdiff(schemas, schema_names))) {
+      stop("schemas not found on connection: ",
+           paste(not_found, collapse = ", "))
+    }
+
+    schemas <- union(schemas, schemas_to_include(conn))
   }
 
   names(schemas) <- schemas
@@ -193,4 +196,44 @@ print.dbi.schema <- function(x, ...) {
   }
 
   invisible(x)
+}
+
+
+
+schemas_to_include <- function(conn) {
+  UseMethod("schemas_to_include")
+}
+
+
+
+#' @rawNamespace S3method(schemas_to_include,default,schemas_to_include_default)
+schemas_to_include_default <- function(conn) {
+  character(0)
+}
+
+
+
+#' @rawNamespace S3method(schemas_to_include,"Microsoft SQL Server",schemas_to_include_Microsoft_SQL_Server)
+schemas_to_include_Microsoft_SQL_Server <- function(conn) {
+  c("INFORMATION_SCHEMA", "sys")
+}
+
+
+
+#' @rawNamespace S3method(schemas_to_include,MariaDBConnection,schemas_to_include_mariadb)
+schemas_to_include_mariadb <- function(conn) {
+  c("information_schema")
+}
+
+
+#' @rawNamespace S3method(schemas_to_include,PqConnection,schemas_to_include_postgres)
+schemas_to_include_postgres <- function(conn) {
+  c("information_schema", "pg_catalog")
+}
+
+
+
+#' @rawNamespace S3method(schemas_to_include,duckdb_connection,schemas_to_include_duckdb)
+schemas_to_include_duckdb <- function(conn) {
+  c("information_schema")
 }
