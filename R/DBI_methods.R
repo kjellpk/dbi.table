@@ -15,6 +15,13 @@ setOldClass("dbi.schema")
 setOldClass("dbi.table")
 
 
+################################################################################
+
+stry <- function(expr) {
+  suppressWarnings(try(expr, silent = TRUE))
+}
+
+
 
 ################################################################################
 #' @name
@@ -309,7 +316,8 @@ dbGetQuery_dbi_table <- function(conn, statement, ...) {
   if (is.null(n <- list(...)$n)) {
     n <- getOption("dbitable.max.fetch", 10000L)
   }
-  DBI::dbGetQuery(dbi_connection(conn), write_select_query(conn, n), n = n)
+
+  dbGetQuery_dbi_table_pkg(conn, write_select_query(conn, n), n = n)
 }
 
 
@@ -326,7 +334,37 @@ setMethod(f = dbGetQuery,
 
 
 dbGetQuery_dbi_table_pkg <- function(conn, statement, ...) {
-  DBI::dbGetQuery(dbi_connection(conn), statement, ...)
+  x <- stry(DBI::dbGetQuery(dbi_conn <- dbi_connection(conn), statement, ...))
+
+  if (inherits(x, "try-error")) {
+    if (is_valid <- DBI::dbIsValid(dbi_conn)) {
+      simple_query_works <- stry(DBI::dbGetQuery(dbi_conn, "SELECT 1;"))
+      is_valid <- !inherits(simple_query_works, "try-error")
+    } else {
+      stop(attr(x, "condition"))
+    }
+
+    if (is_valid) {
+      stop(attr(x, "condition"))
+    }
+
+    if (is_dbi_catalog(e <- get_connection(conn))) {
+      if (!is.null(recon <- attr(dbi_conn, "recon", exact = TRUE))) {
+        stry(DBI::dbDisconnect(dbi_conn))
+        assign("./dbi_connection", init_connection(recon), pos = e)
+      } else {
+        stop(attr(x, "condition"))
+      }
+    }
+
+    x <- stry(DBI::dbGetQuery(dbi_connection(conn), statement, ...))
+
+    if (inherits(x, "try-error")) {
+      stop(attr(x, "condition"))
+    }
+  }
+
+  x
 }
 
 
