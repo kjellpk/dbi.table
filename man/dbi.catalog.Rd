@@ -4,15 +4,15 @@
 \alias{dbi.catalog}
 \title{Create a \code{dbi.catalog}}
 \usage{
-dbi.catalog(conn, schemas = NULL)
+dbi.catalog(conn, schemas)
 }
 \arguments{
 \item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}} or a
 zero-argument function that returns a connection handle.}
 
 \item{schemas}{a character vector of distinct schema names. These schemas will be loaded
-into the \code{dbi.catalog}. The default \code{schemas = NULL} loads all
-schemas in the catalog.}
+into the \code{dbi.catalog}. By default (when \code{schemas} is missing),
+\code{dbi.catalog} loads all available schemas.}
 }
 \value{
 a \code{dbi.catalog}.

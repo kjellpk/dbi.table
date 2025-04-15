@@ -40,34 +40,35 @@
 dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
                        schema = NULL, graphics = TRUE) {
   what_name <- deparse1(substitute(what))
+  what <- init_connection(what)
 
-  if (!is.null(name) && (length(name <- as.character(name)) != 1L)) {
+  if (length(name) && length(name <- as.character(name)) != 1L) {
     stop("'name' is not a scalar character string")
   }
 
-  catalog <- dbi.catalog(what, schemas = schema)
-  schemas <- setdiff(ls(catalog, all.names = TRUE), "./dbi_connection")
-
   if (is.null(schema)) {
-    choices <- setdiff(schemas, session$ignore_schemas)
-    if (length(choices) == 1L) {
-      schema <- choices
-    } else if (length(choices) > 1L && interactive()) {
-      schema <- utils::menu(choices,
+    schema <- default_schema(what)
+  } else {
+    schema <- as.character(schema)
+
+    if (length(schema) != 1L) {
+      stop("'schema' is not a scalar character string")
+    }
+  }
+
+  catalog <- dbi.catalog(what, schemas = schema)
+  schemas <- ls(catalog)
+
+  if (is.na(schema)) {
+    if (length(schemas) && interactive()) {
+      schema <- utils::menu(schemas,
                             graphics = graphics,
                             title = "Select Schema")
       if (schema == 0L) {
         return(invisible())
       } else {
-        schema <- choices[[schema]]
+        schema <- schemas[[schema]]
       }
-    } else {
-      schema <- NA_character_
-    }
-  } else {
-    schema <- as.character(schema)
-    if (length(schema) != 1L) {
-      stop("'schema' is not a scalar character string")
     }
   }
 
@@ -90,8 +91,9 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
 
   if (name %in% search()) {
     stop("'", what_name, "' was not attached because '", name,
-         "' is already on the search path - if you want to attach the same ",
-         "database twice, use the 'name' argument to provide a distinct name")
+         "' is already on the search path - if you really want to attach the ",
+         "same database twice, use the 'name' argument to provide a distinct ",
+         "name")
   }
 
   # From ?attach: "In programming, functions should not change the search
@@ -107,4 +109,45 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   assign_and_lock(schema, e, catalog)
 
   invisible(e)
+}
+
+
+
+default_schema <- function(conn) {
+  UseMethod("default_schema")
+}
+
+
+
+#' @rawNamespace S3method(default_schema,default,default_schema_default)
+default_schema_default <- function(conn) {
+  NA_character_
+}
+
+
+
+#' @rawNamespace S3method(default_schema,MariaDBConnection,default_schema_mariadb)
+default_schema_mariadb <- function(conn) {
+  DBI::dbGetQuery(conn, "SELECT SCHEMA()")[[1L]]
+}
+
+
+
+#' @rawNamespace S3method(default_schema,PqConnection,default_schema_postgres)
+default_schema_postgres <- function(conn) {
+  DBI::dbGetQuery(conn, "SELECT CURRENT_SCHEMA()")[[1L]]
+}
+
+
+
+#' @rawNamespace S3method(default_schema,SQLiteConnection,default_schema_sqlite)
+default_schema_sqlite <- function(conn) {
+  "main"
+}
+
+
+
+#' @rawNamespace S3method(default_schema,duckdb_connection,default_schema_duckdb)
+default_schema_duckdb <- function(conn) {
+  DBI::dbGetQuery(conn, "SELECT current_schema()")[[1L]]
 }

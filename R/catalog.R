@@ -8,8 +8,8 @@
 #'
 #' @param schemas
 #'   a character vector of distinct schema names. These schemas will be loaded
-#'   into the \code{dbi.catalog}. The default \code{schemas = NULL} loads all
-#'   schemas in the catalog.
+#'   into the \code{dbi.catalog}. By default (when \code{schemas} is missing),
+#'   \code{dbi.catalog} loads all available schemas.
 #'
 #' @return
 #'   a \code{dbi.catalog}.
@@ -25,8 +25,14 @@
 #' ls(db$main)
 #'
 #' @export
-dbi.catalog <- function(conn, schemas = NULL) {
+dbi.catalog <- function(conn, schemas) {
   conn <- init_connection(conn)
+
+  if (missing(schemas)) {
+    schemas <- NA
+  }
+
+  schemas <- as.character(schemas)
 
   catalog <- new.env(parent = emptyenv())
   assign("./dbi_connection", conn, catalog)
@@ -49,10 +55,10 @@ dbi.catalog <- function(conn, schemas = NULL) {
     schema_names <- setdiff(unique(columns$table_schema), "information_schema")
   }
 
-  if (is.null(schemas)) {
+  if (is.na(schemas)) {
     schemas <- schema_names
   } else {
-    schemas <- intersect(as.character(schemas), schema_names)
+    schemas <- intersect(schemas, schema_names)
   }
 
   names(schemas) <- schemas
