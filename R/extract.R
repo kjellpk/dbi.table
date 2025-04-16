@@ -342,7 +342,7 @@ handle_the_walrus <- function(x, i, j, by, env, x_sub) {
         }
       }
 
-      res <- try(assign(x_name, x, pos = x_env), silent = TRUE)
+      res <- stry(assign(x_name, x, pos = x_env))
       if (inherits(res, "try-error")) {
         warning(attr(res, "condition")$message, call. = FALSE)
       }

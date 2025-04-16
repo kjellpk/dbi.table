@@ -6,8 +6,7 @@ tables_schema <- function(conn) {
 
 #' @rawNamespace S3method(tables_schema,default,tables_schema_default)
 tables_schema_default <- function(conn) {
-  columns <- try(DBI::dbGetQuery(conn, sql_statement("tables_schema_default")),
-                 silent = TRUE)
+  columns <- stry(DBI::dbGetQuery(conn, sql_statement("tables_schema_default")))
 
   if (is.data.frame(columns)) {
     names(columns) <- tolower(names(columns))

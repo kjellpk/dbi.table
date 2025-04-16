@@ -594,7 +594,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
 
   sub_on <- substitute(on)
   if (!is.null(sub_on)) {
-    on <- try(eval(on, envir = parent), silent = TRUE)
+    on <- stry(eval(on, envir = parent))
     if (inherits(on, "try-error")) {
       on <- sub_on
     }
@@ -701,8 +701,7 @@ as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
       return(in_query_cte(conn, x))
     }
 
-    if (is.dbi.table(tmp <- try(temporary_dbi_table(conn, x, key = x_key),
-                                silent = TRUE))) {
+    if (is.dbi.table(tmp <- stry(temporary_dbi_table(conn, x, key = x_key)))) {
       return(tmp)
     }
 
@@ -749,7 +748,7 @@ temporary_dbi_table <- function(conn, x, key = NULL) {
 
 
 finalize_temp_dbi_table <- function(e) {
-  try(DBI::dbRemoveTable(e$conn, e$id), silent = TRUE)
+  stry(DBI::dbRemoveTable(e$conn, e$id))
 
   NULL
 }

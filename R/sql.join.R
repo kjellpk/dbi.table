@@ -53,7 +53,7 @@ sql.join <- function(x, y, type = "inner", on = NULL,
   }
 
   on_sub <- substitute(on)
-  if (inherits(on <- try(on, silent = TRUE), "try-error")) {
+  if (inherits(on <- stry(on), "try-error")) {
     on <- on_sub
   }
 

@@ -116,7 +116,7 @@ install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
 
 dbi.catalog_disconnect <- function(e) {
   on.exit(rm(list = "./dbi_connection", envir = e))
-  try(DBI::dbDisconnect(dbi_connection(e)), silent = TRUE)
+  stry(DBI::dbDisconnect(dbi_connection(e)))
 }
 
 
