@@ -452,48 +452,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
     strict <- as.logical(strict)
   }
 
-  query <- write_select_query(x, n, strict)
-  res <- try(DBI::dbSendStatement(dbi_connection(x), query), silent = TRUE)
-
-  if (inherits(res, "DBIResult")) {
-    on.exit(DBI::dbClearResult(res))
-  }
-
-  if (inherits(res, "try-error")) {
-    is_valid <- DBI::dbIsValid(conn <- dbi_connection(x))
-
-    if (is_valid) {
-      simple_query_works <- try(DBI::dbGetQuery(conn, "SELECT 1;"),
-                                silent = TRUE)
-      is_valid <- !inherits(simple_query_works, "try-error")
-    } else {
-      stop(attr(res, "condition"))
-    }
-
-    if (is_valid) {
-      stop(attr(res, "condition"))
-    }
-
-    if (is.environment(e <- get_connection(x))) {
-      conn <- dbi_connection(e)
-      if (!is.null(recon <- attr(conn, "recon", exact = TRUE))) {
-        try(DBI::dbDisconnect(conn), silent = TRUE)
-        assign("./dbi_connection", init_connection(recon), pos = e)
-      } else {
-        stop(attr(res, "condition"))
-      }
-    }
-
-    res <- DBI::dbSendStatement(dbi_connection(x), query)
-
-    if (inherits(res, "DBIResult")) {
-      on.exit(DBI::dbClearResult(res))
-    } else {
-      stop(attr(res, "condition"))
-    }
-  }
-
-  result_set <- DBI::dbFetch(res, n = n)
+  result_set <- DBI::dbGetQuery(x, write_select_query(x, n, strict))
 
   if (isTRUE(get_stringsAsFactors(x))) {
     f_idx <- vapply(result_set, is.character, FALSE)
