@@ -220,12 +220,6 @@ schemas_to_include_Microsoft_SQL_Server <- function(conn) {
 
 
 
-#' @rawNamespace S3method(schemas_to_include,MariaDBConnection,schemas_to_include_mariadb)
-schemas_to_include_mariadb <- function(conn) {
-  c("information_schema")
-}
-
-
 #' @rawNamespace S3method(schemas_to_include,PqConnection,schemas_to_include_postgres)
 schemas_to_include_postgres <- function(conn) {
   c("information_schema", "pg_catalog")

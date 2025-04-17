@@ -126,13 +126,6 @@ default_schema_default <- function(conn) {
 
 
 
-#' @rawNamespace S3method(default_schema,MariaDBConnection,default_schema_mariadb)
-default_schema_mariadb <- function(conn) {
-  DBI::dbGetQuery(conn, "SELECT SCHEMA()")[[1L]]
-}
-
-
-
 #' @rawNamespace S3method(default_schema,PqConnection,default_schema_postgres)
 default_schema_postgres <- function(conn) {
   DBI::dbGetQuery(conn, "SELECT CURRENT_SCHEMA()")[[1L]]
