@@ -60,3 +60,9 @@ dbi_connection <- function(x) {
   }
   conn
 }
+
+
+
+get_catalog <- function(x) {
+  if (is_dbi_catalog(x <- get_connection(x))) x else NULL
+}
