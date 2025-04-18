@@ -144,7 +144,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
-    if (length(rt <- related_tables(dbi_connection(x), x, y)) && nrow(rt) > 0L) {
+    if (length(rt <- related_tables(x, y)) && nrow(rt) > 0L) {
       rt_x <- rt[, c("catalog_x", "schema_x", "table_x", "field_x")]
       by_x <- match_by_field(x, rt_x)
       rt_y <- rt[, c("catalog_y", "schema_y", "table_y", "field_y")]

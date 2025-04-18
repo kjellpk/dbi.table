@@ -1,4 +1,10 @@
-related_tables <- function(conn, x, y = NULL) {
+related_tables <- function(x, y = NULL) {
+  related_tables_(dbi_connection(x), x, y)
+}
+
+
+
+related_tables_ <- function(conn, x, y = NULL) {
   UseMethod("related_tables")
 }
 
@@ -177,7 +183,7 @@ match_by_field <- function(x, fields) {
 
 
 relational_merge <- function(x, recursive = FALSE) {
-  if (is.null(rt <- related_tables(dbi_connection(x), x)) || nrow(rt) == 0L) {
+  if (is.null(rt <- related_tables(x)) || nrow(rt) == 0L) {
     return(x)
   }
 
