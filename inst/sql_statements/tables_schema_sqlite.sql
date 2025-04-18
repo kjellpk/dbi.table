@@ -8,4 +8,5 @@ SELECT table_list.schema AS table_schema,
        END AS pk_ordinal_position
   FROM pragma_table_list() AS table_list
  INNER JOIN pragma_table_info(table_list.name, table_list.schema) AS table_info
- WHERE table_list.schema = 'main';
+ WHERE table_list.schema = 'main'
+   AND table_list.name <> 'sqlite_schema';
