@@ -144,17 +144,17 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
-    if (length(rt <- related_tables(x, y)) && nrow(rt) > 0L) {
-      rt_x <- rt[, c("catalog_x", "schema_x", "table_x", "field_x")]
-      by_x <- match_by_field(x, rt_x)
-      rt_y <- rt[, c("catalog_y", "schema_y", "table_y", "field_y")]
-      by_y <- match_by_field(y, rt_y)
 
-      if (!anyNA(by_x) && !anyNA(by_y)) {
-        by.x <- by_x
-        by.y <- by_y
+    if (is_pristine(x) && is_pristine(y)) {
+      if (length(rt <- related_tables(x, y))) {
+        if (nrow(rt) == 1L) {
+          by.x <- rt[[1L, "x_columns"]]
+          by.y <- rt[[1L, "y_columns"]]
+        }
       }
-    } else {
+    }
+
+    if (is.null(by.x) && is.null(by.y)) {
       by <- intersect(x_key <- get_key(x), get_key(y))
 
       if (!length(by)) {
@@ -414,4 +414,12 @@ extract_on_validator <- function(expr, x_names, i_names) {
   }
 
   NULL
+}
+
+
+
+is_pristine <- function(x) {
+  f <- get_fields(x)
+  nn <- names_list(f$internal_name, f$field)
+  nrow(get_data_source(x)) == 1L && setequal(c(x), nn)
 }

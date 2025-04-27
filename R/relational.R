@@ -1,11 +1,111 @@
 related_tables <- function(x, y = NULL) {
-  related_tables_(dbi_connection(x), x, y)
+  UseMethod("related_tables", dbi_connection(x))
 }
 
 
 
-related_tables_ <- function(conn, x, y = NULL) {
-  UseMethod("related_tables")
+#' @rawNamespace S3method(related_tables,default,related_tables_default)
+related_tables_default <- function(x, y = NULL) {
+  fks <- foreign_keys(get_catalog(x))
+
+  dots <- list(table_catalog = fks$fk_table_catalog,
+               table_schema = fks$fk_table_schema,
+               table_name = fks$fk_table_name)
+  dots <- dots[vapply(dots, length, 0L) > 0L]
+  fks$fk_id <- .mapply(DBI::Id, dots, NULL)
+
+  dots <- list(table_catalog = fks$pk_table_catalog,
+               table_schema = fks$pk_table_schema,
+               table_name = fks$pk_table_name)
+  dots <- dots[vapply(dots, length, 0L) > 0L]
+  fks$pk_id <- .mapply(DBI::Id, dots, NULL)
+
+  fks <- split(fks, fks$constraint_name)
+  names(fks) <- NULL
+
+  fks <- lapply(fks, function(u) {
+    data.frame(fk_id = I(u$fk_id[1L]),
+               fk_columns = I(list(u$fk_column_name[u$seq])),
+               pk_id = I(u$pk_id[1L]),
+               pk_columns = I(list(u$pk_column_name[u$seq])))
+  })
+
+  fks <- do.call(rbind, fks)
+
+  names_out <- c(y_id = "x_id", y_columns = "x_columns",
+                 x_id = "y_id", x_columns = "y_columns")
+
+  names(fks) <- names_out
+
+  x_ids <- unique(get_data_source(x)[, "id", drop = FALSE])
+  x_fks <- merge(fks, x_ids, by.x = "x_id", by.y = "id", sort = FALSE)
+
+  if (!is.null(y)) {
+    y_ids <- unique(get_data_source(y)[, "id", drop = FALSE])
+    x_fks <- merge(x_fks, y_ids, by.x = "y_id", by.y = "id", sort = FALSE)
+
+    y_fks <- merge(fks, y_ids, by.x = "x_id", by.y = "id", sort = FALSE)
+    y_fks <- merge(y_fks, x_ids, by.x = "y_id", by.y = "id", sort = FALSE)
+
+    names(y_fks) <- names_out[names(y_fks)]
+    y_fks <- y_fks[, names_out]
+
+    x_fks <- rbind(x_fks[, names_out], y_fks[, names_out])
+  }
+
+  x_fks[, names_out]
+}
+
+
+
+#' @rawNamespace S3method(related_tables,SQLiteConnection,related_tables_sqlite)
+related_tables_sqlite <- function(x, y = NULL) {
+  x_id <- get_data_source(x)$id
+  table_name <- dbQuoteString(x, x_id[[1L]]@name[["table_name"]])
+  statement <- sprintf(sql_statement("related_tables_sqlite"), table_name)
+  fkl <- DBI:::dbGetQuery(x, statement)
+
+  if ((m <- nrow(fkl)) > 0L) {
+    dots <- list(table_schema = "main", table_name = fkl$table)
+    fkl$pk_id <- I(.mapply(DBI::Id, dots, NULL))
+    fkl$fk_id <- I(rep(x_id, m))
+
+    fkl <- split(fkl, fkl$id)
+    names(fkl) <- NULL
+
+    fkl <- lapply(fkl, function(u) {
+      data.frame(x_id = I(u$fk_id[1L]),
+                 x_columns = I(list(u$from[u$seq])),
+                 y_id = I(u$pk_id[1L]),
+                 y_columns = I(list(u$to[u$seq])))
+    })
+
+    fkl <- do.call(rbind, fkl)
+  }
+
+  if (length(y)) {
+    if (nrow(fkl)) {
+      y_id <- get_data_source(y)$id
+      fkl <- fkl[match(y_id, fkl$y_id, nomatch = 0L), ]
+    }
+
+    if (!nrow(fkl)) {
+      fkl <- related_tables_sqlite(y)
+
+      if (length(fkl)) {
+        fkl <- fkl[match(x_id, fkl$y_id, nomatch = 0L), ]
+        fkl_names <- names(fkl)
+        fkl <- fkl[, c("y_id", "y_columns", "x_id", "x_columns")]
+        names(fkl) <- fkl_names
+      }
+    }
+  }
+
+  if (length(fkl) && !nrow(fkl)) {
+    fkl <- NULL
+  }
+
+  fkl
 }
 
 
@@ -23,138 +123,6 @@ SECOND_MERGE_BY <- c(fk_unique_constraint_catalog = "constraint_catalog",
                      fk_unique_constraint_name = "constraint_name",
                      fk_referenced_table_name = "table_name",
                      fk_ordinal_position = "ordinal_position")
-
-
-#' @rawNamespace S3method(related_tables,default,related_tables_default)
-related_tables_default <- function(conn, x, y = NULL) {
-  info <- get_information_schema(x)
-
-  if (is.null(referential_constraints <- info$referential_constraints) ||
-        is.null(key_column_usage <- info$key_column_usage)) {
-    return(NULL)
-  }
-
-  merge_by <- intersect(FIRST_MERGE_BY, names(referential_constraints))
-
-  r <- merge(referential_constraints, key_column_usage, by = merge_by)
-
-  names(r) <- paste0("fk_", names(r))
-
-  merge_by <- intersect(names(SECOND_MERGE_BY), names(r))
-  merge_by <- SECOND_MERGE_BY[merge_by]
-
-  r <- merge(key_column_usage, r, by.x = merge_by, by.y = names(merge_by))
-
-  r <- r[, list(constraint = fk_constraint_name,
-                catalog_x = fk_table_catalog,
-                schema_x = fk_table_schema,
-                table_x = fk_table_name,
-                field_x = fk_column_name,
-                catalog_y = table_catalog,
-                schema_y = table_schema,
-                table_y = table_name,
-                field_y = column_name)]
-
-  xids <- unique(get_data_source(x)$id)
-  xids <- as.data.frame(t(vapply(xids, function(u) u@name, character(3L))))
-  xids <- as.dbi.table(info, xids, type = "query")
-  names(xids) <- c("catalog_x", "schema_x", "table_x")
-
-  rx <- r[xids, nomatch = NULL, on = names(xids)]
-
-  names(xids) <- c("catalog_y", "schema_y", "table_y")
-  rx <- rx[!xids, nomatch = NULL, on = names(xids)]
-
-  if (!is.null(y)) {
-    yids <- unique(get_data_source(y)$id)
-    yids <- as.data.frame(t(vapply(yids, function(u) u@name, character(3L))))
-    yids <- as.dbi.table(info, yids, type = "query")
-    names(yids) <- c("catalog_y", "schema_y", "table_y")
-
-    rx <- rx[yids, nomatch = NULL, on = names(yids)]
-
-    names(yids) <- c("catalog_x", "schema_x", "table_x")
-    ry <- r[yids, nomatch = NULL, on = names(yids)]
-    ry <- ry[xids, nomatch = NULL, on = names(xids)]
-
-    names(ry) <- c("constraint",
-                   "catalog_y", "schema_y", "table_y", "field_y",
-                   "catalog_x", "schema_x", "table_x", "field_x")
-
-    rx <- as.data.frame(rx)
-    ry <- as.data.frame(ry)[, names(rx)]
-    rbind(rx, ry)
-  } else {
-    as.data.frame(rx)
-  }
-}
-
-
-
-#' @rawNamespace S3method(related_tables,"Microsoft SQL Server",related_tables_Microsoft_SQL_Server)
-related_tables_Microsoft_SQL_Server <- function(conn, x, y = NULL) {
-  info <- get_connection(x)$INFORMATION_SCHEMA
-
-  referential_constraints <- info$REFERENTIAL_CONSTRAINTS
-  names(referential_constraints) <- tolower(names(referential_constraints))
-
-  key_column_usage <- info$KEY_COLUMN_USAGE
-  names(key_column_usage) <- tolower(names(key_column_usage))
-
-  merge_by <- intersect(FIRST_MERGE_BY, names(referential_constraints))
-
-  r <- merge(referential_constraints, key_column_usage, by = merge_by)
-
-  names(r) <- paste0("fk_", names(r))
-
-  merge_by <- intersect(names(SECOND_MERGE_BY), names(r))
-  merge_by <- SECOND_MERGE_BY[merge_by]
-
-  r <- merge(key_column_usage, r, by.x = merge_by, by.y = names(merge_by))
-
-  r <- r[, list(constraint = fk_constraint_name,
-                catalog_x = fk_table_catalog,
-                schema_x = fk_table_schema,
-                table_x = fk_table_name,
-                field_x = fk_column_name,
-                catalog_y = table_catalog,
-                schema_y = table_schema,
-                table_y = table_name,
-                field_y = column_name)]
-
-  xids <- unique(get_data_source(x)$id)
-  xids <- as.data.frame(t(vapply(xids, function(u) u@name, character(3L))))
-  xids <- as.dbi.table(info, xids, type = "query")
-  names(xids) <- c("catalog_x", "schema_x", "table_x")
-
-  rx <- r[xids, nomatch = NULL, on = names(xids)]
-
-  names(xids) <- c("catalog_y", "schema_y", "table_y")
-  rx <- rx[!xids, nomatch = NULL, on = names(xids)]
-
-  if (!is.null(y)) {
-    yids <- unique(get_data_source(y)$id)
-    yids <- as.data.frame(t(vapply(yids, function(u) u@name, character(3L))))
-    yids <- as.dbi.table(info, yids, type = "query")
-    names(yids) <- c("catalog_y", "schema_y", "table_y")
-
-    rx <- rx[yids, nomatch = NULL, on = names(yids)]
-
-    names(yids) <- c("catalog_x", "schema_x", "table_x")
-    ry <- r[yids, nomatch = NULL, on = names(yids)]
-    ry <- ry[xids, nomatch = NULL, on = names(xids)]
-
-    names(ry) <- c("constraint",
-                   "catalog_y", "schema_y", "table_y", "field_y",
-                   "catalog_x", "schema_x", "table_x", "field_x")
-
-    rx <- as.data.frame(rx)
-    ry <- as.data.frame(ry)[, names(rx)]
-    rbind(rx, ry)
-  } else {
-    as.data.frame(rx)
-  }
-}
 
 
 
@@ -235,12 +203,65 @@ relational_merge <- function(x, recursive = FALSE) {
   x
 }
 
-fk_constraint_name <- NULL
-fk_table_catalog <- NULL
-fk_table_schema <- NULL
-fk_table_name <- NULL
-fk_column_name <- NULL
-table_catalog <- NULL
-table_schema <- NULL
-table_name <- NULL
-column_name <- NULL
+
+
+foreign_keys <- function(catalog) {
+  if (!is_dbi_catalog(catalog)) {
+    return(NULL)
+  }
+
+  UseMethod("foreign_keys", dbi_connection(catalog))
+}
+
+
+
+#' @rawNamespace S3method(foreign_keys,default,foreign_keys_default)
+foreign_keys_default <- function(catalog) {
+  NULL
+}
+
+
+
+#' @rawNamespace S3method(foreign_keys,SQLiteConnection,foreign_keys_sqlite)
+foreign_keys_sqlite <- function(catalog) {
+  DBI::dbGetQuery(catalog, sql_statement("foreign_keys_sqlite"))
+}
+
+
+
+#' @rawNamespace S3method(foreign_keys,duckdb_connection,foreign_keys_duckdb)
+foreign_keys_duckdb <- function(catalog) {
+  info <- get_catalog(catalog)$information_schema
+
+  referential_constraints <- info$referential_constraints
+  key_column_usage <- info$key_column_usage
+
+  r <- merge(referential_constraints, key_column_usage,
+             by = c("constraint_catalog",
+                    "constraint_schema",
+                    "constraint_name"))
+
+  names(r) <- paste0("fk_", names(r))
+
+  r <- merge(key_column_usage, r,
+             by.x = c("constraint_catalog",
+                      "constraint_schema",
+                      "constraint_name",
+                      "ordinal_position"),
+             by.y = c("fk_unique_constraint_catalog",
+                      "fk_unique_constraint_schema",
+                      "fk_unique_constraint_name",
+                      "fk_ordinal_position"))
+
+  r <- r[, list(constraint_name = fk_constraint_name,
+                fk_table_catalog = fk_table_catalog,
+                fk_table_schema = fk_table_schema,
+                fk_table_name = fk_table_name,
+                fk_column_name = fk_column_name,
+                pk_table_catalog = table_catalog,
+                pk_table_schema = table_schema,
+                pk_table_name = table_name,
+                pk_column_name = column_name)]
+
+  as.data.frame(r, n = -1L)
+}
