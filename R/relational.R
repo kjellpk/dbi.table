@@ -222,13 +222,6 @@ foreign_keys_default <- function(catalog) {
 
 
 
-#' @rawNamespace S3method(foreign_keys,SQLiteConnection,foreign_keys_sqlite)
-foreign_keys_sqlite <- function(catalog) {
-  DBI::dbGetQuery(catalog, sql_statement("foreign_keys_sqlite"))
-}
-
-
-
 #' @rawNamespace S3method(foreign_keys,duckdb_connection,foreign_keys_duckdb)
 foreign_keys_duckdb <- function(catalog) {
   info <- get_catalog(catalog)$information_schema
