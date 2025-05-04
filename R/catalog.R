@@ -81,9 +81,8 @@ install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
   schema_names <- names(schemas)
   id_cols <- intersect(ID_COLUMNS, names(columns))
 
-  columns <- subset(columns,
-                    subset = table_schema %in% schema_names,
-                    select = c(id_cols, VALUE_COLUMNS))
+  idx <- columns$table_schema %in% schema_names
+  columns <- columns[idx, c(id_cols, VALUE_COLUMNS), drop = FALSE]
 
   tables <- split(columns, columns[, id_cols], drop = TRUE)
 
