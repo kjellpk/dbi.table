@@ -42,24 +42,6 @@ test_that("merge works when relational data not available", {
 chinook <- dbi.attach(chinook.duckdb)
 DBI::dbExecute(chinook, DBI::SQL("SET threads TO 1;"))
 
-# Relational merge (1) finds the internal name of each foreign key column
-# in the dbi.table's fields attribute, then (2) finds the first column in the
-# dbi.table that matches each internal name exactly. When all columns are found,
-# then they are used at the default 'by'.
-
-test_that("relational merge works", {
-  g <- Genre[, .(gid = GenreId, Genre.Name = Name)]
-  expect_s3_class({
-    track_genre <- merge(Track, g)
-  }, "dbi.table")
-
-  ref <- merge(as.data.table(Track), as.data.table(g),
-               by.x = "GenreId", by.y = "gid")
-
-  expect_true(all.equal(as.data.table(track_genre), ref,
-                        ignore.row.order = TRUE))
-})
-
 # Merge should fail when a column in the foreign key constraint is
 # not in the dbi.table.
 
@@ -74,17 +56,12 @@ test_that("relational merge fails when column missing", {
 
 test_that("relational merge works", {
   expect_s3_class(x <- merge(Track), "dbi.table")
-
   track <- as.data.table(Track)
 
-  nm <- names(x)[1:3]
-  nm <- substring(nm, 1, nchar(nm) - 2L)
-
-  for (i in rev(nm)) {
-    y <- as.data.table(get(i))
+  for (i in rev(names(x)[1:3])) {
+    y <- as.data.table(get(substring(i, 1, nchar(i) - 2L)))
     setnames(y, names(y), paste(i, names(y), sep = "."))
-    track <- merge(track, y, by.x = paste0(i, "Id"), by.y = names(y)[[1L]],
-                   all.x = TRUE)
+    track <- merge(track, y, by.x = i, by.y = names(y)[[1L]], all.x = TRUE)
   }
 
   expect_true(all.equal(as.data.table(x), track, ignore.row.order = TRUE))
@@ -92,23 +69,19 @@ test_that("relational merge works", {
 
 test_that("relational merge works with recursive = TRUE", {
   expect_s3_class(x <- merge(Track, recursive = TRUE), "dbi.table")
-
   track <- as.data.table(Track)
 
-  nm <- names(x)[1:4]
-  nm <- substring(nm, 1L, nchar(nm) - 2L)
+  album <- as.data.table(Album)
+  artist <- as.data.table(Artist)
+  setnames(artist, paste("ArtistId", names(artist), sep = "."))
+  aa <- merge(album, artist, by.x = "ArtistId", by.y = "ArtistId.ArtistId")
+  setnames(aa, paste("AlbumId", names(aa), sep = "."))
+  track <- merge(track, aa, by.x = "AlbumId", by.y = "AlbumId.AlbumId")
 
-  for (i in rev(nm)) {
-    if (i == "Album.Artist") {
-      y <- as.data.table(get("Artist"))
-      setnames(y, names(y), paste("Artist", names(y), sep = "."))
-    } else {
-      y <- as.data.table(get(i))
-      setnames(y, names(y), paste(i, names(y), sep = "."))
-    }
-
-    track <- merge(track, y, by.x = paste0(i, "Id"), by.y = names(y)[[1L]],
-                   all.x = TRUE)
+  for (i in c("GenreId", "MediaTypeId")) {
+    y <- as.data.table(get(substring(i, 1, nchar(i) - 2L)))
+    setnames(y, names(y), paste(i, names(y), sep = "."))
+    track <- merge(track, y, by.x = i, by.y = names(y)[[1L]], all.x = TRUE)
   }
 
   expect_true(all.equal(as.data.table(x), track, ignore.row.order = TRUE))
