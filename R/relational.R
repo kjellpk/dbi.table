@@ -85,7 +85,7 @@ foreign_keys <- function(x) {
   id <- get_data_source(x)[[1L, "id"]]
 
   if (is.null(fk <- get0("./foreign_keys", catalog, inherits = FALSE))) {
-    if (is.null(fk <- foreign_keys_s3_dispatcher(catalog, id))) {
+    if (is.null(fk <- foreign_keys_(catalog, id))) {
       return(NULL)
     }
 
@@ -124,20 +124,20 @@ foreign_keys <- function(x) {
 
 
 
-foreign_keys_s3_dispatcher <- function(catalog, id) {
-  UseMethod("foreign_keys", dbi_connection(catalog))
+foreign_keys_ <- function(catalog, id) {
+  UseMethod("foreign_keys_", dbi_connection(catalog))
 }
 
 
 
-#' @rawNamespace S3method(foreign_keys,default,foreign_keys_default)
+#' @rawNamespace S3method(foreign_keys_,default,foreign_keys_default)
 foreign_keys_default <- function(catalog, id) {
   NULL
 }
 
 
 
-#' @rawNamespace S3method(foreign_keys,SQLiteConnection,foreign_keys_sqlite)
+#' @rawNamespace S3method(foreign_keys_,SQLiteConnection,foreign_keys_sqlite)
 foreign_keys_sqlite <- function(catalog, id) {
   schema <- id@name[["table_schema"]]
   name <- id@name[["table_name"]]
@@ -161,7 +161,7 @@ foreign_keys_sqlite <- function(catalog, id) {
 
 
 
-#' @rawNamespace S3method(foreign_keys,duckdb_connection,foreign_keys_duckdb)
+#' @rawNamespace S3method(foreign_keys_,duckdb_connection,foreign_keys_duckdb)
 foreign_keys_duckdb <- function(catalog, id) {
   r <- merge(catalog$information_schema$referential_constraints,
              catalog$information_schema$key_column_usage,
