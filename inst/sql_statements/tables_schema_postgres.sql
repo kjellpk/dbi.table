@@ -27,4 +27,4 @@ SELECT current_database() AS table_catalog,
     ON indpk.indrelid = pg_class.oid
    AND indpk.indkey = pg_attribute.attnum
 
- WHERE pg_attribute.attnum > 0
+ WHERE pg_attribute.attnum > 0 AND pg_class.relkind IN ('r', 'v');
