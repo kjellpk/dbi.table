@@ -209,24 +209,3 @@ schemas_to_include <- function(conn) {
 schemas_to_include_default <- function(conn) {
   character(0)
 }
-
-
-
-#' @rawNamespace S3method(schemas_to_include,"Microsoft SQL Server",schemas_to_include_Microsoft_SQL_Server)
-schemas_to_include_Microsoft_SQL_Server <- function(conn) {
-  c("INFORMATION_SCHEMA", "sys")
-}
-
-
-
-#' @rawNamespace S3method(schemas_to_include,PqConnection,schemas_to_include_postgres)
-schemas_to_include_postgres <- function(conn) {
-  c("information_schema", "pg_catalog")
-}
-
-
-
-#' @rawNamespace S3method(schemas_to_include,duckdb_connection,schemas_to_include_duckdb)
-schemas_to_include_duckdb <- function(conn) {
-  c("information_schema")
-}

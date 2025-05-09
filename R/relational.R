@@ -89,6 +89,9 @@ foreign_keys <- function(x) {
       return(NULL)
     }
 
+    idx <- vapply(fk, bit64::is.integer64, FALSE)
+    fk[, idx] <- lapply(fk[, idx,  drop = FALSE], as.integer)
+
     dots <- list(table_catalog = fk$fk_table_catalog,
                  table_schema = fk$fk_table_schema,
                  table_name = fk$fk_table_name)
@@ -133,63 +136,4 @@ foreign_keys_ <- function(catalog, id) {
 #' @rawNamespace S3method(foreign_keys_,default,foreign_keys_default)
 foreign_keys_default <- function(catalog, id) {
   NULL
-}
-
-
-
-#' @rawNamespace S3method(foreign_keys_,SQLiteConnection,foreign_keys_sqlite)
-foreign_keys_sqlite <- function(catalog, id) {
-  schema <- id@name[["table_schema"]]
-  name <- id@name[["table_name"]]
-
-  statement <- sql_statement("related_tables_sqlite")
-  statement <- sprintf(statement, DBI::dbQuoteString(catalog, name))
-
-  if (m <- nrow(fkl <- DBI::dbGetQuery(catalog, statement))) {
-    data.frame(constraint_name = paste(rep("FK", m), fkl$id, sep = "__"),
-               fk_table_schema = rep(schema, m),
-               fk_table_name = rep(name, m),
-               fk_column_name = fkl$from,
-               pk_table_schema = rep(schema, m),
-               pk_table_name = fkl$table,
-               pk_column_name = fkl$to,
-               key_ordinal_position = fkl$seq)
-  } else {
-    NULL
-  }
-}
-
-
-
-#' @rawNamespace S3method(foreign_keys_,duckdb_connection,foreign_keys_duckdb)
-foreign_keys_duckdb <- function(catalog, id) {
-  r <- merge(catalog$information_schema$referential_constraints,
-             catalog$information_schema$key_column_usage,
-             by = c("constraint_catalog",
-                    "constraint_schema",
-                    "constraint_name"))
-
-  names(r) <- paste0("fk_", names(r))
-
-  r <- merge(catalog$information_schema$key_column_usage, r,
-             by.x = c("constraint_catalog",
-                      "constraint_schema",
-                      "constraint_name",
-                      "ordinal_position"),
-             by.y = c("fk_unique_constraint_catalog",
-                      "fk_unique_constraint_schema",
-                      "fk_unique_constraint_name",
-                      "fk_ordinal_position"))
-
-  r <- r[, c("fk_constraint_name", "fk_table_catalog", "fk_table_schema",
-              "fk_table_name", "fk_column_name", "table_catalog",
-              "table_schema", "table_name", "column_name",
-              "fk_position_in_unique_constraint")]
-
-  names(r) <- c("constraint_name", "fk_table_catalog", "fk_table_schema",
-                "fk_table_name", "fk_column_name", "pk_table_catalog",
-                "pk_table_schema", "pk_table_name", "pk_column_name",
-                "key_ordinal_position")
-
-  as.data.frame(r, n = -1L)
 }
