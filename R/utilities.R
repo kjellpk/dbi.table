@@ -133,12 +133,31 @@ assign_and_lock <- function(x, value, pos) {
 
 
 
-make_install_function <- function(catalog, id, fields, column_names, key) {
+get_table_schema_from_id <- function(catalog, id) {
+  cts <- catalog[["./tables_schema"]]
+  i <- match(list(id), cts$id)
+  cts <- cts[i, ]
+
+  if (!length(fields <- cts[[1L, "fields"]])) {
+    fields <- DBI::dbListFields(dbi_connection(catalog), id)
+    catalog[["./tables_schema"]][[i, "fields"]] <- fields
+  }
+
+  list(catalog = catalog,
+       id = id,
+       column_names = fields,
+       key = cts[[1L, "key"]])
+}
+
+
+
+new_active_dbi_table <- function(catalog, id) {
   function(x) {
     if (missing(x)) {
-      dbi_table <- new_dbi_table(catalog, id, fields, key)
-      names(dbi_table) <- copy_vector(column_names)
-      return(dbi_table)
+      table_schema <- get_table_schema_from_id(catalog, id)
+      column_names <- copy_vector(table_schema$column_names)
+      key <- copy_vector(table_schema$key)
+      return(new_dbi_table(catalog, id, column_names, key))
     }
 
     stop("'dbi.table' cannot be modified", call. = FALSE)
@@ -147,10 +166,10 @@ make_install_function <- function(catalog, id, fields, column_names, key) {
 
 
 
-install_in_schema <- function(x, catalog, id, fields, column_names, key, schema) {
-  FUN <- make_install_function(catalog, id, fields, column_names, key)
-  makeActiveBinding(x, FUN, schema)
-  lockBinding(x, schema)
+install_active_dbi_table <- function(catalog, schema, name, id) {
+  fn <- new_active_dbi_table(catalog, id)
+  makeActiveBinding(name, fn, schema)
+  lockBinding(name, schema)
 }
 
 

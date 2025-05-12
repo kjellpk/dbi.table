@@ -43,15 +43,19 @@ dbi.catalog <- function(conn, schemas) {
 
   class(catalog) <- "dbi.catalog"
 
-  columns <- tables_schema(dbi_connection(catalog))
-  columns$ordinal_position <- as.integer(columns$ordinal_position)
-  columns$pk_ordinal_position <- as.integer(columns$pk_ordinal_position)
+  tables_schema <- tables_schema(dbi_connection(catalog))
 
-  if (is.null(columns$table_schema)) {
-    schema_names <- columns$table_schema <- "main"
+  table_name <- tables_schema[, "table_name"]
+
+  if (is.null(tables_schema$table_schema)) {
+    table_schema <- rep("main", nrow(tables_schema))
   } else {
-    schema_names <- unique(columns$table_schema)
+    table_schema <- tables_schema[, "table_schema"]
   }
+
+  table_id <- tables_schema$id
+
+  schema_names <- unique(table_schema)
 
   if (is.na(schemas)) {
     schemas <- schema_names
@@ -66,49 +70,20 @@ dbi.catalog <- function(conn, schemas) {
 
   names(schemas) <- schemas
   schemas <- lapply(schemas, new_schema, catalog = catalog)
+  schemas <- schemas[table_schema]
 
-  install_from_columns(columns, schemas, catalog)
+  assign("./tables_schema", tables_schema[, c("id", "fields", "key")],
+         pos = catalog)
+
+  mapply(install_active_dbi_table,
+         schema = schemas,
+         name = table_name,
+         id = table_id,
+         MoreArgs = list(catalog = catalog),
+         SIMPLIFY = FALSE,
+         USE.NAMES = FALSE)
 
   catalog
-}
-
-
-
-ID_COLUMNS <- c("table_catalog", "table_schema", "table_name")
-VALUE_COLUMNS <- c("column_name", "ordinal_position", "pk_ordinal_position")
-
-install_from_columns <- function(columns, schemas, catalog, to_lower = FALSE) {
-  schema_names <- names(schemas)
-  id_cols <- intersect(ID_COLUMNS, names(columns))
-
-  idx <- columns$table_schema %in% schema_names
-  columns <- columns[idx, c(id_cols, VALUE_COLUMNS), drop = FALSE]
-
-  tables <- split(columns, columns[, id_cols], drop = TRUE)
-
-  tables <- lapply(tables, function(u) {
-    id <- DBI::Id(unlist(u[1L, id_cols]))
-    fields <- u$column_name[order(u$ordinal_position)]
-    key <- subset(u, subset = !is.na(u$pk_ordinal_position))
-    key <- key$column_name[key$pk_ordinal_position]
-
-    if (to_lower) {
-      table_schema <- tolower(u$table_schema[[1L]])
-      table_name <- tolower(u$table_name[[1L]])
-      column_names <- tolower(fields)
-    } else {
-      table_schema <- u$table_schema[[1L]]
-      table_name <- u$table_name[[1L]]
-      column_names <- fields
-    }
-
-    schema <- schemas[[table_schema]]
-
-    install_in_schema(table_name, catalog, id, fields,
-                      column_names, key, schema)
-  })
-
-  invisible()
 }
 
 

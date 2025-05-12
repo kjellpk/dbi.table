@@ -1,4 +1,4 @@
-#' @rawNamespace S3method(tables_schema,duckdb_connection,tables_schema_duckdb)
+#' @rawNamespace S3method(tables_schema_,duckdb_connection,tables_schema_duckdb)
 tables_schema_duckdb <- function(conn) {
   schema <- DBI::dbGetQuery(conn, sql_statement("tables_schema_duckdb"))
 

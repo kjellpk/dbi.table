@@ -1,4 +1,4 @@
-#' @rawNamespace S3method(tables_schema,SQLiteConnection,tables_schema_sqlite)
+#' @rawNamespace S3method(tables_schema_,SQLiteConnection,tables_schema_sqlite)
 tables_schema_sqlite <- function(conn) {
   DBI::dbGetQuery(conn, sql_statement("tables_schema_sqlite"))
 }

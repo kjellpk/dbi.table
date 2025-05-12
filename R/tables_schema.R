@@ -1,29 +1,73 @@
 tables_schema <- function(conn) {
-  UseMethod("tables_schema")
+  schema <- tables_schema_(conn)
+
+  if (isTRUE(attr(schema, "default_method", exact = TRUE))) {
+    n <- ncol(schema)
+    m <- nrow(schema)
+
+    table_name <- schema[, n]
+
+    if (n > 1L) {
+      table_schema <- schema[, n - 1L]
+    } else {
+      table_schema <- rep("main", m)
+    }
+
+    id <- apply(schema, 1L, DBI::Id)
+    fields <- rep(list(character(0)), nrow(schema))
+    key <- vector(nrow(schema), mode = "list")
+
+    schema <- data.frame(table_schema = table_schema,
+                         table_name = table_name,
+                         id = I(id),
+                         fields = I(fields),
+                         key = I(key))
+  } else {
+    id_cols <- seq_len(match("column_name", names(schema)) - 1L)
+    schema$f <- apply(schema[, id_cols, drop = FALSE], 1L,
+                      paste, collapse = ".")
+    schemata <- split(schema, schema$f)
+
+    schemata <- lapply(schemata, function(u, v) {
+      table_schema <- u[[1L, "table_schema"]]
+      table_name <- u[[1L, "table_name"]]
+      id <- DBI::Id(unlist(u[1L, v]))
+      fields <- u$column_name[u$ordinal_position]
+
+      if (nrow(u <- u[!is.na(u$pk_ordinal_position), ])) {
+        key <- u$column_name[u$pk_ordinal_position]
+      } else {
+        key <- NULL
+      }
+
+      data.frame(table_schema = table_schema,
+                 table_name = table_name,
+                 id = I(list(id)),
+                 fields = I(list(fields)),
+                 key = I(list(key)))
+    }, v = id_cols)
+
+    names(schemata) <- NULL
+    schema <- do.call(rbind, schemata)
+  }
+
+  schema
 }
 
 
 
-#' @rawNamespace S3method(tables_schema,default,tables_schema_default)
+tables_schema_ <- function(conn) {
+  UseMethod("tables_schema_")
+}
+
+
+
+#' @rawNamespace S3method(tables_schema_,default,tables_schema_default)
 tables_schema_default <- function(conn) {
-  columns <- stry(DBI::dbGetQuery(conn, sql_statement("tables_schema_default")))
-
-  if (is.data.frame(columns)) {
-    names(columns) <- tolower(names(columns))
-  } else {
-    columns <- mapply(function(conn, name) {
-      fields <- DBI::dbListFields(conn, name)
-      data.frame(table_name = name,
-                 column_name = fields,
-                 ordinal_position = seq_along(fields))
-    },
-    name = DBI::dbListTables(conn),
-    MoreArgs = list(conn = conn), SIMPLIFY = FALSE)
-
-    columns <- do.call(rbind, columns)
-    row.names(columns) <- NULL
-  }
-
-  columns$pk_ordinal_position <- NA_integer_
-  columns
+  objs <- DBI::dbListObjects(conn)
+  objs <- objs[objs$is_prefix == FALSE, ]
+  columns <- lapply(objs$table, function(u) u@name)
+  x <- as.data.frame(t(simplify2array(columns, higher = FALSE, except = NULL)))
+  attr(x, "default_method") <- TRUE
+  x
 }

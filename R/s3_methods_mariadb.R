@@ -1,4 +1,4 @@
-#' @rawNamespace S3method(tables_schema,MariaDBConnection,tables_schema_mariadb)
+#' @rawNamespace S3method(tables_schema_,MariaDBConnection,tables_schema_mariadb)
 tables_schema_mariadb <- function(conn) {
   DBI::dbGetQuery(conn, sql_statement("tables_schema_mariadb"))
 }
