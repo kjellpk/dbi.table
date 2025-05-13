@@ -32,10 +32,10 @@ tables_schema <- function(conn) {
       table_schema <- u[[1L, "table_schema"]]
       table_name <- u[[1L, "table_name"]]
       id <- DBI::Id(unlist(u[1L, v]))
-      fields <- u$column_name[u$ordinal_position]
+      fields <- u$column_name[as.integer(u$ordinal_position)]
 
       if (nrow(u <- u[!is.na(u$pk_ordinal_position), ])) {
-        key <- u$column_name[u$pk_ordinal_position]
+        key <- u$column_name[as.integer(u$pk_ordinal_position)]
       } else {
         key <- NULL
       }

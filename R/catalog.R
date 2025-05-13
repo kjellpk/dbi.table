@@ -33,7 +33,6 @@ dbi.catalog <- function(conn, schemas) {
   }
 
   schemas <- as.character(schemas)
-
   catalog <- new.env(parent = emptyenv())
   assign("./dbi_connection", conn, catalog)
 
@@ -42,25 +41,12 @@ dbi.catalog <- function(conn, schemas) {
   }
 
   class(catalog) <- "dbi.catalog"
-
   tables_schema <- tables_schema(dbi_connection(catalog))
 
-  table_name <- tables_schema[, "table_name"]
-
-  if (is.null(tables_schema$table_schema)) {
-    table_schema <- rep("main", nrow(tables_schema))
-  } else {
-    table_schema <- tables_schema[, "table_schema"]
-  }
-
-  table_id <- tables_schema$id
-
-  schema_names <- unique(table_schema)
-
   if (is.na(schemas)) {
-    schemas <- schema_names
+    schemas <- unique(tables_schema$table_schema)
   } else {
-    if (length(not_found <- setdiff(schemas, schema_names))) {
+    if (length(not_found <- setdiff(schemas, tables_schema$table_schema))) {
       stop("schemas not found on connection: ",
            paste(not_found, collapse = ", "))
     }
@@ -68,9 +54,15 @@ dbi.catalog <- function(conn, schemas) {
     schemas <- union(schemas, schemas_to_include(conn))
   }
 
+  tables_schema <- tables_schema[tables_schema$table_schema %in% schemas, ]
+  row.names(tables_schema) <- NULL
+
   names(schemas) <- schemas
   schemas <- lapply(schemas, new_schema, catalog = catalog)
-  schemas <- schemas[table_schema]
+  schemas <- schemas[tables_schema$table_schema]
+
+  table_name <- tables_schema[, "table_name"]
+  table_id <- tables_schema$id
 
   assign("./tables_schema", tables_schema[, c("id", "fields", "key")],
          pos = catalog)
