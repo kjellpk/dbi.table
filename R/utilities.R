@@ -128,7 +128,6 @@ find_environment <- function(x, mode = "any", class = NULL,
 assign_and_lock <- function(x, value, pos) {
   assign(x, value, pos)
   lockBinding(x, pos)
-  return(TRUE)
 }
 
 
@@ -151,16 +150,23 @@ get_table_schema_from_id <- function(catalog, id) {
 
 
 
+new_dbi_table_from_id <- function(catalog, id) {
+  if (is.null(s <- get_table_schema_from_id(catalog, id))) {
+    return(NULL)
+  }
+
+  new_dbi_table(catalog, id, copy_vector(s$column_names), copy_vector(s$key))
+}
+
+
+
 new_active_dbi_table <- function(catalog, id) {
   function(x) {
     if (missing(x)) {
-      table_schema <- get_table_schema_from_id(catalog, id)
-      column_names <- copy_vector(table_schema$column_names)
-      key <- copy_vector(table_schema$key)
-      return(new_dbi_table(catalog, id, column_names, key))
+      return(new_dbi_table_from_id(catalog, id))
     }
 
-    stop("'dbi.table' cannot be modified", call. = FALSE)
+    stop("this dbi.table cannot be modified", call. = FALSE)
   }
 }
 
@@ -169,7 +175,6 @@ new_active_dbi_table <- function(catalog, id) {
 install_active_dbi_table <- function(catalog, schema, name, id) {
   fn <- new_active_dbi_table(catalog, id)
   makeActiveBinding(name, fn, schema)
-  lockBinding(name, schema)
 }
 
 
