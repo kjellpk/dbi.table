@@ -45,13 +45,7 @@ relational_merge <- function(x, recursive = FALSE, ids = list()) {
   catalog <- get_catalog(x)
 
   for (i in seq_len(nrow(rt))) {
-    y_id <- rt[[i, "y_id"]]
-    if (is.na(schema <- unname(y_id@name["table_schema"]))) {
-      schema <- "main"
-    }
-    name <- y_id@name[["table_name"]]
-
-    y <- catalog[[schema]][[name]]
+    y <- new_dbi_table_from_id(catalog, rt[[i, "y_id"]])
 
     if (recursive) {
       ids <- c(ids, unique(get_data_source(x)$id))
@@ -63,7 +57,7 @@ relational_merge <- function(x, recursive = FALSE, ids = list()) {
     if (length(by_y <- rt[[i, "y_columns"]]) == 1L) {
       prefix <- paste0(by_x, ".")
     } else {
-      prefix <- paste0(name, ".")
+      prefix <- paste0(get_data_source(y)[[1L, "id"]]@name[["table_name"]], ".")
     }
 
     names(y) <- paste0(prefix, names(y))
