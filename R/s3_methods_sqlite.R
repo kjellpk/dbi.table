@@ -10,7 +10,7 @@ foreign_keys_sqlite <- function(catalog, id) {
   schema <- id@name[["table_schema"]]
   name <- id@name[["table_name"]]
 
-  statement <- sql_statement("related_tables_sqlite")
+  statement <- sql_statement("foreign_keys_sqlite")
   statement <- sprintf(statement, DBI::dbQuoteString(catalog, name))
 
   if (m <- nrow(fkl <- DBI::dbGetQuery(catalog, statement))) {
