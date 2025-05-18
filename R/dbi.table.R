@@ -134,10 +134,6 @@ dbi.table <- function(conn, id, check.names = FALSE, key = NULL,
     id <- DBI::Id(id)
   }
 
-  if (inherits(id, "Id")) {
-    id <- check_id(id)
-  }
-
   x <- new_dbi_table(conn, id, key = key, stringsAsFactors = stringsAsFactors)
 
   if (isTRUE(check.names)) {
