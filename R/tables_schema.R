@@ -1,5 +1,5 @@
-tables_schema <- function(conn) {
-  schema <- tables_schema_(conn)
+tables_schema <- function(catalog) {
+  schema <- tables_schema_(catalog)
 
   if (isTRUE(attr(schema, "default_method", exact = TRUE))) {
     n <- ncol(schema)
@@ -56,15 +56,15 @@ tables_schema <- function(conn) {
 
 
 
-tables_schema_ <- function(conn) {
+tables_schema_ <- function(catalog) {
   UseMethod("tables_schema_")
 }
 
 
 
 #' @rawNamespace S3method(tables_schema_,default,tables_schema_default)
-tables_schema_default <- function(conn) {
-  objs <- DBI::dbListObjects(conn)
+tables_schema_default <- function(catalog) {
+  objs <- DBI::dbListObjects(catalog)
   objs <- objs[objs$is_prefix == FALSE, ]
   columns <- lapply(objs$table, function(u) u@name)
   x <- as.data.frame(t(simplify2array(columns, higher = FALSE, except = NULL)))

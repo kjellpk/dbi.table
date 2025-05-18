@@ -1,6 +1,6 @@
 #' @rawNamespace S3method(tables_schema_,PqConnection,tables_schema_postgres)
-tables_schema_postgres <- function(conn) {
-  DBI::dbGetQuery(conn, sql_statement("tables_schema_postgres"))
+tables_schema_postgres <- function(catalog) {
+  DBI::dbGetQuery(catalog, sql_statement("tables_schema_postgres"))
 }
 
 
