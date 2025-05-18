@@ -25,6 +25,15 @@
 \alias{dbGetQuery,dbi.schema-method}
 \alias{dbGetQuery,dbi.table,ANY-method}
 \alias{dbGetQuery,dbi.table-method}
+\alias{dbListFields,dbi.catalog,ANY-method}
+\alias{dbListFields,dbi.catalog-method}
+\alias{dbListFields,dbi.schema,ANY-method}
+\alias{dbListFields,dbi.schema-method}
+\alias{dbListFields,dbi.table,ANY-method}
+\alias{dbListFields,dbi.table-method}
+\alias{dbListObjects,dbi.catalog-method}
+\alias{dbListObjects,dbi.schema-method}
+\alias{dbListObjects,dbi.table-method}
 \alias{dbQuoteIdentifier,dbi.catalog,ANY-method}
 \alias{dbQuoteIdentifier,dbi.catalog-method}
 \alias{dbQuoteIdentifier,dbi.schema,ANY-method}
@@ -102,6 +111,18 @@
 
 \S4method{dbGetQuery}{dbi.table,ANY}(conn, statement, ...)
 
+\S4method{dbListFields}{dbi.catalog,ANY}(conn, name, ...)
+
+\S4method{dbListFields}{dbi.schema,ANY}(conn, name, ...)
+
+\S4method{dbListFields}{dbi.table,ANY}(conn, name, ...)
+
+\S4method{dbListObjects}{dbi.catalog}(conn, prefix = NULL, ...)
+
+\S4method{dbListObjects}{dbi.schema}(conn, prefix = NULL, ...)
+
+\S4method{dbListObjects}{dbi.table}(conn, prefix = NULL, ...)
+
 \S4method{dbQuoteIdentifier}{dbi.catalog,ANY}(conn, x, ...)
 
 \S4method{dbQuoteIdentifier}{dbi.schema,ANY}(conn, x, ...)
@@ -177,6 +198,9 @@ found in the 'See Also' section).}
 
 \item{dbObj}{A \code{\link{dbi.catalog}}, \code{dbi.schema}, or \code{\link{dbi.table}}.}
 
+\item{prefix}{Please refer to the documentation for the generic function (links can be
+found in the 'See Also' section).}
+
 \item{x}{Please refer to the documentation for the generic function (links can be
 found in the 'See Also' section).}
 
@@ -192,6 +216,7 @@ Call DBI methods using the underlying DBI connection.
   \code{\link[DBI]{dbExecute}},
   \code{\link[DBI]{dbGetInfo}},
   \code{\link[DBI]{dbGetQuery}},
+  \code{\link[DBI]{dbListObjects}},
   \code{\link[DBI]{dbReadTable}},
   \code{\link[DBI]{dbQuoteIdentifier}},
   \code{\link[DBI]{dbQuoteLiteral}},

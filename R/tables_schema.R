@@ -57,7 +57,7 @@ tables_schema <- function(catalog) {
 
 
 tables_schema_ <- function(catalog) {
-  UseMethod("tables_schema_")
+  UseMethod("tables_schema_", dbi_connection(catalog))
 }
 
 

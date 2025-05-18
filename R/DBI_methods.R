@@ -1,3 +1,12 @@
+dbi_connection <- function(x) {
+  if (is_dbi_catalog(conn <- get_connection(x))) {
+    conn <- get("./dbi_connection", pos = conn, inherits = FALSE)
+  }
+  conn
+}
+
+
+
 #' @importFrom methods setOldClass
 #' @export
 setOldClass("dbi.catalog")
@@ -43,6 +52,10 @@ stry <- function(expr) {
 #'   Please refer to the documentation for the generic function (links can be
 #'   found in the 'See Also' section).
 #'
+#' @param prefix
+#'   Please refer to the documentation for the generic function (links can be
+#'   found in the 'See Also' section).
+#'
 #' @param fields
 #'   Please refer to the documentation for the generic function (links can be
 #'   found in the 'See Also' section).
@@ -80,6 +93,7 @@ stry <- function(expr) {
 #'   \code{\link[DBI]{dbExecute}},
 #'   \code{\link[DBI]{dbGetInfo}},
 #'   \code{\link[DBI]{dbGetQuery}},
+#'   \code{\link[DBI]{dbListObjects}},
 #'   \code{\link[DBI]{dbReadTable}},
 #'   \code{\link[DBI]{dbQuoteIdentifier}},
 #'   \code{\link[DBI]{dbQuoteLiteral}},
@@ -412,11 +426,97 @@ setMethod(f = dbGetQuery,
 # dbIsReadOnly
 # dbIsValid
 # dbListConnections
+
+################################################################################
 # dbListFields
+################################################################################
+
+dbListFields_dbi_table_pkg <- function(conn, name, ...)  {
+  DBI::dbListFields(dbi_connection(conn), name, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbListFields,dbi.catalog-method
+#' @importFrom DBI dbListFields
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbListFields,
+          signature = "dbi.catalog",
+          definition = dbListFields_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbListFields,dbi.schema-method
+#' @importFrom DBI dbListFields
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbListFields,
+          signature = "dbi.schema",
+          definition = dbListFields_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbListFields,dbi.table-method
+#' @importFrom DBI dbListFields
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbListFields,
+          signature = "dbi.table",
+          definition = dbListFields_dbi_table_pkg)
+
+
+
+################################################################################
 # dbListObjects
+################################################################################
+
+dbListObjects_dbi_table_pkg <- function(conn, prefix = NULL, ...)  {
+  DBI::dbListObjects(dbi_connection(conn), prefix = prefix, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbListObjects,dbi.catalog-method
+#' @importFrom DBI dbListObjects
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbListObjects,
+          signature = "dbi.catalog",
+          definition = dbListObjects_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbListObjects,dbi.schema-method
+#' @importFrom DBI dbListObjects
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbListObjects,
+          signature = "dbi.schema",
+          definition = dbListObjects_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbListObjects,dbi.table-method
+#' @importFrom DBI dbListObjects
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbListObjects,
+          signature = "dbi.table",
+          definition = dbListObjects_dbi_table_pkg)
+
+
+
+################################################################################
+
 # dbListResults
 # dbListTables
-
 
 ################################################################################
 # dbQuoteIdentifier

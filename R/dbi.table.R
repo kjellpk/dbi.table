@@ -150,7 +150,7 @@ new_dbi_table <- function(conn, id, fields = NULL, key = NULL,
   if (inherits(id, "Id")) {
     id_name <- id@name[[length(id@name)]]
   } else {
-    id_name <- DBI::dbUnquoteIdentifier(dbi_connection(conn), id)[[1L]]@name
+    id_name <- DBI::dbUnquoteIdentifier(conn, id)[[1L]]@name
     id_name <- id_name[[length(id_name)]]
   }
 
@@ -164,7 +164,7 @@ new_dbi_table <- function(conn, id, fields = NULL, key = NULL,
                             on = I(list(NULL)))
 
   if (is.null(fields)) {
-    fields <- DBI::dbListFields(dbi_connection(conn), id)
+    fields <- DBI::dbListFields(conn, id)
   }
 
   internal_name <- paste0(session$key_base, seq_len(length(fields)))
@@ -352,7 +352,7 @@ print.dbi.table <- function(x, ...) {
     m <- rbind(classes, m)
   }
 
-  cat(paste0("<", db_short_name(dbi_connection(x)), ">"),
+  cat(paste0("<", db_short_name(x), ">"),
       paste(get_data_source(x)$id_name, collapse = " + "),
       "\n")
 
@@ -716,16 +716,13 @@ as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
 
 
 temporary_dbi_table <- function(conn, x, key = NULL) {
-  dbi_conn <- dbi_connection(conn)
-  stopifnot(inherits(dbi_conn, "DBIConnection"))
-
   temp_name <- unique_table_name(session$tmp_base)
 
-  if (inherits(dbi_conn, "Microsoft SQL Server")) {
+  if (inherits(dbi_connection(conn), "Microsoft SQL Server")) {
     temp_name <- paste0("#", temp_name)
   }
 
-  if (!DBI::dbWriteTable(dbi_conn, temp_name, x, temporary = TRUE)) {
+  if (!DBI::dbWriteTable(conn, temp_name, x, temporary = TRUE)) {
     stop("could not create temporary table - permission denied")
   }
 
@@ -752,7 +749,6 @@ finalize_temp_dbi_table <- function(e) {
 
 
 in_query_cte <- function(conn, data, key = NULL) {
-  dbi_conn <- dbi_connection(conn)
   data <- as.data.frame(data)
 
   empty <- nrow(data) < 1L
@@ -765,7 +761,7 @@ in_query_cte <- function(conn, data, key = NULL) {
   id <- DBI::Id(cte_name)
   x <- new_dbi_table(conn, id, names(data), key)
 
-  qnames <- DBI::dbQuoteIdentifier(dbi_conn, names(data))
+  qnames <- DBI::dbQuoteIdentifier(conn, names(data))
   col_modes <- vapply(data, storage.mode, "")
 
   if (empty) {
@@ -779,7 +775,7 @@ in_query_cte <- function(conn, data, key = NULL) {
                   data[[j]],
                   SIMPLIFY = FALSE,
                   USE.NAMES = FALSE)
-    tmp <- translate_sql_(tmp, dbi_conn)
+    tmp <- translate_sql_(tmp, con = conn)
     data[[j]] <- DBI::SQL(paste(tmp, "AS", qnames[[j]]))
   }
 

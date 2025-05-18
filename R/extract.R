@@ -209,7 +209,7 @@ handle_by <- function(x, by, enclos) {
 
   by <- sub_lang(by, envir = x, enclos = enclos)
 
-  if (length(window_calls(by, dbi_connection(x)))) {
+  if (length(window_calls(by, x))) {
     stop("Aggregate and window functions are not allowed in 'by'",
          call. = FALSE)
   }
@@ -263,7 +263,7 @@ handle_j <- function(x, j, by, enclos) {
 handle_over <- function(x, j, partition, order) {
   over <- list(partition_by = unname(partition), order_by = unname(order))
 
-  for (k in window_calls(j, dbi_connection(x))) {
+  for (k in window_calls(j, x)) {
     attr(j[[k]], "over") <- over
   }
 

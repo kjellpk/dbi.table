@@ -41,7 +41,7 @@ dbi.catalog <- function(conn, schemas) {
   }
 
   class(catalog) <- "dbi.catalog"
-  tables_schema <- tables_schema(dbi_connection(catalog))
+  tables_schema <- tables_schema(catalog)
 
   if (is.na(schemas)) {
     schemas <- unique(tables_schema$table_schema)
@@ -89,8 +89,7 @@ dbi.catalog_disconnect <- function(e) {
 
 #' @export
 print.dbi.catalog <- function(x, ...) {
-  conn <- dbi_connection(x)
-  name <- paste(dbi_connection_package(conn), db_short_name(conn), sep = "::")
+  name <- paste(dbi_connection_package(x), db_short_name(x), sep = "::")
   desc <- paste(length(lsx <- ls(x)), "schemas containing",
                 sum(as.integer(eapply(x, function(u) length(ls(u))))),
                 "objects")

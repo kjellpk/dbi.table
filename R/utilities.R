@@ -115,7 +115,7 @@ get_table_schema_from_id <- function(catalog, id) {
   cts <- cts[i, ]
 
   if (!length(fields <- cts[[1L, "fields"]])) {
-    fields <- DBI::dbListFields(dbi_connection(catalog), id)
+    fields <- DBI::dbListFields(catalog, id)
     catalog[["./tables_schema"]][[i, "fields"]] <- fields
   }
 
