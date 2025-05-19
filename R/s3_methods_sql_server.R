@@ -51,3 +51,45 @@ foreign_keys_Microsoft_SQL_Server <- function(catalog, id) {
 
   as.data.frame(r, n = -1L)
 }
+
+
+
+#' @rawNamespace S3method(write_select,"Microsoft SQL Server",write_select_Microsoft_SQL_Server)
+write_select_Microsoft_SQL_Server <- function(x, n) {
+  if (all(vapply(setdiff(c(x), get_group_by(x)), call_can_aggregate, FALSE))) {
+    select <- translate_sql_(c(x), con = x, window = FALSE)
+  } else {
+    select <- list()
+    for (i in seq_along(x)) {
+      if (!is.null(over <- attr(x[[i]], "over", exact = TRUE))) {
+        pb <- translate_sql_(over$partition_by, con = x, window = FALSE)
+        ob <- translate_sql_(over$order_by, con = x, window = FALSE)
+      } else {
+        pb <- ob <- NULL
+      }
+
+      select[[i]] <- translate_sql_(unname(c(x)[i]), con = x,
+                                    vars_group = pb, vars_order = ob)
+    }
+  }
+
+  select <- sub_db_identifier(unlist(select), x, get_fields(x))
+  select <- paste(select, "AS", DBI::dbQuoteIdentifier(x, names(x)))
+  pad1 <- ifelse(get_distinct(x), "SELECT DISTINCT", "SELECT")
+
+  if (n > 0L) {
+    pad1 <- paste(pad1, "TOP", paren(n))
+  }
+
+  pad <- rep(ws(nchar(pad1)), length(x))
+  pad[1] <- pad1
+
+  paste(paste(pad, select), collapse = ",\n")
+}
+
+
+
+#' @rawNamespace S3method(write_limit,"Microsoft SQL Server",write_limit_Microsoft_SQL_Server)
+write_limit_Microsoft_SQL_Server <- function(x, n) {
+  NULL
+}
