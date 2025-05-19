@@ -80,13 +80,7 @@ dbi.attach <- function(what, pos = 2L, name = NULL, warn.conflicts = FALSE,
   schema <- get("./schema_name", pos = what, inherits = FALSE)
 
   if (is.null(name)) {
-    if (schema %in% c("main", "dbo")) {
-      name <- db_short_name(what)
-    } else {
-      name <- schema
-    }
-
-    name <- paste(dbi_connection_package(what), name, sep = ":")
+    name <- paste(dbi_connection_package(what), db_short_name(what), sep = ":")
   }
 
   if (name %in% search()) {

@@ -1,27 +1,30 @@
 db_short_name <- function(conn) {
-  conn <- dbi_connection(conn)
+  UseMethod("db_short_name")
+}
 
-  info <- DBI::dbGetInfo(conn)
-  if (nchar(dbname <- info$dbname)) {
-    short_name <- sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(dbname))
-  } else if (nchar(host <- info$host)) {
-    short_name <- host
+
+
+#' @rawNamespace S3method(db_short_name,default,db_short_name_default)
+db_short_name_default <- function(conn) {
+  if (nchar(dbname <- DBI::dbGetInfo(conn)$dbname)) {
+    sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(dbname))
   } else {
-    short_name <- "default_catalog"
+    "default_database"
   }
-
-  short_name
 }
 
 
 
 dbi_connection_package <- function(conn) {
-  conn <- dbi_connection(conn)
-  if (!is.null(pkg <- attr(class(conn), "package", exact = TRUE))) {
-    pkg
-  } else {
-    "DBI"
-  }
+  UseMethod("dbi_connection_package")
+}
+
+
+
+#' @rawNamespace S3method(dbi_connection_package,default,dbi_connection_package_default)
+dbi_connection_package_default <- function(conn) {
+  pkg <- attr(class(dbi_connection(conn)), "package", exact = TRUE)
+  if (is.null(pkg)) "DBI" else pkg
 }
 
 
