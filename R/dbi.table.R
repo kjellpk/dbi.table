@@ -715,12 +715,21 @@ as.dbi.table <- function(conn, x, type = c("auto", "query", "temporary")) {
 
 
 
-temporary_dbi_table <- function(conn, x, key = NULL) {
-  temp_name <- unique_table_name(session$tmp_base)
+temporary_dbi_table_name <- function(conn) {
+  UseMethod("temporary_dbi_table_name", dbi_connection(conn))
+}
 
-  if (inherits(dbi_connection(conn), "Microsoft SQL Server")) {
-    temp_name <- paste0("#", temp_name)
-  }
+
+
+#' @rawNamespace S3method(temporary_dbi_table_name,default,temporary_dbi_table_name_default)
+temporary_dbi_table_name_default <- function(conn) {
+  unique_table_name(session$tmp_base)
+}
+
+
+
+temporary_dbi_table <- function(conn, x, key = NULL) {
+  temp_name <- temporary_dbi_table_name(conn)
 
   if (!DBI::dbWriteTable(conn, temp_name, x, temporary = TRUE)) {
     stop("could not create temporary table - permission denied")
