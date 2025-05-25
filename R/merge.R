@@ -9,9 +9,11 @@
 #'   determined by the first of the following cases to apply.
 #'
 #'   \enumerate{
-#'     \item If there is a foreign key relating \code{x} and \code{y} (either
-#'           \code{x} referencing \code{y}, or \code{y} referencing \code{x}),
-#'           then it is used to set \code{by.x} and \code{by.y}.
+#'     \item If \code{x} and \code{y} are each unmodified \code{dbi.table}s in
+#'           the same \code{dbi.catalog} and if there is a single foreign key
+#'           relating \code{x} and \code{y} (either \code{x} referencing
+#'           \code{y}, or \code{y} referencing \code{x}), then it is used to set
+#'           \code{by.x} and \code{by.y}.
 #'
 #'     \item If \code{x} and \code{y} have shared key columns, then they are
 #'           used to set \code{by} (that is,
@@ -34,7 +36,8 @@
 #' @param x,y
 #'   \code{\link{dbi.table}}s sharing the same DBI connection. If \code{y} is
 #'   not a \code{dbi.table} but does inherit from \code{data.frame}, then it is
-#'   coerced to a \code{dbi.table} using \code{\link{as.dbi.table}}.
+#'   coerced to a \code{dbi.table} using \code{\link{as.dbi.table}}. If \code{y}
+#'   is missing, a merge is performed for each of \code{x}'s foreign keys.
 #'
 #' @param by
 #'   a character vector of shared column names in \code{x} and \code{y} to merge
@@ -73,19 +76,14 @@
 #'
 #' @param recursive
 #'   a logical value. Only used when \code{y} is missing. When \code{TRUE},
-#'   \code{merge} is called recursively on each of the just-merged
-#'   \code{dbi.table}s. See examples.
+#'   \code{merge} is called on each \code{dbi.table} prior to merging with
+#'   \code{x}. See examples.
 #'
 #' @param \dots
 #'   additional arguments are passed to \code{\link{as.dbi.table}}.
 #'
 #' @return
 #'   a \code{\link{dbi.table}}.
-#'
-#' @section Foreign Key Constraints:
-#'   Foreign keys can only be queried when (1) the \code{dbi.table}'s schema is
-#'   loaded, and (2) \code{dbi.table} understands the underlying database's
-#'   information schema.
 #'
 #' @details
 #'   \code{merge.dbi.table} uses \code{\link{sql.join}} to join \code{x} and
@@ -105,12 +103,12 @@
 #'   #When y is omitted, x's foreign key relationship is used to determine y
 #'   merge(chinook$main$Album)
 #'
-#'   #Multiple foreign keys are supported
-#'   csql(merge(chinook$main$Track))
+#'   #Track has 3 foreign keys: merge with Album, Genre, and MediaType
+#'   merge(chinook$main$Track)
 #'
 #'   #Track references Album but not Artist, Album references Artist
-#'   #This dbi.table includes Artist.Name as well
-#'   csql(merge(chinook$main$Track, recursive = TRUE))
+#'   #This dbi.table includes the artist name
+#'   merge(chinook$main$Track, recursive = TRUE)
 #'
 #' @export
 merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,

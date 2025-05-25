@@ -24,7 +24,8 @@
 \arguments{
 \item{x, y}{\code{\link{dbi.table}}s sharing the same DBI connection. If \code{y} is
 not a \code{dbi.table} but does inherit from \code{data.frame}, then it is
-coerced to a \code{dbi.table} using \code{\link{as.dbi.table}}.}
+coerced to a \code{dbi.table} using \code{\link{as.dbi.table}}. If \code{y}
+is missing, a merge is performed for each of \code{x}'s foreign keys.}
 
 \item{by}{a character vector of shared column names in \code{x} and \code{y} to merge
 on.}
@@ -54,8 +55,8 @@ non-\code{by.y} column names in \code{y} when they have the same column
 name as any \code{by.x}.}
 
 \item{recursive}{a logical value. Only used when \code{y} is missing. When \code{TRUE},
-\code{merge} is called recursively on each of the just-merged
-\code{dbi.table}s. See examples.}
+\code{merge} is called on each \code{dbi.table} prior to merging with
+\code{x}. See examples.}
 
 \item{\dots}{additional arguments are passed to \code{\link{as.dbi.table}}.}
 }
@@ -67,9 +68,11 @@ Merge two \code{\link{dbi.table}}s. By default, the columns to merge on are
   determined by the first of the following cases to apply.
 
   \enumerate{
-    \item If there is a foreign key relating \code{x} and \code{y} (either
-          \code{x} referencing \code{y}, or \code{y} referencing \code{x}),
-          then it is used to set \code{by.x} and \code{by.y}.
+    \item If \code{x} and \code{y} are each unmodified \code{dbi.table}s in
+          the same \code{dbi.catalog} and if there is a single foreign key
+          relating \code{x} and \code{y} (either \code{x} referencing
+          \code{y}, or \code{y} referencing \code{x}), then it is used to set
+          \code{by.x} and \code{by.y}.
 
     \item If \code{x} and \code{y} have shared key columns, then they are
           used to set \code{by} (that is,
@@ -94,13 +97,6 @@ Merge two \code{\link{dbi.table}}s. By default, the columns to merge on are
   \code{y} then formats the result set to match the typical \code{merge}
   output.
 }
-\section{Foreign Key Constraints}{
-
-  Foreign keys can only be queried when (1) the \code{dbi.table}'s schema is
-  loaded, and (2) \code{dbi.table} understands the underlying database's
-  information schema.
-}
-
 \examples{
   chinook <- dbi.catalog(chinook.duckdb)
 
@@ -110,12 +106,12 @@ Merge two \code{\link{dbi.table}}s. By default, the columns to merge on are
   #When y is omitted, x's foreign key relationship is used to determine y
   merge(chinook$main$Album)
 
-  #Multiple foreign keys are supported
-  csql(merge(chinook$main$Track))
+  #Track has 3 foreign keys: merge with Album, Genre, and MediaType
+  merge(chinook$main$Track)
 
   #Track references Album but not Artist, Album references Artist
-  #This dbi.table includes Artist.Name as well
-  csql(merge(chinook$main$Track, recursive = TRUE))
+  #This dbi.table includes the artist name
+  merge(chinook$main$Track, recursive = TRUE)
 
 }
 \seealso{
