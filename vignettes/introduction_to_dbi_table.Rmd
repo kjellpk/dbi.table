@@ -23,21 +23,15 @@ that you know how to open a database connection using the `DBI` package.
 
 # Installation
 
-The `dbi.table` package is hosted on GitHub. Use the following command to
-install the package.
+If you haven't alreay done so, install the `dbi.table` package from CRAN.
 
 ```{r install, eval = FALSE}
-#install.packages("devtools")
-devtools::install_github("kjellpk/dbi.table")
+install.packages("dbi.table")
 ```
-
-Note: if the `install_github` function is not found, you will need to first
-install the `devtools` package using `install.packages`.
-
 
 # Getting Started
 
-This section uses the sample
+This section uses the
 [Chinook Database](https://github.com/lerocha/chinook-database)
 (included in the package) to demonstrate how to
 
@@ -46,14 +40,14 @@ This section uses the sample
   3. attach a schema to the search path using the `dbi.attach` function, and
   4. load a database catalog using the `dbi.catalog` function.
 
-The function `chinook.duckdb` that returns an open `duckdb` (DBI) connection to
+The function `chinook.duckdb` returns an open `duckdb` (DBI) connection to
 the sample Chinook Database.  This connection is a typical DBI connection as
 returned by `DBI::dbConnect` that can be used as the `conn` argument in DBI
 package functions. Let's get started by loading the package and opening the
 connection.
 
 ```{r library, message = FALSE}
-library(data.table)
+library(data.table) #needed for as.data.table
 library(dbi.table)
 chinook <- chinook.duckdb()
 ```
@@ -68,7 +62,7 @@ indentifying a database table or view.
 my_album <- dbi.table(chinook, DBI::Id("Album"))
 ```
 
-The object `my_album` is a `dbi.table`, a data structure that represents a SQL
+The object `my_album` is a `dbi.table`, a data structure that represents an SQL
 query (which we refer to as the `dbi.table`'s *underlying SQL query*). The
 `print` method displays a preview of the underlying SQL query. 
 
@@ -82,15 +76,15 @@ The preview has a format similar to a `data.table` with two notable exceptions.
 1. The row numbers are omitted. SQL queries do not necessarily return the
    result set in a reliable order (even on subsequent evaluations of the same
    query), and `dbi.table` does not make any extra effort to order the rows by
-   default. Thus the row numbers are omitted.
+   default.
 
-2. Only 5 rows of the `dbi.table` are displayed (`data.table` displays the first
-   5 and the last 5). Again, since the result set does not have a reliable
-   order, it is not possible to say which rows are the first and which are the
-   last. The rows displayed are the first 5 returned by the RDBMS.
+2. Only the first 5 rows of the `dbi.table` are displayed (`data.table` displays
+   the first 5 and the last 5). Again, since the result set does not have a
+   reliable order, it is not possible to say which rows are the first and which
+   are the last. The rows displayed are the first 5 returned by the RDBMS.
 
 The function `as.data.table` executes the `dbi.table`'s underlying SQL query and
-retrieves the result set as a `data.table`. Pro tip: calling the extracts method
+retrieves the result set as a `data.table`. Pro tip: calling the extract method
 (`[]`) with no arguments is a shortcut for `as.data.table`.
 
 ```{r fetch_data_table}
@@ -101,12 +95,12 @@ my_album[]
 Since the result set is instantiated locally as a `data.table`, the row numbers
 and the last 5 rows are displayed.
 
-Note: by default, `as.data.table` (and the empty extracts shortcut) fetch a
+Note: by default, `as.data.table` (and its `[]` shortcut) fetches a
 maximum of 10,000 rows. To override this limit, either set the option
 `dbitable.max.fetch` or call `as.data.table` and provide the `n` argument
 (e.g., `n = -1` to fetch the entire result set). 
 
-The `csql` utility displays the query.
+Lastly, the `csql` function displays the `dbi.table`'s underlying SQL query.
 
 ```{r my_album_csql}
 csql(my_album)
@@ -117,7 +111,7 @@ from the database table.
 
 ## Manipulate a `dbi.table` using `data.table` Syntax
 
-This table from `data.table`'s *Introduction to data.table* vignette pretty much
+This extract from `data.table`'s *Introduction to data.table* vignette pretty much
 sums up what `dbi.table` does.
 
 ```{r xref, eval = FALSE}
@@ -128,49 +122,57 @@ DT[i, j, by]
 ```
 
 In general, `dbi.table` should be able to handle basic `data.table` syntax. SQL
-translation is done by `dbplyr::translate_sql_` which works with a wide variety
+translation is done by `dbplyr::translate_sql_` which works with a variety
 of R functions. However, complicated expressions (e.g., custom functions in `j`,
 nested aggregation functions, most special symbols) do not work.
 
 Best practice is to use `dbi.table` to subset and wrangle on the database, then
 `data.table` to fine tune locally.
 
-The remainder of this section demonstrates how `i`, `j`, and `by` manipulate a
-`dbi.table`'s underlying SQL query.
-
 When `i` is a logical expression of the variables in the `dbi.table` then it
 becomes the *WHERE* clause in the `dbi.table`'s underlying SQL query.
 
-```{r i_where}
+```{r i_where_query}
 csql(my_album[AlbumId == ArtistId + 1])
+```
+
+```{r i_where}
+my_album[AlbumId == ArtistId + 1]
 ```
 
 When `i` is a call to `order` (or `chorder`), it becomes the *ORDER BY* clause
 in the `dbi.table`'s underlying SQL query.
 
-```{r i_order}
+```{r i_order_query}
 csql(my_album[order(nchar(Title), -AlbumId)])
+```
+
+```{r i_order}
+my_album[order(nchar(Title), -AlbumId)]
 ```
 
 When `j` is a list of expressions of the variables in the `dbi.table`, then `j`
 becomes the *SELECT* clause in the `dbi.table`'s underlying SQL query.
 
 ```{r j_list}
-csql(my_album[, .(AlbumId, Title)])
+my_album[, .(AlbumId, Title)]
 ```
 
 When `by` is a list of expressions of the variables in the `dbi.table`, then
 `by` becomes the *GROUP BY* clause in the `dbi.table`'s underlying SQL query.
 
-```{r by_list}
+```{r by_list_query}
 csql(my_album[, .("# of Albums" = .N), .(ArtistId)])
 ```
 
+```{r by_list}
+my_album[, .("# of Albums" = .N), .(ArtistId)]
+```
 
 ## Attach a Schema to the Search Path
 
-The `dbi.attach` function *attaches* a DBI connection to the search path. That
-is, `dbi.attach` creates a `dbi.table` for each table and each view in the
+The `dbi.attach` function *attaches* a DBI connection to the search path. This
+means that `dbi.attach` creates a `dbi.table` for each table and view in the
 schema associated with the DBI connection, then assigns these `dbi.table`s to an
 environment on the search path.
 
@@ -195,7 +197,11 @@ Note: Attaching a DBI connection is intended for an interactive exploratory
 analysis of a database (schema). For programatic use cases, see the *Load a
 Database Catalog* section.
 
-Merging two `dbi.table`s results in a SQL join that describes the same result
+### Merging `dbi.table`s
+
+Two `dbi.table`s that share the same connection (for example, all the
+`dbi.table`s in an attached schema share the same connection) can be merged.
+Merging two `dbi.table`s results in an SQL join that describes the same result
 set as the associated `data.table` merge. That is,
 
 ```{r merge_dts, eval = FALSE}
@@ -214,28 +220,35 @@ are the same `data.table` up to row order.
 csql(merge(Album, Artist, by = "ArtistId"))
 ```
 
-When a DBI connection is attached to the search path, `dbi.attach` also loads
-the schema's relational meta data (whether this works depends on how the
-underlying database implments an *information schema*). In particular, *foreign
-key* constraints are used as the default `by` when merging. In the previous
-example, the `ArtistId` column is a foreign key referencing the `Album` table.
-For this example, when the `by` argument is omitted, `dbi.table` still merges
-*by* `ArtistId`.
+If `dbi.table` can determine the *foreign key* constraints between `x` and `y`,
+and if there is only one foreign key (either `x` referring to `y`, or `y`
+referring to `x`), then this foreign key is used as the default `by` when
+merging. Otherwise, `dbi.table` uses the same algorithm to determine the default
+`by` columns as `data.table`.
 
 ```{r merge_no_by}
-csql(merge(Album, Artist))
+csql(merge(Customer, Employee))
 ```
+
+In this case, the `Customer` table has a foreign key `SupportRepId` that refers
+to the `Employee` table's primary key `EmployeeId`.
+
 When the `y` argument is omitted, `dbi.table`'s `merge` uses the foreign key
-constraints that reference `x` to determine the `y` (or `y`s) to merge with.
+constraints that `x` references to determine the `y` (or `y`s) to merge with.
+
+When `y` is missing, `merge.dbi.table` merges with the tables referenced by
+`x`'s foreign keys (one merge for each foreign key).
 
 ```{r merge_no_y}
 csql(merge(Track))
 ```
 
-When the optional `recursive` argument is `TRUE`, `merge.dbi.table` recursively
-merges on each of the just-merged tables. In this example, `Track` has a foreign
-key that references `Album` and `Album` has a foreign key that references
-`Artist`.
+When the optional `recursive` argument is `TRUE`, `merge.dbi.table` calls
+`merge` with `recuresive = TRUE` on each referenced table and merges `x`
+with the result. In this example, `Track` has a foreign key that references
+`Album` and `Album` has a foreign key that references `Artist`. The columns
+from `Artist` are included in the result set when `merge` is called with
+`recuresive = TRUE`.
 
 ```{r merge_no_y_rec}
 csql(merge(Track, recursive = TRUE))
@@ -262,14 +275,6 @@ Individual tables can be accessed using `catalog$schema$table` syntax.
 ```{r dbi_catalog_table}
 catalog$main$Album
 ```
-
-When a catalog is loaded, all of its tables have access to the relational data
-in the information schema.
-
-```{r dbi_catalog_merge}
-merge(catalog$main$Album)
-```
-
 
 # Scope
 
