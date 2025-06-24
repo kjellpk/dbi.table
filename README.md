@@ -1,78 +1,94 @@
 # `dbi.table`
 
-Query database objects (e.g., tables and views) accessible over a `DBI`
-connection using `data.table`’s `[i, j, by]` syntax. Under the hood, a
-`dbi.table` is a just an SQL query - its methods are designed to give it
-`data.table` look and feel.
+The `dbi.table` package allows you to query database tables and views
+over a `DBI` connection using `data.table`’s `[i, j, by]` syntax. The
+package provides functions for connecting to a single table, for
+attaching a database schema to the search path, and for connecting to an
+entire database catalog. When using schemas and catalogs, `dbi.table`
+uses a table’s primary key as the default key when creating locally
+instantiated `data.table`s and uses a table’s foreign key as the default
+for `by` when merging.
 
 ## Installation
 
-    devtools::install_github("kjellpk/dbi.table")
+    # Install dbi.table from CRAN:
+    install.packages("dbi.table")
+
+    # Or the development version from GitHub:
+    # install.packages("pak")
+    pak::pak("kjellpk/dbi.table")
 
 ## Quick Start
 
-First, load the package.
+First, let’s load the package.
 
     library(dbi.table)
+    library(data.table) #for as.data.table
 
-Next, open a DBI connection (big thank you to the [CTU Prague Relational
-Learning Repository](https://relational-data.org/) for providing this
-example).
+Next, create a zero-argument function that returns a `DBI` connection to
+the Chinook database at the [CTU Prague Relational Learning
+Repository](https://relational-data.org/).
 
-    ctu_conn <- DBI::dbConnect(RMariaDB::MariaDB(),
-                               host = "relational.fel.cvut.cz",
-                               port = 3306,
-                               user = "guest",
-                               password = "ctu-relational")
+    ctu_connector <- function() {
+      DBI::dbConnect(RMariaDB::MariaDB(),
+                     host = "relational.fel.cvut.cz",
+                     port = 3306,
+                     dbname = "Chinook",
+                     user = "guest",
+                     password = "ctu-relational")
+    }
 
-Then make a `dbi.table` based on the `Album` table in the `Chinook`
-schema.
+Using a function that creates a `DBI` connection rather than the `DBI`
+connection itself (which also works) allows the `dbi.table` package to
+manage the connection. The connection will be reestablished if it drops
+and is disconnected when it is no longer needed.
 
-    (Album <- dbi.table(ctu_conn, DBI::Id("Chinook", "Album")))
+    dbi.attach(ctu_connector)
 
-    ## <relational.fel.cvut.cz> Album 
-    ##  AlbumId                                 Title ArtistId
-    ##    <int>                                <char>    <int>
-    ##        1 For Those About To Rock We Salute You        1
-    ##        2                     Balls to the Wall        2
-    ##        3                     Restless and Wild        2
-    ##        4                     Let There Be Rock        1
-    ##        5                              Big Ones        3
+The Chinook database is now attached to the search path in position 2.
+
+    head(search(), 3)
+
+    ## [1] ".GlobalEnv"         "RMariaDB:Chinook"   "package:data.table"
+
+Its tables can be queried using `data.table`’s `[i, j, by]` syntax.
+
+    Track[MediaTypeId == 1, .("#_of_Tracks" = .N), by = .(Composer)]
+
+    ## <Chinook> Track 
+    ##                                      Composer #_of_Tracks
+    ##                                        <char>       <i64>
+    ##                                            NA         629
+    ##  A. F. Iommi, W. Ward, T. Butler, J. Osbourne           3
+    ##                                      A. Jamal           1
+    ##              A.Bouchard/J.Bouchard/S.Pearlman           1
+    ##                    A.Isbell/A.Jones/O.Redding           1
     ##  ---
 
-A `dbi.table` looks like a `data.table` (but with the row numbers
-omitted). Under the hood, a `dbi.table` is a SQL query - the printed
-output here is a 5 row preview. This query can be maniulated using
-`data.table`’s `[i, j, by]` syntax.
+The `csql` utility displays the `dbi.table`’s SQL query.
 
-    (x <- Album[nchar(Title) > 20 & AlbumId > ArtistId,
-                .(Title, Title_Length = paste(nchar(Title), "characters"))])
+    csql(Track[MediaTypeId == 1, .("#_of_Tracks" = .N), by = .(Composer)])
 
-    ## <relational.fel.cvut.cz> Album 
-    ##                                     Title  Title_Length
-    ##                                    <char>        <char>
-    ##            Plays Metallica By Four Cellos 30 characters
-    ##                  The Best Of Billy Cobham 24 characters
-    ##  Alcohol Fueled Brewtality Live! [Disc 1] 40 characters
-    ##  Alcohol Fueled Brewtality Live! [Disc 2] 40 characters
-    ##           Black Sabbath Vol. 4 (Remaster) 31 characters
-    ##  ---
-
-Some data wrangling can be done on-database. The `csql` utility displays
-the underlying SQL query (SQL generation uses `dbplyr::translate_sql_`).
-
-    csql(x)
-
+    ## SELECT `Track`.`Composer` AS `Composer`,
+    ##        COUNT(*) AS `#_of_Tracks`
     ## 
-    ## SELECT `Album`.`Title` AS `Title`,
-    ##        CONCAT_WS(' ', LENGTH(`Album`.`Title`), 'characters') AS `Title_Length`
+    ##   FROM `Chinook`.`Track` AS `Track`
     ## 
-    ##   FROM `Chinook`.`Album` AS `Album`
+    ##  WHERE `Track`.`MediaTypeId` = 1
     ## 
-    ##  WHERE LENGTH(`Album`.`Title`) > 20 AND `Album`.`AlbumId` > `Album`.`ArtistId`
+    ##  GROUP BY `Track`.`Composer`
     ## 
     ##  LIMIT 10000
 
-Finally, close the DBI connection.
+Simply `detach` the schema when you are finished and the `DBI`
+connection will be closed the next time garbage collection runs.
 
-    DBI::dbDisconnect(ctu_conn)
+    detach("RMariaDB:Chinook")
+
+## Supported Databases
+
+As of version 1.0.4, `dbi.table` supports SQLite, DuckDB, Postgres
+(RPostgres), and MariaDB (RMariaDB). Unsupported RDBMSs fallback to
+DBI - not all features will be available. Full support can be added by
+implementing a few S3 methods. Please feel free to open an issue if you
+would like to use `dbi.table` with a particular RDBMS.

@@ -5,63 +5,87 @@ output: md_document
 
 # `dbi.table`
 
-Query database objects (e.g., tables and views) accessible over a `DBI`
-connection using `data.table`'s `[i, j, by]` syntax. Under the hood, a
-`dbi.table` is a just an SQL query - its methods are designed to give it
-`data.table` look and feel. 
-
+The `dbi.table` package allows you to query database tables and views over a
+`DBI` connection using `data.table`’s `[i, j, by]` syntax. The package provides
+functions for connecting to a single table, for attaching a database schema to
+the search path, and for connecting to an entire database catalog. When using
+schemas and catalogs, `dbi.table` uses a table's primary key as the default key
+when creating locally instantiated `data.table`s and uses a table's foreign key
+as the default for `by` when merging.
 
 ## Installation
 
 ```{r, eval = FALSE}
-devtools::install_github("kjellpk/dbi.table")
+# Install dbi.table from CRAN:
+install.packages("dbi.table")
+
+# Or the development version from GitHub:
+# install.packages("pak")
+pak::pak("kjellpk/dbi.table")
 ```
 
 ## Quick Start
 
-First, load the package.
+First, let's load the package.
 
 ```{r library, message = FALSE}
 library(dbi.table)
+library(data.table) #for as.data.table
 ```
 
-Next, open a DBI connection (big thank you to the [CTU Prague
-Relational Learning Repository](https://relational-data.org/) for providing
-this example).
+Next, create a zero-argument function that returns a `DBI` connection to the
+Chinook database at the
+[CTU Prague Relational Learning Repository](https://relational-data.org/).
 
 ```{r connection}
-ctu_conn <- DBI::dbConnect(RMariaDB::MariaDB(),
-                           host = "relational.fel.cvut.cz",
-                           port = 3306,
-                           user = "guest",
-                           password = "ctu-relational")
+ctu_connector <- function() {
+  DBI::dbConnect(RMariaDB::MariaDB(),
+                 host = "relational.fel.cvut.cz",
+                 port = 3306,
+                 dbname = "Chinook",
+                 user = "guest",
+                 password = "ctu-relational")
+}
 ```
 
-Then make a `dbi.table` based on the `Album` table in the `Chinook` schema.
+Using a function that creates a `DBI` connection rather than the `DBI`
+connection itself (which also works) allows the `dbi.table` package to manage
+the connection. The connection will be reestablished if it drops and is
+disconnected when it is no longer needed.
 
-```{r dbi.table}
-(Album <- dbi.table(ctu_conn, DBI::Id("Chinook", "Album")))
+```{r dbi.attach}
+dbi.attach(ctu_connector)
 ```
 
-A `dbi.table` looks like a `data.table` (but with the row numbers omitted).
-Under the hood, a `dbi.table` is a SQL query - the printed output here is
-a 5 row preview. This query can be maniulated using `data.table`'s `[i, j, by]`
-syntax.
+The Chinook database is now attached to the search path in position 2.
 
-```{r syntax}
-(x <- Album[nchar(Title) > 20 & AlbumId > ArtistId,
-            .(Title, Title_Length = paste(nchar(Title), "characters"))])
+```{r search_path}
+head(search(), 3)
 ```
 
-Some data wrangling can be done on-database. The `csql` utility displays the
-underlying SQL query (SQL generation uses `dbplyr::translate_sql_`).
+Its tables can be queried using `data.table`'s `[i, j, by]` syntax.
 
-```{r csqlx}
-csql(x)
+```{r first_query}
+Track[MediaTypeId == 1, .("#_of_Tracks" = .N), by = .(Composer)]
 ```
 
-Finally, close the DBI connection.
+The `csql` utility displays the `dbi.table`'s SQL query.
+
+```{r csql}
+csql(Track[MediaTypeId == 1, .("#_of_Tracks" = .N), by = .(Composer)])
+```
+
+Simply `detach` the schema when you are finished and the `DBI` connection will
+be closed the next time garbage collection runs.
 
 ```{r detach}
-DBI::dbDisconnect(ctu_conn)
+detach("RMariaDB:Chinook")
 ```
+
+## Supported Databases
+
+As of version 1.0.4, `dbi.table` supports SQLite, DuckDB, Postgres (RPostgres),
+and MariaDB (RMariaDB). Unsupported RDBMSs fallback to DBI - not all features
+will be available. Full support can be added by implementing a few S3 methods.
+Please feel free to open an issue if you would like to use `dbi.table` with a
+particular RDBMS.
