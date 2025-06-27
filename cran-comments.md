@@ -1,12 +1,9 @@
-# 1.0.3 Changes Relative to Version 1.0.1 (Current CRAN Version)
+# 1.0.4 Changes Relative to Version 1.0.3 (Current CRAN Version)
 
-- At the request of the `data.table` maintainers, moved `data.table` from
-  Depends to Suggests.
+- Moved inline SQL statements in .R files to .sql files in inst/sql_statements.
 
-- Added Luis Rocha as a contributor (ctd) for the (Chinook) example database and
-  included his license in example_files/chinook_export/LICENSE. 
+- Added support for more RDBMSs. Improved foreign key lookup and merging.
 
-- Refactored code; no changes to core functionality of package.
 
 ## Test Environments
 
@@ -67,6 +64,19 @@ There are no references other than the package vignette.
 
 # Comments for Previous CRAN Submissions
 
+# 1.0.3 Changes Relative to Version 1.0.1 (Current CRAN Version)
+
+- At the request of the data.table maintainers, moved data.table from Depends
+  to Suggests.
+
+- Added Luis Rocha as a contributor (ctd) for the (Chinook) example database
+  and included his license in example_files/chinook_export/LICENSE.
+
+- Refactored code; no changes to core functionality of package.
+
+
+# 1.0.1 Initial Package Submission (2024-11-29)
+
 This resubmission of the `dbi.table` package includes the changes requested by
 K. Lauseker from my first submission attempt. The requested changes and my
 actions are in section 1.0.1.
@@ -85,8 +95,6 @@ details.
 * ubuntu-latest (release)
 * ubuntu-latest (oldrel-1)
 
-
-# 1.0.1 Initial Package Submission (2024-11-29)
 
 ## Requested Changes for Initial Submission
 
