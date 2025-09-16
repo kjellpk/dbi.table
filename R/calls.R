@@ -112,12 +112,12 @@ if_scalar <- function(x) {
 
 
 
-is_call_to <- function(cl) {
-  if (!is.call(cl)) {
-    return("not a call")
+`%is_call_to%` <- function(cl, choices) {
+  if (is.call(cl)) {
+    return(as.character(cl[[1L]]) %in% as.character(choices))
   }
 
-  as.character(cl[[1]])
+  FALSE
 }
 
 

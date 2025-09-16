@@ -553,7 +553,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
       i <- as.dbi.table(x, i)
     }
 
-    if (is_call_to(i) == "!" && is.dbi.table(i[[2L]])) {
+    if (i %is_call_to% "!" && is.dbi.table(i[[2L]])) {
       not_i <- TRUE
       i <- i[[2L]]
     }
@@ -603,7 +603,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
     stop("package 'data.table' is not installed")
   }
 
-  if (is_call_to(j) == ":=") {
+  if (j %is_call_to% ":=") {
     return(handle_the_walrus(x, i, j, by, parent, x_sub))
   }
 

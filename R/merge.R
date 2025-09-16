@@ -318,7 +318,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
                               SIMPLIFY = FALSE,
                               USE.NAMES = FALSE)
 
-  } else if ((is_call_to(on) == ".") || (is_call_to(on) == "list")) {
+  } else if (on %is_call_to% c(".", "list")) {
     on <- as.list(on[-1])
   }
 
@@ -396,7 +396,9 @@ extract_on_validator <- function(expr, x_names, i_names) {
     }
   }
 
-  if ((op <- is_call_to(expr)) %in% DT_SUPPORTED_JOIN_OPERATORS) {
+  if (expr %is_call_to% DT_SUPPORTED_JOIN_OPERATORS) {
+    op <- as.character(expr[[1L]])
+
     if (!(lhs <- as.character(expr[[2L]])) %in% x_names) {
       stop("argument specifying columns received non-existing column: '",
            lhs, "'")

@@ -1,5 +1,5 @@
 preprocess_j <- function(e, dbi_table, enclos, single.ok = FALSE) {
-  if (is_call_to(e) == ":=") {
+  if (e %is_call_to% ":=") {
     return(e)
   }
 
@@ -58,7 +58,7 @@ preprocess_by <- function(e, dbi_table, enclos, single.ok = FALSE) {
 
 
 preprocess_common <- function(e, dbi_table, enclos, single.ok) {
-  if (is_call_to(e) %in% c(".", "list")) {
+  if (e %is_call_to% c(".", "list")) {
     e <- as.list(e)[-1]
   }
 
@@ -66,11 +66,11 @@ preprocess_common <- function(e, dbi_table, enclos, single.ok) {
     return(e)
   }
 
-  if (is_call_to(e) == ":=") {
+  if (e %is_call_to% ":=") {
     return(e)
   }
 
-  if (is_call_to(e) == ":") {
+  if (e %is_call_to% ":") {
     dbit_names <- names(dbi_table)
     if (is.name(lhs <- e[[2]])) {
       if (is.na(lhs <- match(as.character(lhs), dbit_names))) {
@@ -142,7 +142,7 @@ handle_i_call <- function(x, i, enclos) {
     return(x)
   }
 
-  if (is_call_to(i) == "order") {
+  if (i %is_call_to% "order") {
     return(handle_i_order(x, i, enclos))
   }
 
@@ -274,7 +274,7 @@ handle_over <- function(x, j, partition, order) {
 
 handle_the_walrus <- function(x, i, j, by, env, x_sub) {
 
-  if (length(i) && !is_call_to(i) == "order") {
+  if (length(i) && !(i %is_call_to% "order")) {
     stop("when using :=, if 'i' is not missing it must be a call to 'order'",
          call. = FALSE)
   }
@@ -288,14 +288,14 @@ handle_the_walrus <- function(x, i, j, by, env, x_sub) {
       lhs <- as.character(lhs)
     } else if (!length(all.vars(lhs))) {
       lhs <- as.character(eval(lhs, envir = env))
-    } else if (is_call_to(lhs) %in% c(".", "list")) {
+    } else if (lhs %is_call_to% c(".", "list")) {
       lhs <- vapply(as.list(lhs)[-1], deparse1, "")
     } else {
       stop("the left-hand-side of ':=' should be a character vector ",
            "or a list of names", call. = FALSE)
     }
 
-    if (is_call_to(j[[3L]]) %in% c(".", "list")) {
+    if (j[[3L]] %is_call_to% c(".", "list")) {
       j <- as.list(j[[3L]])[-1]
     } else {
       j <- list(j[[3L]])
