@@ -45,7 +45,7 @@ as_cte <- function(x) {
 
   dbi_table_object(cdefs = v, conn = get_connection(x),
                    data_source = data_source, fields = fields, key = x_key,
-                   order_by = order_by, ctes = c(cte, ctes))
+                   order_by = order_by, ctes = c(ctes, cte))
 }
 
 

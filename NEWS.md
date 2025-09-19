@@ -1,6 +1,14 @@
 **If you are viewing this file on CRAN, please check the [latest news on GitHub](https://github.com/kjellpk/dbi.table/blob/master/NEWS.md) where the formatting is also better.**
 
 
+# dbi.table v1.0.5
+
+## NOTES
+
+1. Bug fix. `as_cte` was putting the CTEs in the wrong order when the input
+   already included a CTE. This caused DuckDB >= 1.4.0 to bork.
+
+
 # dbi.table v1.0.4
 
 ## NOTES
