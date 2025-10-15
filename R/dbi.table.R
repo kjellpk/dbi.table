@@ -588,12 +588,9 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
     j <- preprocess_j(substitute(j), x, parent, !is.null(by))
   }
 
-  sub_on <- substitute(on)
-  if (!is.null(sub_on)) {
-    on <- stry(eval(on, envir = parent))
-    if (inherits(on, "try-error")) {
-      on <- sub_on
-    }
+  on_sub <- substitute(on)
+  if (inherits(on <- stry(on), "try-error")) {
+    on <- on_sub
   }
 
   if (is.null(i) && is.null(j)) {
