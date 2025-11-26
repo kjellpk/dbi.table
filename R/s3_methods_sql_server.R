@@ -96,7 +96,8 @@ write_limit_Microsoft_SQL_Server <- function(x, n) {
 
 
 
-#' @rawNamespace S3method(temporary_dbi_table_name,"Microsoft SQL Server",temporary_dbi_table_name_Microsoft_SQL_Server)
-temporary_dbi_table_name_Microsoft_SQL_Server <- function(conn) {
-  paste0("#", unique_table_name(session$tmp_base))
+#' @rawNamespace S3method(temporary_dbi_table,"Microsoft SQL Server",temporary_dbi_table_Microsoft_SQL_Server)
+temporary_dbi_table_Microsoft_SQL_Server <- function(conn, x, key = NULL) {
+  temp_name <- paste0("#", unique_table_name(session$tmp_base))
+  make_temp_dbi_table(conn, temp_name, x, key)
 }
