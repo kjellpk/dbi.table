@@ -399,11 +399,11 @@ extract_on_validator <- function(expr, x_names, i_names) {
   if (expr %is_call_to% DT_SUPPORTED_JOIN_OPERATORS) {
     op <- as.character(expr[[1L]])
 
-    if (!(lhs <- as.character(expr[[2L]])) %in% x_names) {
+    if (!(lhs <- format(expr[[2L]])) %in% x_names) {
       stop("argument specifying columns received non-existing column: '",
            lhs, "'")
     }
-    if (!(rhs <- as.character(expr[[3L]])) %in% i_names) {
+    if (!(rhs <- format(expr[[3L]])) %in% i_names) {
       stop("argument specifying columns received non-existing column: '",
            rhs, "'")
     }
