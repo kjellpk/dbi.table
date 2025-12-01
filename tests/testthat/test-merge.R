@@ -111,6 +111,14 @@ for (n in names(chinook_connections)) {
     ))
   })
 
+  test_that(paste0("extract merge w/ syntax as X[Y, on=.(x1 = a, x2 = b)]", " [", n, "]"), {
+    Album <- dbi.table(conn, DBI::Id("Album"))
+    Artist <- dbi.table(conn, DBI::Id("Artist"))
+    expect_true(reference.test(
+      Album[Artist, on = .(AlbumId = ArtistId, ArtistId = ArtistId)]
+    ))
+  })
+
   test_that(paste0("extract merge w/ (non-equi) joins using binary operators >=, <=", " [", n, "]"), {
     Track <- dbi.table(conn, DBI::Id("Track"))
     Customer <- dbi.table(conn, DBI::Id("Customer"))
