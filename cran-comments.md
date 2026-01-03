@@ -1,8 +1,7 @@
-# 1.0.4 Changes Relative to Version 1.0.3 (Current CRAN Version)
+# 1.0.6 Changes Relative to Version 1.0.5 (Current CRAN Version)
 
-- Moved inline SQL statements in .R files to .sql files in inst/sql_statements.
-
-- Added support for more RDBMSs. Improved foreign key lookup and merging.
+- New feature: Added support for lists of the form `.(name = symbol)` to the
+  `on` arguement in the extract (`[`) method.
 
 
 ## Test Environments
@@ -15,7 +14,7 @@
 * ubuntu-latest (release)
 * ubuntu-latest (oldrel-1)
 
-# Relevant Notes from Previous CRAN Submission
+# Relevant Notes from Previous CRAN Submissions
 
 ## The `dbi.attach` Function Calls `attach`
 
@@ -64,7 +63,14 @@ There are no references other than the package vignette.
 
 # Comments for Previous CRAN Submissions
 
-# 1.0.3 Changes Relative to Version 1.0.1 (Current CRAN Version)
+# 1.0.4 Changes Relative to Version 1.0.3
+
+- Moved inline SQL statements in .R files to .sql files in inst/sql_statements.
+
+- Added support for more RDBMSs. Improved foreign key lookup and merging.
+
+
+# 1.0.3 Changes Relative to Version 1.0.1
 
 - At the request of the data.table maintainers, moved data.table from Depends
   to Suggests.
