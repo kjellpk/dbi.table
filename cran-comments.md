@@ -1,7 +1,7 @@
 # 1.0.6 Changes Relative to Version 1.0.5 (Current CRAN Version)
 
-- New feature: Added support for lists of the form `.(name = symbol)` to the
-  `on` arguement in the extract (`[`) method.
+- New feature: added support for lists of the form `.(name = symbol)` to the
+  `on` argument in the extract (`[`) method.
 
 
 ## Test Environments
