@@ -182,7 +182,7 @@ handle_i_order <- function(x, i, enclos) {
     x_key <- names_list(x_key)
     m <- min(length(x_key), length(order_by))
 
-    if (!all(mapply(identical, sub_lang(x_key[m], c(x), NULL), order_by[m]))) {
+    if (!all(mapply(identical, sub_lang(x_key[m], c(x)), order_by[m]))) {
       attr(x, "sorted") <- NULL
     }
   }
@@ -207,7 +207,7 @@ handle_by <- function(x, by, enclos) {
     return(list())
   }
 
-  by <- sub_lang(by, envir = x, enclos = enclos)
+  by <- sub_lang(by, x, get_specials(x), enclos)
 
   if (length(window_calls(by, x))) {
     stop("Aggregate and window functions are not allowed in 'by'",
@@ -234,7 +234,7 @@ handle_j <- function(x, j, by, enclos) {
     j_names[idx] <- paste0("V", which(idx))
   }
 
-  j <- sub_lang(j, envir = x, enclos = enclos)
+  j <- sub_lang(j, x, get_specials(x), enclos)
   by <- handle_by(x, by, enclos)
 
   a <- attributes(x)
@@ -318,7 +318,7 @@ handle_the_walrus <- function(x, i, j, by, env, x_sub) {
          "list of expressions", call. = FALSE)
   }
 
-  j <- sub_lang(j, x, enclos = env)
+  j <- sub_lang(j, x, get_specials(x), env)
   j <- handle_over(x, j, by, order_by)
 
   a <- attributes(x)

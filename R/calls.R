@@ -1,5 +1,5 @@
-sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
-                     enclos = NULL) {
+sub_lang <- function(e, envir = NULL, specials = emptyenv(),
+                     enclos = emptyenv()) {
   if (is.null(e)) {
     return(NULL)
   }
@@ -15,8 +15,8 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
       return(eval(e, envir, NULL))
     }
 
-    if (!is.null(specials[[e_char]])) {
-      return(eval(e, specials, NULL)(e, envir, specials, enclos))
+    if (!is.null(fn <- get0(e_char, specials))) {
+      return(fn(e, envir, specials, enclos))
     }
 
     if (is.call(e <- eval(e, NULL, enclos))) {
@@ -31,7 +31,11 @@ sub_lang <- function(e, envir = NULL, specials = session$special_symbols,
   }
 
   if (is.call(e)) {
-    if (!is.null(specials[[as.character(e[[1L]])]])) {
+    if (!is.null(fn <- get0(as.character(e[[1L]]), envir = specials))) {
+      return(fn(e, envir, specials, enclos))
+    }
+
+    if (!is.null(get0(as.character(e[[1L]]), envir = specials))) {
       return(eval(e[[1L]], specials, NULL)(e, envir, specials, enclos))
     }
 
@@ -147,8 +151,7 @@ handy_andy <- function(x) {
 
   if (length(x) > 1L) {
     names(x) <- paste0("x", seq_along(x))
-    sub_lang(str2lang(paste(paren(names(x)), collapse = "&")),
-             envir = x, specials = NULL)
+    sub_lang(str2lang(paste(paren(names(x)), collapse = "&")), x)
   } else {
     x[[1]]
   }

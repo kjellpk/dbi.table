@@ -117,20 +117,20 @@ sql_join <- function(x, y, type, on, prefixes, parent_frame) {
 
   y_sub <- xy_fields[xy_fields$src == prefixes[[2L]], ]
   y_sub <- names_list(y_sub$internal_name, y_sub$old)
-  new_y <- sub_lang(y, envir = y_sub)
+  new_y <- sub_lang(y, y_sub)
 
   xref <- make_xref(c(x), new_y, xy_fields, prefixes)
   xy <- c(c(x), new_y)
-  on <- sub_lang(on, envir = xref, specials = NULL, enclos = parent_frame)
+  on <- sub_lang(on, xref, enclos = parent_frame)
 
   # join where
 
-  y_where <- sub_lang(get_where(y), envir = y_sub)
+  y_where <- sub_lang(get_where(y), y_sub)
   xy_where <- c(get_where(x), y_where)
 
   # join order_by
 
-  y_order_by <- sub_lang(get_order_by(y), envir = y_sub, specials = NULL)
+  y_order_by <- sub_lang(get_order_by(y), y_sub)
   xy_order_by <- c(get_order_by(x), y_order_by)
 
   # 2. Join DBI connections (fail if not same connection)

@@ -314,7 +314,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
   symbols <- vapply(on, is.symbol, FALSE)
   needs_name <- (nchar(on_names) == 0L & symbols)
   on_names[needs_name] <- as.character(on[needs_name])
-  
+
   on[symbols] <- mapply(call,
                         name = "==",
                         lapply(on_names[symbols], as.symbol),
@@ -349,7 +349,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
     if (is.null(j)) {
       j <- names_list(names(x), x_names)
     } else {
-      j <- sub_lang(j, envir = names_list(names(x), x_names))
+      j <- sub_lang(j, names_list(names(x), x_names), get_specials(x))
     }
 
     xi <- handle_j(xi, j, by = NULL)
@@ -371,7 +371,7 @@ merge_i_dbi_table <- function(x, i, not_i, j, by, nomatch, on, enclos) {
       j <- names_list(c(x_names, i_names))
     }
 
-    j <- sub_lang(j, envir = j_map, specials = NULL)
+    j <- sub_lang(j, j_map)
     xi <- handle_j(xi, j, by = NULL)
   }
 

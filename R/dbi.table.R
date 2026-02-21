@@ -547,7 +547,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
   if (missing(i)) {
     i <- NULL
   } else {
-    i <- sub_lang(substitute(i), x, enclos = parent)
+    i <- sub_lang(substitute(i), x, get_specials(x), parent)
 
     if (is.data.frame(i)) {
       i <- as.dbi.table(x, i)

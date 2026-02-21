@@ -151,7 +151,7 @@ write_order_by <- function(x, strict) {
 #' @rawNamespace S3method(write_order_by,default,write_order_by_default)
 write_order_by_default <- function(x, strict) {
   if (is.null(order_by <- get_order_by(x)) && strict) {
-    x_key <- sub_lang(lapply(get_key(x), as.name), c(x), NULL)
+    x_key <- sub_lang(lapply(get_key(x), as.name), c(x))
     order_by <- unique(c(order_by, x_key))
   }
 
