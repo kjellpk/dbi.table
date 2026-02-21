@@ -63,17 +63,3 @@ dbi_table_is_simple <- function(x) {
 
   (length(group_by) == 0L) && !any(has_over) && !distinct
 }
-
-
-
-dbi.table_can_join_x <- function(x) {
-  if (is.dbi.table(x)) {
-    has_over <- lapply(x, attr, which = "over", exact = TRUE)
-    has_over <- !vapply(has_over, is.null, FALSE)
-
-    length(get_group_by(x)) == 0 &&
-      !any(has_over)
-  } else {
-    FALSE
-  }
-}
