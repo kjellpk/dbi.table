@@ -22,8 +22,7 @@ as_cte <- function(x) {
                             on = I(list(NULL)))
 
   field_names <- names(x)
-  fields <- data.frame(internal_name = paste0(session$key_base,
-                                              seq_along(field_names)),
+  fields <- data.frame(internal_name = paste0(KEY_BASE, seq_along(field_names)),
                        id_name = id_name,
                        field = field_names)
 

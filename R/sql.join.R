@@ -113,7 +113,7 @@ sql_join <- function(x, y, type, on, prefixes, parent_frame) {
 
   xy_fields <- rbind(x_fields, y_fields)
   xy_fields$old <- xy_fields$internal_name
-  xy_fields$internal_name <- paste0(session$key_base, seq_len(nrow(xy_fields)))
+  xy_fields$internal_name <- paste0(KEY_BASE, seq_len(nrow(xy_fields)))
 
   y_sub <- xy_fields[xy_fields$src == prefixes[[2L]], ]
   y_sub <- names_list(y_sub$internal_name, y_sub$old)
