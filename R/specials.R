@@ -91,6 +91,21 @@ specials$parent[["shift"]] <- function(e, dbi_table, specials, env) {
 }
 
 
+specials$parent[["$"]] <- function(e, dbi_table, specials, env) {
+  if_scalar(eval(e, env))
+}
+
+
+specials$parent[["[["]] <- function(e, dbi_table, specials, env) {
+  if_scalar(eval(e, env))
+}
+
+
+specials$parent[["["]] <- function(e, dbi_table, specials, env) {
+  if_scalar(unname(unlist(eval(e, env))))
+}
+
+
 get_specials <- function(conn) {
   if (is.dbi.table(conn)) {
     conn <- get_connection(conn)

@@ -12,4 +12,22 @@ for (n in names(memory_connections)) {
 
     expect_no_error(table1[table2, on = .(name = name2)])
   })
+
+
+  test_that(paste0("dbi.table evaluates $, [[, and [", " [", n, "]"), {
+    x <- as.dbi.table(conn, data.frame(u = 1))
+    tmp <- list(v = 1)
+
+    expect_true(reference.test({
+      x[u == tmp$v]
+    }))
+
+    expect_true(reference.test({
+      x[u == tmp[["v"]]]
+    }))
+
+    expect_true(reference.test({
+      x[u == tmp["v"]]
+    }))
+  })
 }
