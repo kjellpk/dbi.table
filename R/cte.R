@@ -49,16 +49,6 @@ as_cte <- function(x) {
 
 
 
-dbi_table_is_simple <- function(x) {
-  if (!is.dbi.table(x)) {
-    return(FALSE)
-  }
-
-  has_over <- vapply(c(x),
-                     function(u) !is.null(attr(u, "over", exact = TRUE)),
-                     FALSE)
-  group_by <- get_group_by(x)
-  distinct <- attr(x, "distinct", exact = TRUE)
-
-  (length(group_by) == 0L) && !any(has_over) && !distinct
+has_over <- function(x) {
+  any(vapply(c(x), function(u) !is.null(attr(u, "over", exact = TRUE)), FALSE))
 }

@@ -538,7 +538,7 @@ as.data.frame.dbi.table <- function(x, row.names = NULL, optional = FALSE, ...,
   x_sub <- substitute(x)
   parent <- parent.frame()
 
-  if (!dbi_table_is_simple(x)) {
+  if (has_over(x) || length(get_group_by(x)) || get_distinct(x)) {
     x <- as_cte(x)
   }
 

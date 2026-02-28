@@ -190,14 +190,18 @@ JOIN_TYPES <- c(inner = "INNER JOIN",
 
 
 can_join_as_x <- function(x) {
-  dbi_table_is_simple(x)
+  !has_over(x) &&
+    !length(get_group_by(x)) &&
+    !get_distinct(x)
 }
 
 
 
 can_join_as_y <- function(x) {
-  data_source <- get_data_source(x)
-  dbi_table_is_simple(x) && (nrow(data_source) == 1L)
+  !has_over(x) &&
+    !length(get_group_by(x)) &&
+    !get_distinct(x) &&
+    (nrow(get_data_source(x)) == 1L)
 }
 
 
