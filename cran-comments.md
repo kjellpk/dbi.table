@@ -1,7 +1,7 @@
-# 1.0.6 Changes Relative to Version 1.0.5 (Current CRAN Version)
+# 1.0.7 Changes Relative to Version 1.0.6 (Current CRAN Version)
 
-- New feature: added support for lists of the form `.(name = symbol)` to the
-  `on` argument in the extract (`[`) method.
+- Bug fix: fixed issue #6 - `x[y]` did not return the reference result when
+  `x` contained a `WHERE` clause.
 
 
 ## Test Environments
@@ -13,6 +13,7 @@
 * ubuntu-latest (devel)
 * ubuntu-latest (release)
 * ubuntu-latest (oldrel-1)
+
 
 # Relevant Notes from Previous CRAN Submissions
 
@@ -62,6 +63,12 @@ There are no references other than the package vignette.
 ---
 
 # Comments for Previous CRAN Submissions
+
+# 1.0.6 Changes Relative to Version 1.0.5 (Current CRAN Version)
+
+- New feature: added support for lists of the form `.(name = symbol)` to the
+  `on` argument in the extract (`[`) method.
+
 
 # 1.0.4 Changes Relative to Version 1.0.3
 

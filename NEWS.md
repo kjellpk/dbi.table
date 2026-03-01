@@ -1,6 +1,15 @@
 **If you are viewing this file on CRAN, please check the [latest news on GitHub](https://github.com/kjellpk/dbi.table/blob/master/NEWS.md) where the formatting is also better.**
 
 
+# dbi.table v1.0.7
+
+## NOTES
+
+1. Fixed a bug (Issue #6) where `x[y]` did not return the reference result when `x` contains a `WHERE` clause.
+
+2. Evaluation of special functions (e.g., `%in%`) now RDBMS specific.
+
+
 # dbi.table v1.0.6
 
 ## NOTES
