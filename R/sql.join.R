@@ -191,6 +191,7 @@ JOIN_TYPES <- c(inner = "INNER JOIN",
 
 can_join_as_x <- function(x) {
   !has_over(x) &&
+    !length(get_where(x)) &&
     !length(get_group_by(x)) &&
     !get_distinct(x)
 }
