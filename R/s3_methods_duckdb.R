@@ -70,3 +70,29 @@ foreign_keys_duckdb <- function(catalog, id) {
 
   as.data.frame(r, n = -1L)
 }
+
+
+
+#' @rawNamespace S3method(temporary_dbi_table,duckdb_connection,temporary_dbi_table_duckdb)
+temporary_dbi_table_duckdb <- function(conn, x, key = NULL) {
+  temp_name <- unique_table_name(TMP_BASE)
+  duckdb::duckdb_register(conn, temp_name, x)
+
+  temp_id <- DBI::Id(temp_name)
+  x <- new_dbi_table(conn, temp_id, names(x), key)
+
+  temp_dbi_table <- new.env(parent = emptyenv())
+  temp_dbi_table$name <- temp_name
+  temp_dbi_table$conn <- conn
+  reg.finalizer(temp_dbi_table, finalize_duckdb_temp_dbi_table)
+
+  attr(x, "temp_dbi_table") <- temp_dbi_table
+  x
+}
+
+
+
+finalize_duckdb_temp_dbi_table <- function(e) {
+  stry(duckdb::duckdb_unregister(e$conn, e$name))
+  NULL
+}
