@@ -9,6 +9,7 @@ rnacentral.postgres <- function() {
 
 test_that("dbi.attach works on Postgres w/ schema arg", {
   skip_on_cran()
+  skip_on_ci()
   expect_no_error(e <- dbi.attach(rnacentral.postgres))
   expect_true(identical(as.environment(2L), e))
   expect_true(setequal(ls(e[["../catalog"]]),

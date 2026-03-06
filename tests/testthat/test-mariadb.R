@@ -8,6 +8,7 @@ ctu.mariadb <- function() {
 
 test_that("dbi.attach works on MariaDB / needs schema arg", {
   skip_on_cran()
+  skip_on_ci()
   #since not interactive / multiple schemas
   expect_error(e <- dbi.attach(ctu.mariadb))
   expect_no_error(e <- dbi.attach(ctu.mariadb, schema = "Chinook"))
