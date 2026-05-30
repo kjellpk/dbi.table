@@ -1,5 +1,10 @@
 # `dbi.table`
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/kjellpk/dbi.table/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/kjellpk/dbi.table/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 The `dbi.table` package allows you to query database tables and views
 over a `DBI` connection using `data.table`’s `[i, j, by]` syntax. The
 package provides functions for connecting to a single table, for
@@ -30,6 +35,9 @@ the Chinook database at the [CTU Prague Relational Learning
 Repository](https://relational-data.org/).
 
     ctu_connector <- function() {
+      # disable SSL - server does not accept encrypted connections
+      Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = "1")
+
       DBI::dbConnect(RMariaDB::MariaDB(),
                      host = "relational.fel.cvut.cz",
                      port = 3306,

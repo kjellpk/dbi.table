@@ -1,4 +1,11 @@
 ctu.mariadb <- function() {
+  if (nchar(m <- Sys.getenv("MARIADB_TLS_DISABLE_PEER_VERIFICATION"))) {
+    on.exit(Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = m))
+  } else {
+    on.exit(Sys.unsetenv("MARIADB_TLS_DISABLE_PEER_VERIFICATION"))
+  }
+  Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = "1")
+
   DBI::dbConnect(RMariaDB::MariaDB(),
                  user = "guest",
                  password = "ctu-relational",

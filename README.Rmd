@@ -43,6 +43,9 @@ Chinook database at the
 
 ```{r connection}
 ctu_connector <- function() {
+  # disable SSL - server does not accept encrypted connections
+  Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = "1")
+
   DBI::dbConnect(RMariaDB::MariaDB(),
                  host = "relational.fel.cvut.cz",
                  port = 3306,
