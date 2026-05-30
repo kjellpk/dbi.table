@@ -323,33 +323,15 @@ handle_the_walrus <- function(x, i, j, by, env, x_sub) {
 
   a <- attributes(x)
   a$names <- NULL
-  x <- c(x)
-  x[names(j)] <- j
-  x <- x[setdiff(names(x), names(j_null))]
-  a$names <- names(x)
-  attributes(x) <- a
+  xj <- c(x)
+  xj[names(j)] <- j
+  xj <- xj[setdiff(names(xj), names(j_null))]
+  a$names <- names(xj)
+  attributes(xj) <- a
 
-  if (is.symbol(x_sub)) {
-    x_name <- as.character(x_sub)
-    x_env <- find_environment(x_name, class = "dbi.table", envir = env)
-
-    if (!is.null(x_env)) {
-      if (is_dbi_schema(x_env)) {
-        search_path_envs <- lapply(search(), as.environment)
-
-        if (any(vapply(search_path_envs, identical, FALSE, y = x_env))) {
-          x_env <- env
-        }
-      }
-
-      res <- stry(assign(x_name, x, pos = x_env))
-      if (inherits(res, "try-error")) {
-        warning(attr(res, "condition")$message, call. = FALSE)
-      }
-    }
-  }
+  modify_in_place(x, x_sub, env, xj)
 
   #invisible doesn't work - use data.table's workaround
-  session$print <- x
-  x
+  session$print <- xj
+  xj
 }

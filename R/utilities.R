@@ -80,31 +80,6 @@ unique_table_name <- function(pre = "X") {
 
 
 
-find_environment <- function(x, mode = "any", class = NULL,
-                             envir = parent.frame()) {
-  if (identical(envir, emptyenv())) {
-    return(NULL)
-  }
-
-  if (!is.character(x) && !is.symbol(x <- substitute(x))) {
-    return(NULL)
-  }
-
-  x <- as.character(x)[[1L]]
-
-  if (!is.null(obj <- get0(x, envir, mode, inherits = FALSE))) {
-    if (is.null(class)) {
-      return(envir)
-    } else if (inherits(obj, class)) {
-      return(envir)
-    }
-  }
-
-  find_environment(x, mode, class, parent.env(envir))
-}
-
-
-
 assign_and_lock <- function(x, value, pos) {
   assign(x, value, pos)
   lockBinding(x, pos)
