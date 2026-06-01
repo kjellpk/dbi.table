@@ -1,16 +1,9 @@
 ctu.mariadb <- function() {
-  if (nchar(m <- Sys.getenv("MARIADB_TLS_DISABLE_PEER_VERIFICATION"))) {
-    on.exit(Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = m))
-  } else {
-    on.exit(Sys.unsetenv("MARIADB_TLS_DISABLE_PEER_VERIFICATION"))
-  }
-  Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = "1")
-
   DBI::dbConnect(RMariaDB::MariaDB(),
+                 host = "relational.fel.cvut.cz",
                  user = "guest",
                  password = "ctu-relational",
-                 host = "relational.fel.cvut.cz",
-                 port = 3306)
+                 ssl.mode = "DISABLED")
 }
 
 test_that("dbi.attach works on MariaDB / needs schema arg", {

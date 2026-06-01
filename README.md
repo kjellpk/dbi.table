@@ -35,15 +35,12 @@ the Chinook database at the [CTU Prague Relational Learning
 Repository](https://relational-data.org/).
 
     ctu_connector <- function() {
-      # disable SSL - server does not accept encrypted connections
-      Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = "1")
-
       DBI::dbConnect(RMariaDB::MariaDB(),
                      host = "relational.fel.cvut.cz",
-                     port = 3306,
-                     dbname = "Chinook",
                      user = "guest",
-                     password = "ctu-relational")
+                     password = "ctu-relational",
+                     dbname = "Chinook",
+                     ssl.mode = "DISABLED")
     }
 
 Using a function that creates a `DBI` connection rather than the `DBI`
