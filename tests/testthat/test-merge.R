@@ -67,12 +67,13 @@ for (n in names(chinook_connections)) {
   test_that(paste0("self merge works with no.dups = FALSE", " [", n, "]"), {
     Album <- dbi.table(conn, DBI::Id("Album"))
     expect_warning(reference.test(
-      merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId", no.dups = FALSE)
+      merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId",
+            sort = FALSE, no.dups = FALSE)
     ))
     expect_true(reference.test(
       suppressWarnings(
         merge(Album, Album, by.x = "AlbumId", by.y = "ArtistId",
-              no.dups = FALSE)
+              sort = FALSE, no.dups = FALSE)
       )
     ))
   })
