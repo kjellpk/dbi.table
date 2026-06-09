@@ -2,8 +2,7 @@ ctu.mariadb <- function() {
   DBI::dbConnect(RMariaDB::MariaDB(),
                  host = "relational.fel.cvut.cz",
                  user = "guest",
-                 password = "ctu-relational",
-                 ssl.mode = "DISABLED")
+                 password = "ctu-relational")
 }
 
 test_that("dbi.attach works on MariaDB / needs schema arg", {
