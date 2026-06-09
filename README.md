@@ -20,8 +20,8 @@ for `by` when merging.
     install.packages("dbi.table")
 
     # Or the development version from GitHub:
-    # install.packages("pak")
-    pak::pak("kjellpk/dbi.table")
+    # install.packages("remotes")
+    remotes::install_github("kjellpk/dbi.table")
 
 ## Quick Start
 
@@ -30,65 +30,56 @@ First, let’s load the package.
     library(dbi.table)
     library(data.table) #for as.data.table
 
-Next, create a zero-argument function that returns a `DBI` connection to
-the Chinook database at the [CTU Prague Relational Learning
-Repository](https://relational-data.org/).
+While the `dbi.table` package will work with `DBIConnection` handles
+(e.g., as returned by `DBI::dbConnect`), best practice is instead to use
+a zero argument function that returns a `DBIConnection`. This paradigm
+allows the package to open, close, and reconnect to the database as
+necessary.
 
-    ctu_connector <- function() {
-      DBI::dbConnect(RMariaDB::MariaDB(),
-                     host = "relational.fel.cvut.cz",
-                     user = "guest",
-                     password = "ctu-relational",
-                     dbname = "Chinook",
-                     ssl.mode = "DISABLED")
-    }
+The function `chinook.duckbd` returns an open `DBIConnection` handle to
+the sample *Chinook* database included in the package.
 
-Using a function that creates a `DBI` connection rather than the `DBI`
-connection itself (which also works) allows the `dbi.table` package to
-manage the connection. The connection will be reestablished if it drops
-and is disconnected when it is no longer needed.
-
-    dbi.attach(ctu_connector)
+    dbi.attach(chinook.duckdb)
 
 The Chinook database is now attached to the search path in position 2.
 
     head(search(), 3)
 
-    ## [1] ".GlobalEnv"         "RMariaDB:Chinook"   "package:data.table"
+    ## [1] ".GlobalEnv"            "duckdb:chinook_duckdb" "package:data.table"
 
 Its tables can be queried using `data.table`’s `[i, j, by]` syntax.
 
     Track[MediaTypeId == 1, .("#_of_Tracks" = .N), by = .(Composer)]
 
-    ## <Chinook> Track 
-    ##                                      Composer #_of_Tracks
-    ##                                        <char>       <i64>
-    ##                                            NA         629
-    ##  A. F. Iommi, W. Ward, T. Butler, J. Osbourne           3
-    ##                                      A. Jamal           1
-    ##              A.Bouchard/J.Bouchard/S.Pearlman           1
-    ##                    A.Isbell/A.Jones/O.Redding           1
+    ## <chinook_duckdb> Track 
+    ##                                             Composer #_of_Tracks
+    ##                                               <char>       <num>
+    ##  Steven Tyler, Joe Perry, Jim Vallance, Holly Knight           1
+    ##                              Al Perkins/Willie Dixon           1
+    ##                             Fausto Nilo - Armandinho           1
+    ##               Bino Farias/Da Gama/Lazão/Toni Garrido           4
+    ##                              Marisa Monte/Nando Reis           2
     ##  ---
 
 The `csql` utility displays the `dbi.table`’s SQL query.
 
     csql(Track[MediaTypeId == 1, .("#_of_Tracks" = .N), by = .(Composer)])
 
-    ## SELECT `Track`.`Composer` AS `Composer`,
-    ##        COUNT(*) AS `#_of_Tracks`
+    ## SELECT Track.Composer AS Composer,
+    ##        COUNT(*) AS "#_of_Tracks"
     ## 
-    ##   FROM `Chinook`.`Track` AS `Track`
+    ##   FROM chinook_duckdb.main.Track AS Track
     ## 
-    ##  WHERE `Track`.`MediaTypeId` = 1
+    ##  WHERE Track.MediaTypeId = 1
     ## 
-    ##  GROUP BY `Track`.`Composer`
+    ##  GROUP BY Track.Composer
     ## 
     ##  LIMIT 10000
 
 Simply `detach` the schema when you are finished and the `DBI`
 connection will be closed the next time garbage collection runs.
 
-    detach("RMariaDB:Chinook")
+    detach("duckdb:chinook_duckdb")
 
 ## Supported Databases
 

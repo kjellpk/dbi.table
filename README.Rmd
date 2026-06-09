@@ -24,8 +24,8 @@ as the default for `by` when merging.
 install.packages("dbi.table")
 
 # Or the development version from GitHub:
-# install.packages("pak")
-pak::pak("kjellpk/dbi.table")
+# install.packages("remotes")
+remotes::install_github("kjellpk/dbi.table")
 ```
 
 ## Quick Start
@@ -37,28 +37,16 @@ library(dbi.table)
 library(data.table) #for as.data.table
 ```
 
-Next, create a zero-argument function that returns a `DBI` connection to the
-Chinook database at the
-[CTU Prague Relational Learning Repository](https://relational-data.org/).
+While the `dbi.table` package will work with `DBIConnection` handles (e.g., as
+returned by `DBI::dbConnect`), best practice is instead to use a zero argument
+function that returns a `DBIConnection`. This paradigm allows the package to
+open, close, and reconnect to the database as necessary.
 
-```{r connection}
-ctu_connector <- function() {
-  DBI::dbConnect(RMariaDB::MariaDB(),
-                 host = "relational.fel.cvut.cz",
-                 user = "guest",
-                 password = "ctu-relational",
-                 dbname = "Chinook",
-                 ssl.mode = "DISABLED")
-}
-```
-
-Using a function that creates a `DBI` connection rather than the `DBI`
-connection itself (which also works) allows the `dbi.table` package to manage
-the connection. The connection will be reestablished if it drops and is
-disconnected when it is no longer needed.
+The function `chinook.duckbd` returns an open `DBIConnection` handle to the
+sample *Chinook* database included in the package.
 
 ```{r dbi.attach}
-dbi.attach(ctu_connector)
+dbi.attach(chinook.duckdb)
 ```
 
 The Chinook database is now attached to the search path in position 2.
@@ -83,7 +71,7 @@ Simply `detach` the schema when you are finished and the `DBI` connection will
 be closed the next time garbage collection runs.
 
 ```{r detach}
-detach("RMariaDB:Chinook")
+detach("duckdb:chinook_duckdb")
 ```
 
 ## Supported Databases
