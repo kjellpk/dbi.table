@@ -8,6 +8,8 @@ db_short_name <- function(conn) {
 db_short_name_default <- function(conn) {
   if (nchar(dbname <- DBI::dbGetInfo(conn)$dbname)) {
     sub("([^.]+)\\.[[:alnum:]]+$", "\\1", basename(dbname))
+  } else if (is_dbi_schema(conn)) {
+    get("./schema_name", conn)
   } else {
     "default_database"
   }
