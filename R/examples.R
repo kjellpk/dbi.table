@@ -36,7 +36,7 @@ chinook.duckdb <- function() {
   conn <- DBI::dbConnect(duckdb::duckdb(),
                          temp_db_path("chinook_duckdb.duckdb"))
 
-  load_chinook_database(conn)
+  load_chinook_database(conn, schema_name = "main")
 }
 
 
@@ -51,11 +51,7 @@ temp_db_path <- function(db_file_name) {
 
 
 
-load_chinook_database <- function(conn) {
-  if (length(DBI::dbListTables(conn))) {
-    stop("database is not empty", call. = FALSE)
-  }
-
+load_chinook_database <- function(conn, schema_name = "") {
   chinook_dir <- file.path(system.file(package = "dbi.table"),
                            "example_files",
                            "chinook_export")
@@ -63,6 +59,14 @@ load_chinook_database <- function(conn) {
   chinook_schema <- file.path(chinook_dir, "schema.sql")
 
   chinook_sql <- readLines(chinook_schema)
+
+  if (nchar(schema_name)) {
+    schema_name_dot <- paste0(schema_name, ".")
+  } else {
+    schema_name_dot <- schema_name
+  }
+
+  chinook_sql <- gsub("__SCHEMA__", schema_name_dot, chinook_sql, fixed = TRUE)
 
   for (statement in chinook_sql[nchar(chinook_sql) > 0L]) {
     DBI::dbExecute(conn, statement)
@@ -74,7 +78,8 @@ load_chinook_database <- function(conn) {
 
   for (tab in chinook_tables) {
     x <- utils::read.csv(file.path(chinook_dir, paste0(tolower(tab), ".csv")))
-    DBI::dbAppendTable(conn, tab, x)
+    id <- if (nchar(schema_name)) DBI::Id(schema = schema_name, table = tab) else DBI::Id(table = tab)
+    DBI::dbAppendTable(conn, id, x)
   }
 
   conn
