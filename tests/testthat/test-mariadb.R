@@ -1,4 +1,11 @@
 ctu.mariadb <- function() {
+  if (nchar(ev <- Sys.getenv("MARIADB_TLS_DISABLE_PEER_VERIFICATION"))) {
+    on.exit(Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = ev))
+  } else {
+    Sys.unsetenv("MARIADB_TLS_DISABLE_PEER_VERIFICATION")
+  }
+  Sys.setenv(MARIADB_TLS_DISABLE_PEER_VERIFICATION = "1")
+
   DBI::dbConnect(RMariaDB::MariaDB(),
                  host = "relational.fel.cvut.cz",
                  user = "guest",
@@ -33,5 +40,5 @@ test_that("dbi.attach works on MariaDB / needs schema arg", {
   expect_true(catalog$.temporary_table_denied)
   expect_identical(as.data.frame(x, n = -1L), big_iris)
 
-  expect_silent(detach(2L))
+  expect_silent(detach("RMariaDB:Chinook"))
 })
