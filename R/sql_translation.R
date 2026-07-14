@@ -1,5 +1,5 @@
 sub_db_identifier <- function(e, conn, fields) {
-  qname <- DBI::dbQuoteIdentifier(conn, fields$internal_name)
+  qname <- translate_sql_(lapply(fields$internal_name, as.name), con = conn)
 
   qfield <- paste(DBI::dbQuoteIdentifier(conn, fields$id),
                   DBI::dbQuoteIdentifier(conn, fields$field),
