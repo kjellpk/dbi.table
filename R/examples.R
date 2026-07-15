@@ -33,8 +33,10 @@ chinook.duckdb <- function() {
          call. = FALSE)
   }
 
-  conn <- DBI::dbConnect(duckdb::duckdb(),
-                         temp_db_path("chinook_duckdb.duckdb"))
+  suppressMessages({
+    conn <- DBI::dbConnect(duckdb::duckdb(),
+                           temp_db_path("chinook_duckdb.duckdb"))
+  })
 
   load_chinook_database(conn, schema_name = "main")
 }
