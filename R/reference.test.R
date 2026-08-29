@@ -72,6 +72,11 @@ reference.test <- function(expr, envir = parent.frame(),
   dbit_eval <- data.table::as.data.table(dbit_eval)
   dt_eval <- eval(expr, envir = dbits, enclos = envir)
 
+  i64 <- vapply(dbit_eval, bit64::is.integer64, FALSE)
+  ii <- vapply(dt_eval, is.integer, FALSE)
+  nm <- names(dbit_eval)[i64 & ii]
+  dbit_eval[, (nm) := lapply(.SD, as.integer), .SDcols = nm]
+
   eq <- all.equal(dt_eval, dbit_eval,
                   ignore.row.order = ignore.row.order)
 
