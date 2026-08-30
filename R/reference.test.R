@@ -91,3 +91,6 @@ reference.test <- function(expr, envir = parent.frame(),
 # Need to tell data.table that dbi.table is data.table aware b/c nothing
 # imported from data.table.
 .datatable.aware <- TRUE
+
+`:=` <- function(x, y) NULL
+.SD <- NULL

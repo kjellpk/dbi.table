@@ -10,6 +10,7 @@ Imports:
   dbplyr,
   methods,
   rlang,
+  stats,
   stringi,
   utils
 Suggests:
@@ -19,6 +20,7 @@ Suggests:
   data.table,
   duckdb,
   knitr,
+  odbc,
   rmarkdown,
   testthat (>= 3.0.0),
   withr

@@ -109,14 +109,14 @@ new_specials_env_from_conn_Microsoft_SQL_Server <- function(conn) {
   specials_mssql <- new.env(parent = emptyenv())
 
   specials_mssql$mean <- function(e, dbi_table, specials, env) {
-    e <- match.call(mean, e)
+    e <- match.call(base::mean, e)
     x <- sub_lang(e$x, dbi_table, specials, env)
     e$x <- as.call(list(as.symbol("as.double"), x))
     e
   }
 
   specials_mssql$sd <- function(e, dbi_table, specials, env) {
-    e <- match.call(sd, e)
+    e <- match.call(stats::sd, e)
     x <- sub_lang(e$x, dbi_table, specials, env)
     e$x <- as.call(list(as.symbol("as.double"), x))
     e
