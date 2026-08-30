@@ -101,3 +101,26 @@ temporary_dbi_table_Microsoft_SQL_Server <- function(conn, x, key = NULL) {
   temp_name <- paste0("#", unique_table_name(TMP_BASE))
   make_temp_dbi_table(conn, temp_name, x, key)
 }
+
+
+
+#' @rawNamespace S3method(new_specials_env_from_conn,"Microsoft SQL Server",new_specials_env_from_conn_Microsoft_SQL_Server)
+new_specials_env_from_conn_Microsoft_SQL_Server <- function(conn) {
+  specials_mssql <- new.env(parent = emptyenv())
+
+  specials_mssql$mean <- function(e, dbi_table, specials, env) {
+    e <- match.call(mean, e)
+    x <- sub_lang(e$x, dbi_table, specials, env)
+    e$x <- as.call(list(as.symbol("as.double"), x))
+    e
+  }
+
+  specials_mssql$sd <- function(e, dbi_table, specials, env) {
+    e <- match.call(sd, e)
+    x <- sub_lang(e$x, dbi_table, specials, env)
+    e$x <- as.call(list(as.symbol("as.double"), x))
+    e
+  }
+
+  specials_mssql
+}
