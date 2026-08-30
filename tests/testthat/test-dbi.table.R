@@ -21,7 +21,8 @@ for (n in names(chinook_connections)) {
                 MIN = min(Milliseconds, na.rm = TRUE),
                 MAX = max(Milliseconds, na.rm = TRUE),
                 SD = sd(Milliseconds, na.rm = TRUE),
-                N = .N)]
+                N = .N)],
+      ignore.row.order = FALSE
     ))
   })
 
@@ -154,7 +155,9 @@ for (n in names(chinook_connections)) {
 
   test_that(paste0("over picks up key", " [", n, "]"), {
     expect_no_error(
-      Album <- dbi.table(conn, "Album", key = c("ArtistId", "Title"))
+      #Need colations to sort on character data for SQL Server
+      #Album <- dbi.table(conn, "Album", key = c("ArtistId", "Title"))
+      Album <- dbi.table(conn, "Album", key = c("ArtistId", "AlbumId"))
     )
 
     expect_true(reference.test(
