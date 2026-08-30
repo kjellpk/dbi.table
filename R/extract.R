@@ -248,9 +248,11 @@ handle_j <- function(x, j, by, enclos) {
   names(j) <- j_names
   j <- c(by, j)
 
-  j_key <- match(x_key_cols, j, nomatch = 0L)
-  j_key <- j_key[j_key > 0L]
-  j_key <- names(j)[j_key]
+  if (all(j_key <- match(x_key_cols, j, nomatch = 0L) > 0L)) {
+    j_key <- names(j)[j_key]
+  } else {
+    j_key <- NULL
+  }
 
   dbi_table_object(cdefs = j, conn = a$conn, data_source = a$data_source,
                    fields = a$fields, key = j_key, distinct = a$distinct,
