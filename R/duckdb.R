@@ -1,29 +1,3 @@
-#' @rawNamespace S3method(tables_schema_,duckdb_connection,tables_schema_duckdb)
-tables_schema_duckdb <- function(catalog) {
-  schema <- DBI::dbGetQuery(catalog, sql_statement("tables_schema_duckdb"))
-
-  information_schema_tables <- c("character_sets", "columns",
-                                 "constraint_column_usage", "key_column_usage",
-                                 "referential_constraints", "schemata",
-                                 "tables", "table_constraints")
-
-  for (table in information_schema_tables) {
-    i <- DBI::dbListFields(catalog,
-                           DBI::SQL(paste0("information_schema.", table)))
-    i <- data.frame(table_catalog = "system",
-                    table_schema = "information_schema",
-                    table_name = table,
-                    column_name = i,
-                    ordinal_position = seq_along(i),
-                    pk_ordinal_position = NA_integer_)
-    schema <- rbind(schema, i)
-  }
-
-  schema
-}
-
-
-
 #' @rawNamespace S3method(default_schema,duckdb_connection,default_schema_duckdb)
 default_schema_duckdb <- function(conn) {
   DBI::dbGetQuery(conn, "SELECT current_schema()")[[1L]]
