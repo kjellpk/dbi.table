@@ -1,10 +1,3 @@
-#' @rawNamespace S3method(tables_schema_,PqConnection,tables_schema_postgres)
-tables_schema_postgres <- function(catalog) {
-  DBI::dbGetQuery(catalog, sql_statement("tables_schema_postgres"))
-}
-
-
-
 #' @rawNamespace S3method(default_schema,PqConnection,default_schema_postgres)
 default_schema_postgres <- function(conn) {
   DBI::dbGetQuery(conn, "SELECT CURRENT_SCHEMA()")[[1L]]

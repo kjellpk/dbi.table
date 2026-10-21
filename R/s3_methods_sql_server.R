@@ -1,10 +1,3 @@
-#' @rawNamespace S3method(tables_schema_,"Microsoft SQL Server",tables_schema_Microsoft_SQL_Server)
-tables_schema_Microsoft_SQL_Server <- function(catalog) {
-  DBI::dbGetQuery(catalog, sql_statement("tables_schema_Microsoft_SQL_Server"))
-}
-
-
-
 #' @rawNamespace S3method(default_schema,"Microsoft SQL Server",default_schema_Microsoft_SQL_Server)
 default_schema_Microsoft_SQL_Server <- function(conn) {
   DBI::dbGetQuery(conn, "SELECT SCHEMA_NAME()")[[1L]]

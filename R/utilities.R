@@ -89,24 +89,6 @@ assign_and_lock <- function(x, value, pos) {
 
 
 
-get_table_schema_from_id <- function(catalog, id) {
-  cts <- catalog[["./tables_schema"]]
-  i <- match(list(id), cts$id)
-  cts <- cts[i, ]
-
-  if (!length(fields <- cts[[1L, "fields"]])) {
-    fields <- DBI::dbListFields(catalog, id)
-    catalog[["./tables_schema"]][[i, "fields"]] <- fields
-  }
-
-  list(catalog = catalog,
-       id = id,
-       column_names = fields,
-       key = cts[[1L, "key"]])
-}
-
-
-
 new_dbi_table_from_id <- function(catalog, id) {
   if (is.null(s <- get_table_schema_from_id(catalog, id))) {
     return(NULL)
