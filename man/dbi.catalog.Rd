@@ -4,7 +4,7 @@
 \alias{dbi.catalog}
 \title{Create a \code{dbi.catalog}}
 \usage{
-dbi.catalog(conn, schemas)
+dbi.catalog(conn, ...)
 }
 \arguments{
 \item{conn}{a connection handle returned by \code{\link[DBI]{dbConnect}} or a

@@ -142,3 +142,10 @@ shouldnt_print <- function(x) {
 copy_vector <- function(x) {
   rev(rev(x))
 }
+
+
+
+copy_data_frame <- function(x) {
+  x <- as.data.frame(lapply(x, copy_vector))
+  copy_vector(x)
+}

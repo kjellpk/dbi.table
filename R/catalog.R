@@ -25,14 +25,28 @@
 #' ls(db$main)
 #'
 #' @export
-dbi.catalog <- function(conn, schemas) {
+dbi.catalog <- function(conn, ...) {
+  catalog <- empty_catalog(conn)
+  templates <- catalog_dbi_table_templates(catalog, ...)
+
+  lapply(templates, function(u, catalog) {
+    l <- length(id_name <- u$id@name)
+    schema_name <- if (l > 1L) id_name[[l - 1L]] else "main"
+
+    if (is.null(schema <- catalog[[schema_name]])) {
+      schema <- new_schema(schema_name, catalog)
+    }
+
+    makeActiveBinding(id_name[[l]], u$constructor, schema)
+  }, catalog = catalog)
+
+  catalog
+}
+
+
+
+empty_catalog <- function(conn) {
   conn <- init_connection(conn)
-
-  if (missing(schemas)) {
-    schemas <- NA
-  }
-
-  schemas <- as.character(schemas)
 
   catalog <- new.env(parent = emptyenv())
 
@@ -44,40 +58,6 @@ dbi.catalog <- function(conn, schemas) {
   }
 
   class(catalog) <- "dbi.catalog"
-  tables_schema <- tables_schema(catalog)
-
-  if (is.na(schemas)) {
-    schemas <- unique(tables_schema$table_schema)
-  } else {
-    if (length(not_found <- setdiff(schemas, tables_schema$table_schema))) {
-      stop("schemas not found on connection: ",
-           paste(not_found, collapse = ", "))
-    }
-
-    schemas <- union(schemas, schemas_to_include(conn))
-  }
-
-  tables_schema <- tables_schema[tables_schema$table_schema %in% schemas, ]
-  row.names(tables_schema) <- NULL
-
-  names(schemas) <- schemas
-  schemas <- lapply(schemas, new_schema, catalog = catalog)
-  schemas <- schemas[tables_schema$table_schema]
-
-  table_name <- tables_schema[, "table_name"]
-  table_id <- tables_schema$id
-
-  assign("./tables_schema", tables_schema[, c("id", "fields", "key")],
-         pos = catalog)
-
-  mapply(install_active_dbi_table,
-         schema = schemas,
-         name = table_name,
-         id = table_id,
-         MoreArgs = list(catalog = catalog),
-         SIMPLIFY = FALSE,
-         USE.NAMES = FALSE)
-
   catalog
 }
 
@@ -118,6 +98,45 @@ print.dbi.catalog <- function(x, ...) {
 
 is_dbi_catalog <- function(x) {
   inherits(x, "dbi.catalog")
+}
+
+
+
+catalog_objects <- function(catalog, ...) {
+  UseMethod("catalog_objects", dbi_connection(catalog))
+}
+
+
+#' @rawNamespace S3method(catalog_objects,default,catalog_objects_dbi)
+catalog_objects_dbi <- function(catalog, ...) {
+  db_objs <- DBI::dbListObjects(catalog, ...)
+  ids <- db_objs[db_objs$is_prefix == FALSE, "table"]
+  names(ids) <- vapply(ids, id_name, "", conn = catalog)
+
+  fields_fun <- function(conn, id) {
+    data.frame(fields = DBI::dbListFields(conn, id))
+  }
+
+  list(ids = ids, fields_fun = fields_fun)
+}
+
+
+
+catalog_dbi_table_templates <- function(catalog, ...) {
+  objs <- catalog_objects(catalog, ...)
+
+  if (is.data.frame(objs)) {
+    tmp <- NULL
+  } else {
+    templates <- lapply(objs$ids, dbi_table_template,
+                        catalog = catalog, fields = objs$fields_fun)
+
+    lapply(templates, function(u, expr) {
+      assign(".fields_expr", expr, pos = u)
+    }, expr = objs$fields_expr)
+  }
+
+  templates
 }
 
 

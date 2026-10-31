@@ -145,7 +145,10 @@ dbi.table <- function(conn, id, check.names = FALSE, key = NULL,
 
 
 
-new_dbi_table <- function(conn, id, fields = NULL, key = NULL,
+new_dbi_table <- function(conn, id, fields = NULL,
+                          key = NULL,
+                          primary_key = NULL,
+                          foreign_keys = NULL,
                           stringsAsFactors = FALSE) {
   if (inherits(id, "Id")) {
     id_name <- id@name[[length(id@name)]]
@@ -164,25 +167,32 @@ new_dbi_table <- function(conn, id, fields = NULL, key = NULL,
                             on = I(list(NULL)))
 
   if (is.null(fields)) {
-    fields <- DBI::dbListFields(conn, id)
+    fields <- data.frame(fields = DBI::dbListFields(conn, id))
   }
 
-  internal_name <- paste0(KEY_BASE, seq_len(length(fields)))
+  internal_name <- paste0(KEY_BASE, seq_len(nrow(fields)))
 
-  x <- names_list(internal_name, fields)
+  x <- names_list(internal_name, fields$field)
 
-  fields <- data.frame(internal_name = internal_name,
-                       id_name = id_name,
-                       field = fields)
+  fields <- cbind(internal_name = internal_name,
+                  id_name = id_name,
+                  fields)
+
+  if (is.null(key) && length(primary_key)) {
+    key <- primary_key
+  }
 
   dbi_table_object(cdefs = x, conn = conn, data_source = data_source,
                    fields = fields, key = key,
+                   primary_key = primary_key,
+                   foreign_keys = foreign_keys,
                    stringsAsFactors = stringsAsFactors)
 }
 
 
 
 dbi_table_object <- function(cdefs, conn, data_source, fields, key = NULL,
+                             primary_key = NULL, foreign_keys = NULL,
                              distinct = FALSE, where = NULL, group_by = NULL,
                              order_by = NULL, ctes = NULL,
                              stringsAsFactors = FALSE) {
@@ -191,6 +201,8 @@ dbi_table_object <- function(cdefs, conn, data_source, fields, key = NULL,
   attr(cdefs, "conn") <- conn
   attr(cdefs, "data_source") <- data_source
   attr(cdefs, "fields") <- fields
+  attr(cdefs, "primary_key") <- primary_key
+  attr(cdefs, "foreign_keys") <- foreign_keys
 
   if (length(key)) {
     attr(cdefs, "sorted") <- copy_vector(key)
