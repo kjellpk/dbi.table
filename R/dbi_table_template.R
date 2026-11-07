@@ -18,35 +18,52 @@ dbi_table_template <- function(id, catalog, fields) {
   environment(id_fun) <- self
   makeActiveBinding("id", id_fun, self)
 
-  if (is.data.frame(fields)) {
-    assign(".fields", fields, self)
-  } else {
-    assign(".fields_fun", fields, self)
-  }
+  assign(".fields", fields, self)
 
   fields_fun <- function(x) {
     if (! missing(x)) stop("binding is read-only")
+    if (is.data.frame(fields <- .self$.fields)) return(fields)
 
-    if (is.null(.self$.fields)) {
-      fields <- .self$.fields_fun(.self$catalog, .self$id)
-      assign(".fields", fields, .self)
-    }
+    fields <- .self$.fields(.self$catalog, .self$id)
+    assign(".fields", fields, .self)
 
-    .self$.fields
+    fields
   }
   environment(fields_fun) <- self
   makeActiveBinding("fields", fields_fun, self)
 
   pk_fun <- function(x) {
     if (!missing(x)) stop("binding is read-only")
-    .self$.primary_key
+
+    if (is.character(pk <- .self$.primary_key)) {
+      return(pk)
+    }
+
+    if (is.function(pk)) {
+      pk <- pk(.self$catalog, .self$id)$column
+      assign(".primary_key", pk, .self)
+      return(.self$primary_key)
+    }
+
+    NULL
   }
   environment(pk_fun) <- self
   makeActiveBinding("primary_key", pk_fun, self)
 
   fk_fun <- function(x) {
     if (!missing(x)) stop("binding is read-only")
-    .self$.foreign_keys
+
+    if (is.list(fkl <- .self$.foreign_keys)) {
+      return(fkl)
+    }
+
+    if (is.function(fkl)) {
+      fkl <- fkl(.self$catalog, .self$id)
+      assign(".foreign_keys", fkl, .self)
+      return(.self$foreign_keys)
+    }
+
+    NULL
   }
   environment(fk_fun) <- self
   makeActiveBinding("foreign_keys", fk_fun, self)

@@ -3,7 +3,15 @@
 S3method("[",dbi.table)
 S3method("names<-",dbi.table)
 S3method(as.data.frame,dbi.table)
+S3method(catalog_foreign_keys,SQLiteConnection,catalog_foreign_keys_sqlite)
+S3method(catalog_foreign_keys,default,catalog_foreign_keys_dbi)
+S3method(catalog_foreign_keys,duckdb_connection,catalog_foreign_keys_duckdb)
+S3method(catalog_objects,SQLiteConnection,catalog_objects_sqlite)
 S3method(catalog_objects,default,catalog_objects_dbi)
+S3method(catalog_objects,duckdb_connection,catalog_objects_duckdb)
+S3method(catalog_primary_keys,SQLiteConnection,catalog_primary_keys_sqlite)
+S3method(catalog_primary_keys,default,catalog_primary_keys_dbi)
+S3method(catalog_primary_keys,duckdb_connection,catalog_primary_keys_duckdb)
 S3method(data.table::as.data.table,dbi.table,as_data_table)
 S3method(db_short_name,default,db_short_name_default)
 S3method(dbi_connection_package,default,dbi_connection_package_default)
@@ -16,7 +24,6 @@ S3method(dim,dbi.table)
 S3method(foreign_keys_,"Microsoft SQL Server",foreign_keys_Microsoft_SQL_Server)
 S3method(foreign_keys_,MariaDBConnection,foreign_keys_mariadb)
 S3method(foreign_keys_,PqConnection,foreign_keys_postgres)
-S3method(foreign_keys_,SQLiteConnection,foreign_keys_sqlite)
 S3method(foreign_keys_,default,foreign_keys_default)
 S3method(foreign_keys_,duckdb_connection,foreign_keys_duckdb)
 S3method(get_connection,DBIConnection)
@@ -69,6 +76,7 @@ exportMethods(dbQuoteLiteral)
 exportMethods(dbQuoteString)
 exportMethods(dbReadTable)
 exportMethods(dbRemoveTable)
+exportMethods(dbSendQuery)
 exportMethods(dbSendStatement)
 exportMethods(dbWithTransaction)
 exportMethods(dbWriteTable)
@@ -85,6 +93,7 @@ importFrom(DBI,
   dbQuoteString,
   dbReadTable,
   dbRemoveTable,
+  dbSendQuery,
   dbSendStatement,
   dbWithTransaction,
   dbWriteTable

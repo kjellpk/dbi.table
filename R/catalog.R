@@ -107,6 +107,7 @@ catalog_objects <- function(catalog, ...) {
 }
 
 
+
 #' @rawNamespace S3method(catalog_objects,default,catalog_objects_dbi)
 catalog_objects_dbi <- function(catalog, ...) {
   db_objs <- DBI::dbListObjects(catalog, ...)
@@ -114,7 +115,7 @@ catalog_objects_dbi <- function(catalog, ...) {
   names(ids) <- vapply(ids, id_name, "", conn = catalog)
 
   fields_fun <- function(conn, id) {
-    data.frame(fields = DBI::dbListFields(conn, id))
+    data.frame(field = DBI::dbListFields(conn, id))
   }
 
   list(ids = ids, fields_fun = fields_fun)
@@ -122,21 +123,134 @@ catalog_objects_dbi <- function(catalog, ...) {
 
 
 
+catalog_primary_keys <- function(catalog, ...) {
+  UseMethod("catalog_primary_keys", dbi_connection(catalog))
+}
+
+
+
+#' @rawNamespace S3method(catalog_primary_keys,default,catalog_primary_keys_dbi)
+catalog_primary_keys_dbi <- function(catalog, ...) {
+  NULL
+}
+
+
+
+catalog_foreign_keys <- function(catalog, ...) {
+  UseMethod("catalog_foreign_keys", dbi_connection(catalog))
+}
+
+
+
+#' @rawNamespace S3method(catalog_foreign_keys,default,catalog_foreign_keys_dbi)
+catalog_foreign_keys_dbi <- function(catalog, ...) {
+  NULL
+}
+
+
+
 catalog_dbi_table_templates <- function(catalog, ...) {
-  objs <- catalog_objects(catalog, ...)
+  use_DBI <- isTRUE(list(...)$DBI)
 
-  if (is.data.frame(objs)) {
-    tmp <- NULL
+  objs <- if (use_DBI) {
+    catalog_objects_dbi(catalog, ...)
   } else {
-    templates <- lapply(objs$ids, dbi_table_template,
-                        catalog = catalog, fields = objs$fields_fun)
+    catalog_objects(catalog, ...)
+  }
 
-    lapply(templates, function(u, expr) {
-      assign(".fields_expr", expr, pos = u)
-    }, expr = objs$fields_expr)
+  templates <- if (is.data.frame(objs)) {
+    id_cols <- intersect(c("catalog", "schema", "table"), names(objs))
+    objs$id <- apply(objs[, id_cols, drop = FALSE], 1L, DBI::Id)
+    ff <- mapply(DBI::dbQuoteIdentifier,
+                 x = objs$id, MoreArgs = list(conn = catalog),
+                 USE.NAMES = FALSE)
+    objs <- split(objs, ff)
+
+    ids <- lapply(objs, function(u) u[[1L, "id"]])
+    fields <- lapply(objs, function(u) {
+      u[u$field_index, c("field", "type")]
+    })
+
+    mapply(dbi_table_template,
+           id = ids, fields = fields,
+           MoreArgs = list(catalog = catalog))
+  } else {
+    lapply(objs$ids, dbi_table_template,
+           catalog = catalog, fields = objs$fields_fun)
+  }
+
+  assign("./dbi_table_templates", templates, catalog)
+
+  pks <- if (use_DBI) {
+    catalog_primary_keys_dbi(catalog, ...)
+  } else {
+    catalog_primary_keys(catalog, ...)
+  }
+
+  if (is.data.frame(pks)) {
+    id_cols <- intersect(c("catalog", "schema", "table"), names(pks))
+    pks$id <- apply(pks[, id_cols, drop = FALSE], 1L, DBI::Id)
+    ff <- mapply(DBI::dbQuoteIdentifier,
+                 x = pks$id, MoreArgs = list(conn = catalog),
+                 USE.NAMES = FALSE)
+    pks <- split(pks, ff)
+    pks <- lapply(pks, function(u) u[u$column_index, "column"])
+    lapply(names(pks), function(u) {
+      assign(".primary_key", pks[[u]], templates[[u]])
+    })
+  }
+
+  if (is.function(pks)) {
+    mapply(assign, pos = templates,
+           MoreArgs = list(x = ".primary_key", value = pks))
+  }
+
+  fks <- if (use_DBI) {
+    catalog_foreign_keys_dbi(catalog, ...)
+  } else {
+    catalog_foreign_keys(catalog, ...)
+  }
+
+  if (is.data.frame(fks)) {
+    ids <- id_names_from_df(fks, catalog)
+    fks <- lapply(split(fks, ids), fk_df_to_list, conn = catalog)
+
+    lapply(names(fks), function(u) {
+      assign(".foreign_keys", fks[[u]], templates[[u]])
+    })
+  }
+
+  if (is.function(fks)) {
+    mapply(assign, pos = templates,
+           MoreArgs = list(x = ".foreign_keys", value = fks))
   }
 
   templates
+}
+
+
+
+fk_df_to_list <- function(fk_df, conn) {
+  fk_df$ref_ids <- id_names_from_df(fk_df, conn, ref = TRUE)
+
+  lapply(split(fk_df, f = fk_df$foreign_key_name), function(u) {
+    list(referenced_id = u[[1L, "ref_ids"]],
+         foreign_key = u$column_name,
+         primary_key = u$ref_column_name)
+  })
+}
+
+
+
+ID_COLS <- c("table_catalog", "table_schema", "table_name")
+REF_ID_COLS <- paste("ref", ID_COLS, sep = "_")
+
+id_names_from_df <- function(x, conn, ref = FALSE) {
+  id_cols <- intersect(if (ref) REF_ID_COLS else ID_COLS, names(x))
+  mapply(DBI::dbQuoteIdentifier,
+         x = apply(x[, id_cols, drop = FALSE], 1L, DBI::Id),
+         MoreArgs = list(conn = conn),
+         USE.NAMES = FALSE)
 }
 
 

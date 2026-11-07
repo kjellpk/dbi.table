@@ -1,21 +1,41 @@
-#' @rawNamespace S3method(foreign_keys_,SQLiteConnection,foreign_keys_sqlite)
-foreign_keys_sqlite <- function(catalog, id) {
-  schema <- id@name[["table_schema"]]
-  name <- id@name[["table_name"]]
+#' @rawNamespace S3method(catalog_objects,SQLiteConnection,catalog_objects_sqlite)
+catalog_objects_sqlite <- function(catalog, ...) {
+  schema <- DBI::dbGetQuery(catalog, sql_statement("sqlite_columns"))
+  ids <- apply(schema, 1L, DBI::Id)
+  names(ids) <- vapply(ids, id_name, "", conn = catalog)
 
-  statement <- sql_statement("foreign_keys_sqlite")
-  statement <- sprintf(statement, DBI::dbQuoteString(catalog, name))
+  fields_fun <- function(conn, id) {
+    r <- DBI::dbSendQuery(catalog, sql_statement("sqlite_fields"))
+    on.exit(DBI::dbClearResult(r))
+    DBI::dbBind(r, unname(as.list(id@name)[c("table", "schema")]))
+    DBI::dbFetch(r)
+  }
 
-  if (m <- nrow(fkl <- DBI::dbGetQuery(catalog, statement))) {
-    data.frame(constraint_name = paste(rep("FK", m), fkl$id, sep = "__"),
-               fk_table_schema = rep(schema, m),
-               fk_table_name = rep(name, m),
-               fk_column_name = fkl$from,
-               pk_table_schema = rep(schema, m),
-               pk_table_name = fkl$table,
-               pk_column_name = fkl$to,
-               key_ordinal_position = fkl$seq)
-  } else {
-    NULL
+  list(ids = ids, fields_fun = fields_fun)
+}
+
+
+
+#' @rawNamespace S3method(catalog_primary_keys,SQLiteConnection,catalog_primary_keys_sqlite)
+catalog_primary_keys_sqlite <- function(catalog, ...) {
+  function(conn, id) {
+    r <- DBI::dbSendQuery(catalog, sql_statement("sqlite_primary_keys"))
+    on.exit(DBI::dbClearResult(r))
+    DBI::dbBind(r, unname(as.list(id@name)[c("table", "schema")]))
+    DBI::dbFetch(r)
+  }
+}
+
+
+
+#' @rawNamespace S3method(catalog_foreign_keys,SQLiteConnection,catalog_foreign_keys_sqlite)
+catalog_foreign_keys_sqlite <- function(catalog, ...) {
+  function(conn, id) {
+    r <- DBI::dbSendQuery(catalog, sql_statement("sqlite_foreign_keys"))
+    on.exit(DBI::dbClearResult(r))
+    DBI::dbBind(r, unname(as.list(id@name)[c("table", "schema")]))
+    fks <- DBI::dbFetch(r)
+    fks$ref_table_schema <- id@name[["schema"]]
+    fk_df_to_list(fks, catalog)
   }
 }

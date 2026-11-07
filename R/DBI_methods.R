@@ -160,8 +160,10 @@ setMethod(f = dbAppendTable,
 
 # dbAppendTableArrow
 # dbBegin
-# dbBind
-# dbBindArrow
+
+# dbBind - no conn arg
+# dbBindArrow - no conn arg
+
 # dbBreak
 # dbCallProc
 # dbCanConnect
@@ -740,7 +742,52 @@ setMethod(f = dbRemoveTable,
 ################################################################################
 
 # dbRollback
+
+################################################################################
 # dbSendQuery
+################################################################################
+
+dbSendQuery_dbi_table_pkg <- function(conn, statement, ...) {
+  DBI::dbSendQuery(dbi_connection(conn), statement, ...)
+}
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbSendQuery,dbi.catalog-method
+#' @importFrom DBI dbSendQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbSendQuery,
+          signature = "dbi.catalog",
+          definition = dbSendQuery_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbSendQuery,dbi.schema-method
+#' @importFrom DBI dbSendQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbSendQuery,
+          signature = "dbi.schema",
+          definition = dbSendQuery_dbi_table_pkg)
+
+
+
+#' @rdname DBI-methods
+#' @aliases dbSendQuery,dbi.table-method
+#' @importFrom DBI dbSendQuery
+#' @importFrom methods setMethod
+#' @export
+setMethod(f = dbSendQuery,
+          signature = "dbi.table",
+          definition = dbSendQuery_dbi_table_pkg)
+
+
+
+################################################################################
+
 # dbSendQueryArrow
 
 ################################################################################

@@ -61,6 +61,9 @@
 \alias{dbRemoveTable,dbi.schema-method}
 \alias{dbRemoveTable,dbi.table,ANY-method}
 \alias{dbRemoveTable,dbi.table-method}
+\alias{dbSendQuery,dbi.catalog-method}
+\alias{dbSendQuery,dbi.schema-method}
+\alias{dbSendQuery,dbi.table-method}
 \alias{dbSendStatement,dbi.table,missing-method}
 \alias{dbSendStatement,dbi.catalog,ANY-method}
 \alias{dbSendStatement,dbi.catalog-method}
@@ -152,6 +155,12 @@
 \S4method{dbRemoveTable}{dbi.schema,ANY}(conn, name, ...)
 
 \S4method{dbRemoveTable}{dbi.table,ANY}(conn, name, ...)
+
+\S4method{dbSendQuery}{dbi.catalog}(conn, statement, ...)
+
+\S4method{dbSendQuery}{dbi.schema}(conn, statement, ...)
+
+\S4method{dbSendQuery}{dbi.table}(conn, statement, ...)
 
 \S4method{dbSendStatement}{dbi.table,missing}(conn, statement, ...)
 
