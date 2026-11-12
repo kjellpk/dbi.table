@@ -167,7 +167,7 @@ new_dbi_table <- function(conn, id, fields = NULL,
                             on = I(list(NULL)))
 
   if (is.null(fields)) {
-    fields <- data.frame(fields = DBI::dbListFields(conn, id))
+    fields <- data.frame(field = DBI::dbListFields(conn, id))
   }
 
   internal_name <- paste0(KEY_BASE, seq_len(nrow(fields)))
@@ -744,7 +744,7 @@ make_temp_dbi_table <- function(conn, name, x, key) {
   }
 
   temp_id <- DBI::Id(name)
-  x <- new_dbi_table(conn, temp_id, names(x), key)
+  x <- new_dbi_table(conn, temp_id, data.frame(field = names(x)), key)
 
   temp_dbi_table <- new.env(parent = emptyenv())
   temp_dbi_table$id <- temp_id
@@ -776,7 +776,7 @@ in_query_cte <- function(conn, data, key = NULL) {
 
   cte_name <- unique_table_name("IN_QUERY_CTE")
   id <- DBI::Id(cte_name)
-  x <- new_dbi_table(conn, id, names(data), key)
+  x <- new_dbi_table(conn, id, data.frame(field = names(data)), key)
 
   qnames <- DBI::dbQuoteIdentifier(conn, names(data))
   col_modes <- vapply(data, storage.mode, "")

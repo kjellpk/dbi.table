@@ -17,7 +17,7 @@
   sort = TRUE,
   suffixes = c(".x", ".y"),
   no.dups = TRUE,
-  recursive = FALSE,
+  recursive = 1L,
   ...
 )
 }

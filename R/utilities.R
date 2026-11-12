@@ -89,31 +89,9 @@ assign_and_lock <- function(x, value, pos) {
 
 
 
-new_dbi_table_from_id <- function(catalog, id) {
-  if (is.null(s <- get_table_schema_from_id(catalog, id))) {
-    return(NULL)
-  }
-
-  new_dbi_table(catalog, id, copy_vector(s$column_names), copy_vector(s$key))
-}
-
-
-
-new_active_dbi_table <- function(catalog, id) {
-  function(x) {
-    if (missing(x)) {
-      return(new_dbi_table_from_id(catalog, id))
-    }
-
-    stop("this dbi.table cannot be modified", call. = FALSE)
-  }
-}
-
-
-
-install_active_dbi_table <- function(catalog, schema, name, id) {
-  fn <- new_active_dbi_table(catalog, id)
-  makeActiveBinding(name, fn, schema)
+dbi_table_from_id_key <- function(catalog, id_key) {
+  templates <- get("./dbi_table_templates", catalog, inherits = FALSE)
+  templates[[id_key]]$constructor()
 }
 
 
@@ -148,4 +126,18 @@ copy_vector <- function(x) {
 copy_data_frame <- function(x) {
   x <- as.data.frame(lapply(x, copy_vector))
   copy_vector(x)
+}
+
+
+
+rbind_f <- function(x, y, ...) {
+  if (!identical(nx <- names(x), ny <- names(y))) {
+    add_x <- lapply(stats::setNames(nm = setdiff(ny, nx)), function(u) NA)
+    if (length(add_x)) x <- cbind(x, add_x)
+
+    add_y <- lapply(stats::setNames(nm = setdiff(nx, ny)), function(u) NA)
+    if (length(add_y)) y <- cbind(y, add_y)
+  }
+
+  base::rbind(x, y, ...)
 }

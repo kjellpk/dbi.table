@@ -68,21 +68,27 @@ test_that("relational merge works", {
 })
 
 test_that("relational merge works with recursive = TRUE", {
-  expect_s3_class(x <- merge(Track, recursive = TRUE), "dbi.table")
+  expect_s3_class(x <- merge(Track, recursive = 2), "dbi.table")
   track <- as.data.table(Track)
 
   album <- as.data.table(Album)
   artist <- as.data.table(Artist)
-  setnames(artist, paste("ArtistId", names(artist), sep = "."))
-  aa <- merge(album, artist, by.x = "ArtistId", by.y = "ArtistId.ArtistId")
-  setnames(aa, paste("AlbumId", names(aa), sep = "."))
-  track <- merge(track, aa, by.x = "AlbumId", by.y = "AlbumId.AlbumId")
+  setnames(artist, "Name", "ArtistId.Name")
+  album <- merge(album, artist, by = "ArtistId")
 
-  for (i in c("GenreId", "MediaTypeId")) {
-    y <- as.data.table(get(substring(i, 1, nchar(i) - 2L)))
-    setnames(y, names(y), paste(i, names(y), sep = "."))
-    track <- merge(track, y, by.x = i, by.y = names(y)[[1L]], all.x = TRUE)
-  }
+  setnames(album,
+           c("ArtistId", "Title", "ArtistId.Name"),
+           c("AlbumId.ArtistId", "AlbumId.Title", "AlbumId.ArtistId.Name"))
+
+  track <- merge(track, album, by = "AlbumId")
+
+  genre <- as.data.table(Genre)
+  setnames(genre, "Name", "GenreId.Name")
+  track <- merge(track, genre, by = "GenreId")
+
+  media_type <- as.data.table(MediaType)
+  setnames(media_type, "Name", "MediaTypeId.Name")
+  track <- merge(track, media_type, by = "MediaTypeId")
 
   expect_true(all.equal(as.data.table(x), track, ignore.row.order = TRUE))
 })

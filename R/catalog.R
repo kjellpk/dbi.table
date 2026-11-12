@@ -231,10 +231,10 @@ catalog_dbi_table_templates <- function(catalog, ...) {
 
 
 fk_df_to_list <- function(fk_df, conn) {
-  fk_df$ref_ids <- id_names_from_df(fk_df, conn, ref = TRUE)
+  fk_df$ref_id_keys <- id_names_from_df(fk_df, conn, ref = TRUE)
 
   lapply(split(fk_df, f = fk_df$foreign_key_name), function(u) {
-    list(referenced_id = u[[1L, "ref_ids"]],
+    list(referenced_id_key = u[[1L, "ref_id_keys"]],
          foreign_key = u$column_name,
          primary_key = u$ref_column_name)
   })

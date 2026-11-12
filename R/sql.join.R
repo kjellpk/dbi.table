@@ -111,7 +111,7 @@ sql_join <- function(x, y, type, on, prefixes, parent_frame) {
   y_fields <- get_fields(y)
   y_fields$src <- prefixes[[2L]]
 
-  xy_fields <- rbind(x_fields, y_fields)
+  xy_fields <- rbind_f(x_fields, y_fields)
   xy_fields$old <- xy_fields$internal_name
   xy_fields$internal_name <- paste0(KEY_BASE, seq_len(nrow(xy_fields)))
 
@@ -148,7 +148,7 @@ sql_join <- function(x, y, type, on, prefixes, parent_frame) {
     xy_fields[xy_fields$src == prefixes[[2L]], ]$id_name <- new_id_name
   }
 
-  xy_fields <- xy_fields[, c("internal_name", "id_name", "field")]
+  xy_fields$src <- xy_fields$old <- NULL
 
 
   # 5. join data_source

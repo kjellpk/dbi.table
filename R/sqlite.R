@@ -34,8 +34,11 @@ catalog_foreign_keys_sqlite <- function(catalog, ...) {
     r <- DBI::dbSendQuery(catalog, sql_statement("sqlite_foreign_keys"))
     on.exit(DBI::dbClearResult(r))
     DBI::dbBind(r, unname(as.list(id@name)[c("table", "schema")]))
-    fks <- DBI::dbFetch(r)
-    fks$ref_table_schema <- id@name[["schema"]]
-    fk_df_to_list(fks, catalog)
+    if (nrow(fks <- DBI::dbFetch(r))) {
+      fks$ref_table_schema <- id@name[["schema"]]
+      fk_df_to_list(fks, catalog)
+    } else {
+      NULL
+    }
   }
 }

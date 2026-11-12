@@ -114,7 +114,7 @@
 merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
                             all = FALSE, all.x = all, all.y = all,
                             sort = TRUE, suffixes = c(".x", ".y"),
-                            no.dups = TRUE, recursive = FALSE, ...) {
+                            no.dups = TRUE, recursive = 1L, ...) {
   if (missing(y) || is.null(y)) {
     return(relational_merge(x, recursive))
   }
@@ -144,10 +144,27 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
 
     if (is_pristine(x) && is_pristine(y)) {
-      if (length(rt <- related_tables(x, y))) {
-        if (nrow(rt) == 1L) {
-          by.x <- rt[[1L, "x_columns"]]
-          by.y <- rt[[1L, "y_columns"]]
+      y_qid <- DBI::dbQuoteIdentifier(y, get_data_source(y)[[1L, "id"]])
+      x_fkl <- attr(x, "foreign_keys", exact = TRUE)
+      refs <- vapply(x_fkl, `[[`, "", i = "referenced_id_key")
+      i <- which(refs == y_qid)
+
+      if (length(i)) {
+        i <- i[1L]
+        message("merge on database foreign key: ", names(i))
+        fk <- x_fkl[[i]]
+        by.x <- fk$foreign_key
+        by.y <- fk$primary_key
+        attr(x, "foreign_keys") <- x_fkl[-i]
+      } else {
+        x_qid <- DBI::dbQuoteIdentifier(x, get_data_source(x)[[1L, "id"]])
+        y_fkl <- attr(y, "foreign_keys", exact = TRUE)
+        refs <- vapply(y_fkl, `[[`, "", i = "referenced_id_key")
+        if (length(i <- which(refs == x_qid)) == 1L) {
+          message("reverse merge on database foreign key: ", names(i))
+          fk <- y_fkl[[i]]
+          by.x <- fk$primary_key
+          by.y <- fk$foreign_key
         }
       }
     }

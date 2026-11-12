@@ -33,48 +33,13 @@ schemas_to_include_duckdb <- function(conn) {
 
 
 
-#' @rawNamespace S3method(foreign_keys_,duckdb_connection,foreign_keys_duckdb)
-foreign_keys_duckdb <- function(catalog, id) {
-  r <- merge(catalog$information_schema$referential_constraints,
-             catalog$information_schema$key_column_usage,
-             by = c("constraint_catalog",
-                    "constraint_schema",
-                    "constraint_name"))
-
-  names(r) <- paste0("fk_", names(r))
-
-  r <- merge(catalog$information_schema$key_column_usage, r,
-             by.x = c("constraint_catalog",
-                      "constraint_schema",
-                      "constraint_name",
-                      "ordinal_position"),
-             by.y = c("fk_unique_constraint_catalog",
-                      "fk_unique_constraint_schema",
-                      "fk_unique_constraint_name",
-                      "fk_ordinal_position"))
-
-  r <- r[, c("fk_constraint_name", "fk_table_catalog", "fk_table_schema",
-              "fk_table_name", "fk_column_name", "table_catalog",
-              "table_schema", "table_name", "column_name",
-              "fk_position_in_unique_constraint")]
-
-  names(r) <- c("constraint_name", "fk_table_catalog", "fk_table_schema",
-                "fk_table_name", "fk_column_name", "pk_table_catalog",
-                "pk_table_schema", "pk_table_name", "pk_column_name",
-                "key_ordinal_position")
-
-  as.data.frame(r, n = -1L)
-}
-
-
-
 #' @rawNamespace S3method(temporary_dbi_table,duckdb_connection,temporary_dbi_table_duckdb)
 temporary_dbi_table_duckdb <- function(conn, x, key = NULL) {
   temp_name <- unique_table_name(TMP_BASE)
   duckdb::duckdb_register(conn, temp_name, x)
 
   temp_id <- DBI::Id(temp_name)
-  x <- new_dbi_table(conn, temp_id, names(x), key)
+  x <- new_dbi_table(conn, temp_id, data.frame(field = names(x)), key)
 
   temp_dbi_table <- new.env(parent = emptyenv())
   temp_dbi_table$name <- temp_name
