@@ -6,10 +6,8 @@
 #'   a connection handle returned by \code{\link[DBI]{dbConnect}} or a
 #'   zero-argument function that returns a connection handle.
 #'
-#' @param schemas
-#'   a character vector of distinct schema names. These schemas will be loaded
-#'   into the \code{dbi.catalog}. By default (when \code{schemas} is missing),
-#'   \code{dbi.catalog} loads all available schemas.
+#' @param \dots
+#'   additional arguments are ignored.
 #'
 #' @return
 #'   a \code{dbi.catalog}.
