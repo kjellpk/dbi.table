@@ -49,7 +49,6 @@ empty_catalog <- function(conn) {
   catalog <- new.env(parent = emptyenv())
 
   assign("./dbi_connection", conn, catalog)
-  assign("./specials", get_specials(conn), catalog)
 
   if (!is.null(attr(conn, "recon", exact = TRUE))) {
     reg.finalizer(catalog, dbi.catalog_disconnect, onexit = TRUE)

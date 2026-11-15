@@ -107,13 +107,7 @@ specials$parent[["["]] <- function(e, dbi_table, specials, env) {
 
 
 get_specials <- function(conn) {
-  if (is.dbi.table(conn)) {
-    conn <- get_connection(conn)
-  }
-
-  if (is_dbi_catalog(conn)) {
-    return(get("./specials", conn))
-  }
+  conn <- dbi_connection(conn)
 
   if (is.null(s <- get0(nm <- class(conn)[[1L]], specials))) {
     s <- new_specials_env_from_conn(conn)
