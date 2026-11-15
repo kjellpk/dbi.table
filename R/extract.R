@@ -248,7 +248,7 @@ handle_j <- function(x, j, by, enclos) {
   names(j) <- j_names
   j <- c(by, j)
 
-  if (all(j_key <- match(x_key_cols, j, nomatch = 0L) > 0L)) {
+  if (all((j_key <- match(x_key_cols, j, nomatch = 0L)) > 0L)) {
     j_key <- names(j)[j_key]
   } else {
     j_key <- NULL
