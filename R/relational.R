@@ -12,8 +12,8 @@ relational_merge <- function(x, recursive) {
     names(y) <- paste(nm, names(y), sep = ".")
     by_y <- paste(nm, fk$primary_key, sep = ".")
 
-    x <- merge(x, y, by.x = by_x, by.y = by_y, all.x = TRUE,
-               suffixes = rep("", 2L))
+    x <- merge_dbi_table(x, y, by.x = by_x, by.y = by_y, all.x = TRUE,
+                         suffixes = rep("", 2L))
   }
 
   x

@@ -86,40 +86,51 @@ sql.join <- function(x, y, type = "inner", on = NULL,
     stop("'prefixes[2]' must have at least 1 character")
   }
 
-  sql_join(x, y, type, on, prefixes, parent.frame())
-}
-
-
-sql_join <- function(x, y, type, on, prefixes, parent_frame) {
   if (!can_join_as_x(x)) {
     x <- as_cte(x)
   }
-
-  x_ctes <- get_ctes(x)
 
   if (!can_join_as_y(y)) {
     y <- as_cte(y)
   }
 
+  sql_join(x, y, type, on, prefixes, parent.frame())
+}
+
+
+sql_join <- function(x, y, type, on, prefixes, parent_frame) {
+
+  x_ctes <- get_ctes(x)
   y_ctes <- get_ctes(y)
 
 
   # 1. Join fields and column definitions
 
   x_fields <- get_fields(x)
-  x_fields$src <- prefixes[[1L]]
   y_fields <- get_fields(y)
-  y_fields$src <- prefixes[[2L]]
 
-  xy_fields <- rbind_f(x_fields, y_fields)
-  xy_fields$old <- xy_fields$internal_name
-  xy_fields$internal_name <- paste0(KEY_BASE, seq_len(nrow(xy_fields)))
-
-  y_sub <- xy_fields[xy_fields$src == prefixes[[2L]], ]
-  y_sub <- names_list(y_sub$internal_name, y_sub$old)
+  old_internal_name <- y_fields$internal_name
+  new_name <- paste0(KEY_BASE, nrow(x_fields) + seq_len(nrow(y_fields)))  
+  y_fields$internal_name <- new_name
+  y_sub <- names_list(y_fields$internal_name, old_internal_name)
   new_y <- sub_lang(y, y_sub)
 
-  xref <- make_xref(c(x), new_y, xy_fields, prefixes)
+  names_x <- names(x)
+  names_y <- names(y)
+  dups <- intersect(names_x, names_y)
+
+  pre_x <- c(x)
+  names(pre_x) <- paste0(prefixes[[1L]], names(pre_x))
+
+  uni_x <- c(x)[names_x %notin% names_y]
+
+  pre_y <- new_y
+  names(pre_y) <- paste0(prefixes[[2L]], names(pre_y))
+
+  uni_y <- new_y[names(new_y) %notin% names_x]
+
+  xref <- c(pre_x, uni_x, pre_y, uni_y)
+
   xy <- c(c(x), new_y)
   on <- sub_lang(on, xref, enclos = parent_frame)
 
@@ -142,19 +153,23 @@ sql_join <- function(x, y, type, on, prefixes, parent_frame) {
   x_data_source <- get_data_source(x)
   y_data_source <- get_data_source(y)
 
-  if (y_data_source$id_name %in% x_data_source$id_name) {
-    new_id_name <- unique_table_name()
-    y_data_source$id_name <- new_id_name
-    xy_fields[xy_fields$src == prefixes[[2L]], ]$id_name <- new_id_name
+  for (nm in y_data_source$id_name) {
+    if (nm %in% x_data_source$id_name) {
+      new_nm <- unique_table_name()
+      y_data_source[[y_data_source$id_name == nm, "id_name"]] <- new_nm
+      y_fields$id_name <- gsub(nm, new_nm, y_fields$id_name, fixed = TRUE)
+    }
   }
 
-  xy_fields$src <- xy_fields$old <- NULL
+  xy_fields <- rbind_f(x_fields, y_fields)
 
 
   # 5. join data_source
 
-  y_data_source$clause <- JOIN_TYPES[type]
-  y_data_source$on <- list(on)
+  y_data_source$on <- lapply(y_data_source$on, sub_lang, envir = y_sub)
+
+  y_data_source[[1L, "clause"]] <- JOIN_TYPES[type]
+  y_data_source$on[1L] <- list(on)[1L]
 
   xy_data_source <- rbind(x_data_source, y_data_source)
 
@@ -203,24 +218,6 @@ can_join_as_y <- function(x) {
     !length(get_group_by(x)) &&
     !get_distinct(x) &&
     (nrow(get_data_source(x)) == 1L)
-}
-
-
-
-make_xref <- function(x, y, fields, prefixes) {
-  dups <- intersect(names(x), names(y))
-  c(dbit_xref(x, dups, prefixes[[1L]]), dbit_xref(y, dups, prefixes[[2L]]))
-}
-
-
-
-dbit_xref <- function(dbit, dups, prefix) {
-  dbit_dups <- dbit[dups]
-  names(dbit_dups) <- paste_prefix(prefix, names(dbit_dups))
-  dbit_unique <- dbit[setdiff(names(dbit), dups)]
-  dbit_unique_pre <- dbit_unique
-  names(dbit_unique_pre) <- paste_prefix(prefix, names(dbit_unique_pre))
-  c(dbit_dups, dbit_unique, dbit_unique_pre)
 }
 
 

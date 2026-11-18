@@ -133,6 +133,24 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     warning("non-NULL value of 'incomparables' was ignored")
   }
 
+  if (!can_join_as_x(x)) {
+    x <- as_cte(x)
+  }
+
+  if (!can_join_as_y(y)) {
+    y <- as_cte(y)
+  }
+
+  merge_dbi_table(x, y, by, by.x, by.y, all, all.x, all.y, sort,
+                  suffixes, no.dups)
+}
+
+
+
+merge_dbi_table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
+                            all = FALSE, all.x = all, all.y = all,
+                            sort = TRUE, suffixes = c(".x", ".y"),
+                            no.dups = TRUE) {
   x_names <- names(x)
   y_names <- names(y)
 
@@ -198,7 +216,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   if ((!is.null(by.x) || !is.null(by.y)) && length(by.x) != length(by.y))
     stop("'by.x' and 'by.y' are not the same length")
 
-  if (!missing(by) && !missing(by.x))
+  if (!is.null(by) && !is.null(by.x))
     warning("specification of 'by' superseded by 'by.x' and 'by.y'")
 
   if (!is.null(by.x)) {
@@ -223,7 +241,7 @@ merge.dbi.table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
     by.x <- by.y <- by
   }
 
-  on <- paste(paste0("`x.", by.x, "`"), paste0("`y.", by.y, "`"), sep = " == ")
+  on <- paste(paste0("`y.", by.y, "`"), paste0("`x.", by.x, "`"), sep = " == ")
   on <- handy_andy(lapply(on, str2lang))
 
   if (!length(by.x)) {
