@@ -153,6 +153,7 @@ merge_dbi_table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
                             no.dups = TRUE) {
   x_names <- names(x)
   y_names <- names(y)
+  fkl_keep <- NULL
 
   if (anyDuplicated(x_names) || anyDuplicated(y_names)) {
     stop("the 'merge' method for 'dbi.table' requires that 'x' and 'y' ",
@@ -160,30 +161,43 @@ merge_dbi_table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
   }
 
   if (is.null(by) && is.null(by.x) && is.null(by.y)) {
+    x_fkl <- attr(x, "foreign_keys", exact = TRUE)
+    y_fkl <- attr(y, "foreign_keys", exact = TRUE)
 
-    if (is_pristine(x) && is_pristine(y)) {
+    if (length(x_fkl) && is_pristine(y)) {
       y_qid <- DBI::dbQuoteIdentifier(y, get_data_source(y)[[1L, "id"]])
-      x_fkl <- attr(x, "foreign_keys", exact = TRUE)
       refs <- vapply(x_fkl, `[[`, "", i = "referenced_id_key")
-      i <- which(refs == y_qid)
+      i <- match(y_qid, refs, nomatch = 0L)
 
-      if (length(i)) {
-        i <- i[1L]
-        message("merge on database foreign key: ", names(i))
+      if (i > 0L) {
+        message("merge on database foreign key: ", names(x_fkl)[[i]])
         fk <- x_fkl[[i]]
+
         by.x <- fk$foreign_key
-        by.y <- fk$primary_key
-        attr(x, "foreign_keys") <- x_fkl[-i]
-      } else {
-        x_qid <- DBI::dbQuoteIdentifier(x, get_data_source(x)[[1L, "id"]])
-        y_fkl <- attr(y, "foreign_keys", exact = TRUE)
-        refs <- vapply(y_fkl, `[[`, "", i = "referenced_id_key")
-        if (length(i <- which(refs == x_qid)) == 1L) {
-          message("reverse merge on database foreign key: ", names(i))
-          fk <- y_fkl[[i]]
-          by.x <- fk$primary_key
-          by.y <- fk$foreign_key
-        }
+        nm <- paste(by.x, collapse = "___")
+        names(y) <- y_names <- paste(nm, y_names, sep = ".")
+        by.y <- paste(nm, fk$primary_key, sep = ".")
+        suffixes <- character(2L)
+
+        fkl_keep <- x_fkl[-i]
+      }
+
+    } else if (is_pristine(x) && length(y_fkl)) {
+      x_qid <- DBI::dbQuoteIdentifier(x, get_data_source(x)[[1L, "id"]])
+      y_fkl <- attr(y, "foreign_keys", exact = TRUE)
+      refs <- vapply(y_fkl, `[[`, "", i = "referenced_id_key")
+
+      if (length(i <- which(refs == x_qid)) == 1L) {
+        message("reverse merge on database foreign key: ", names(i))
+        fk <- y_fkl[[i]]
+
+        by.y <- fk$foreign_key
+        by.x <- fk$primary_key
+        nm <- paste(by.y, collapse = "___")
+        nb <- x_names %notin% by.x
+        names(x)[nb] <- x_names[nb] <- paste(nm, x_names[nb], sep = ".")
+
+        suffixes <- character(2L)
       }
     }
 
@@ -300,6 +314,10 @@ merge_dbi_table <- function(x, y, by = NULL, by.x = NULL, by.y = NULL,
 
   if (isTRUE(sort)) {
     attr(xy, "sorted") <- by_names
+  }
+
+  if (length(fkl_keep)) {
+    attr(xy, "foreign_keys") <- fkl_keep
   }
 
   xy
