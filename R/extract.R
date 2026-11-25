@@ -226,14 +226,6 @@ handle_j <- function(x, j, by, enclos) {
 
   x_key_cols <- c(x)[get_key(x)]
 
-  if (is.null(j_names <- names(j))) {
-    j_names <- paste0("V", seq_along(j))
-  }
-
-  if (any(idx <- (!nzchar(j_names) | is.na(j_names)))) {
-    j_names[idx] <- paste0("V", which(idx))
-  }
-
   j <- sub_lang(j, x, get_specials(x), enclos)
   by <- handle_by(x, by, enclos)
 
@@ -245,7 +237,6 @@ handle_j <- function(x, j, by, enclos) {
     j <- handle_over(x, j, by, update_order_by(x, NULL, include_key = TRUE))
   }
 
-  names(j) <- j_names
   j <- c(by, j)
 
   if (all((j_key <- match(x_key_cols, j, nomatch = 0L)) > 0L)) {
